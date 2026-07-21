@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { DocumentManager } from '@/components/DocumentManager';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -47,16 +48,11 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
           
           {/* Left Column: Documents */}
           <section className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div className="p-4 border-b border-slate-200 bg-slate-50">
               <h2 className="font-semibold text-slate-800">Priloženi dokumenti</h2>
-              <button className="text-sm px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-                Dodaj dokument
-              </button>
             </div>
             <div className="flex-1 p-4 overflow-y-auto">
-              <p className="text-sm text-slate-500 text-center mt-10">
-                Ovdje će biti prikazani dokumenti.
-              </p>
+              <DocumentManager predmetId={predmet.id} />
             </div>
           </section>
 
