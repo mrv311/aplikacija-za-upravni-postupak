@@ -1,7 +1,7 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
-import { PDFParse } from 'pdf-parse';
+import pdfParse from 'pdf-parse';
 
 export async function uploadAndParseDocument(formData: FormData) {
   const file = formData.get('file') as File;
@@ -19,8 +19,7 @@ export async function uploadAndParseDocument(formData: FormData) {
     
     let rawText = '';
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      const parser = new PDFParse({ data: buffer });
-      const pdfData = await parser.getText();
+      const pdfData = await pdfParse(buffer);
       rawText = pdfData.text;
     }
 
