@@ -1,4 +1,34 @@
-export default function Home() {
+import { supabase } from '@/lib/supabase';
+
+// Define the type matching our DB schema
+type Predmet = {
+  id: string;
+  klasa: string;
+  urbroj: string;
+  stranka: string;
+  datum_zaprimanja: string;
+  status: 'Otvoren' | 'U radu' | 'Riješen';
+};
+
+function getStatusBadge(status: Predmet['status']) {
+  switch (status) {
+    case 'Otvoren':
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Otvoren</span>;
+    case 'U radu':
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">U radu</span>;
+    case 'Riješen':
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Riješen</span>;
+    default:
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
+  }
+}
+
+export default async function Home() {
+  const { data: predmeti, error } = await supabase
+    .from('predmeti')
+    .select('*')
+    .order('datum_zaprimanja', { ascending: false });
+
   return (
     <div className="p-8">
       <header className="mb-8 flex items-center justify-between">
@@ -16,72 +46,49 @@ export default function Home() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700">Broj predmeta</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700">KLASA</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-700">URBROJ</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Stranka / Žalitelj</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Datum primitka</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-700">Referent</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700">Status</th>
                 <th className="px-6 py-4 text-sm font-semibold text-slate-700 text-right">Akcije</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {/* Dummy Data for demonstration */}
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-900 font-medium">UP/II-001-26</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Marko Marković</td>
-                <td className="px-6 py-4 text-sm text-slate-600">15.07.2026.</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Ana Anić</td>
-                <td className="px-6 py-4 text-sm">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    U rješavanju
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  <button className="text-slate-400 hover:text-slate-900 transition-colors">
-                    Detalji
-                  </button>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-900 font-medium">UP/II-002-26</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Tvrtka d.o.o.</td>
-                <td className="px-6 py-4 text-sm text-slate-600">10.07.2026.</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Ivan Horvat</td>
-                <td className="px-6 py-4 text-sm">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                    Na čekanju
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  <button className="text-slate-400 hover:text-slate-900 transition-colors">
-                    Detalji
-                  </button>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-900 font-medium">UP/II-003-26</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Ivana Ivanović</td>
-                <td className="px-6 py-4 text-sm text-slate-600">01.07.2026.</td>
-                <td className="px-6 py-4 text-sm text-slate-600">Ana Anić</td>
-                <td className="px-6 py-4 text-sm">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    Riješeno
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-right">
-                  <button className="text-slate-400 hover:text-slate-900 transition-colors">
-                    Detalji
-                  </button>
-                </td>
-              </tr>
+              {error && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-red-500">
+                    Greška pri dohvaćanju podataka: {error.message}
+                  </td>
+                </tr>
+              )}
               
-              {/* Empty state (optional, if no data is present)
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                  Nema aktivnih predmeta za prikaz.
-                </td>
-              </tr>
-              */}
+              {!error && (!predmeti || predmeti.length === 0) && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    Nema aktivnih predmeta za prikaz.
+                  </td>
+                </tr>
+              )}
+
+              {!error && predmeti && predmeti.map((predmet: Predmet) => (
+                <tr key={predmet.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-sm text-slate-900 font-medium">{predmet.klasa}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600">{predmet.urbroj}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600">{predmet.stranka}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {predmet.datum_zaprimanja ? new Date(predmet.datum_zaprimanja).toLocaleDateString('hr-HR') : '-'}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {getStatusBadge(predmet.status)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-right">
+                    <button className="text-slate-400 hover:text-slate-900 transition-colors">
+                      Detalji
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
