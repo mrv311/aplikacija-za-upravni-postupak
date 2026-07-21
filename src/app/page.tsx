@@ -30,6 +30,10 @@ export default async function Home() {
     .select('*')
     .order('datum_zaprimanja', { ascending: false });
 
+  if (error) {
+    console.error("Supabase Error fetch predmeti:", error);
+  }
+
   return (
     <div className="p-8">
       <header className="mb-8 flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { uploadAndParseDocument } from '@/app/actions/documentActions';
 
 type Dokument = {
   id: string;
@@ -36,32 +37,16 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
     setError(null);
 
     try {
-      // 1. Upload to Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${predmetId}/${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('predmetId', predmetId);
+      formData.append('tipDokumenta', tipDokumenta);
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('spisi')
-        .upload(filePath, file);
+      const result = await uploadAndParseDocument(formData);
 
-      if (uploadError) throw uploadError;
-
-      // 2. Get Public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('spisi')
-        .getPublicUrl(filePath);
-
-      // 3. Save to DB
-      const { error: dbError } = await supabase
-        .from('dokumenti')
-        .insert({
-          predmet_id: predmetId,
-          tip_dokumenta: tipDokumenta,
-          storage_url: publicUrlData.publicUrl,
-        });
-
-      if (dbError) throw dbError;
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       // Reset and refresh
       setFile(null);
