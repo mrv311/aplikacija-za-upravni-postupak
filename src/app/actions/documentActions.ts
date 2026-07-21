@@ -31,7 +31,9 @@ export async function uploadAndParseDocument(formData: FormData) {
 
     const { error: uploadError } = await supabase.storage
       .from('spisi')
-      .upload(filePath, file);
+      .upload(filePath, buffer, {
+        contentType: file.type || 'application/pdf',
+      });
 
     if (uploadError) {
       return { error: `Greška pri uploadu u storage: ${uploadError.message}` };
