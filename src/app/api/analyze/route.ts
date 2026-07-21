@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const systemPrompt = "Ti si viši savjetnik u ministarstvu koji rješava drugostupanjske upravne postupke. Pročitaj priloženi tekst žalbe i ekstrahiraj ključne žalbene navode u jasne, koncizne natuknice. Zanemari formalni pozdravni tekst i fokusiraj se na pravnu argumentaciju.";
 
     const { text } = await generateText({
-      model: google('gemini-2.0-flash'),
+      model: google('gemini-flash-latest'),
       system: systemPrompt,
       prompt: `Tekst žalbe:\n\n${dokument.raw_text}`
     });
