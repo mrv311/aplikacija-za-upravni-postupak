@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 // Define the type matching our DB schema
@@ -83,9 +84,9 @@ export default async function Home() {
                     {getStatusBadge(predmet.status)}
                   </td>
                   <td className="px-6 py-4 text-sm text-right">
-                    <button className="text-slate-400 hover:text-slate-900 transition-colors">
+                    <Link href={`/predmeti/${predmet.id}`} className="text-slate-400 hover:text-slate-900 transition-colors font-medium">
                       Detalji
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
