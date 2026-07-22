@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     // 2. Ekstrakcija ključnih riječi / sažetka za vektor pretragu
     const { text: sazetak } = await generateText({
-      model: google('gemini-flash-latest', { useSearchGrounding: false }),
+      model: google('gemini-flash-latest'),
       system: 'Izvuci ključne pravne koncepte i sažetak iz ovog teksta u obliku nekoliko rečenica.',
       prompt: dokument.raw_text.substring(0, 5000), // Ograničavamo zbog brzine
     });
@@ -70,7 +70,7 @@ ${praksaKontekst}
 Napiši analizu i predloži smjer rješavanja baziran na toj praksi.`;
 
     const { text: finalAnalysis } = await generateText({
-      model: google('gemini-flash-latest', { useSearchGrounding: false }),
+      model: google('gemini-flash-latest'),
       prompt: finalPrompt
     });
 

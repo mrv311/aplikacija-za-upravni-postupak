@@ -35,7 +35,7 @@ export async function addPraksa(formData: FormData) {
       const html = await response.text();
       
       const { text } = await generateText({
-        model: google('gemini-flash-latest', { useSearchGrounding: false }),
+        model: google('gemini-flash-latest'),
         system: 'Ti si asistent za ekstrakciju teksta. Izvuci SAMO glavni čitljivi tekst iz ovog HTML dokumenta, ignoriraj izbornike, footere, skripte i CSS. Vrati čisti tekst.',
         prompt: html.substring(0, 80000), // ograničavamo da ne probijemo limit tokena
       });
