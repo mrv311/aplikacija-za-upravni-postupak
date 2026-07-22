@@ -13,6 +13,8 @@
     "@ai-sdk/google": "^4.0.19",
     "@supabase/supabase-js": "^2.110.7",
     "ai": "^7.0.32",
+    "lucide-react": "^1.25.0",
+    "mammoth": "^1.12.0",
     "next": "16.2.10",
     "pdf-parse": "^1.1.1",
     "react": "19.2.4",

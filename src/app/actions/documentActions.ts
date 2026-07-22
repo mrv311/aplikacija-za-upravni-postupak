@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase';
 import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
 
 export async function uploadAndParseDocument(formData: FormData) {
   const file = formData.get('file') as File;
@@ -13,19 +14,27 @@ export async function uploadAndParseDocument(formData: FormData) {
   }
 
   try {
-    // 1. Ekstrakcija teksta iz PDF-a
+    // 1. Ekstrakcija teksta iz PDF-a ili Word-a
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
     let rawText = '';
-    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    if (file.type === 'application/pdf' || fileExt === 'pdf') {
       const pdfData = await pdfParse(buffer);
       rawText = pdfData.text;
+    } else if (fileExt === 'doc' || fileExt === 'docx') {
+      const mammothData = await mammoth.extractRawText({ buffer });
+      rawText = mammothData.value;
+    }
+
+    if (!rawText || rawText.trim() === '') {
+      return { error: 'Nije moguće izvući tekst iz dokumenta. Ako je ovo PDF, možda je skeniran kao slika, a takve dokumente asistent trenutno ne može pročitati.' };
     }
 
     // 2. Upload na Supabase Storage
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${Math.random()}.${fileExt || 'pdf'}`;
     const filePath = `${predmetId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -61,5 +70,32 @@ export async function uploadAndParseDocument(formData: FormData) {
   } catch (err: any) {
     console.error("Server Action Error:", err);
     return { error: err.message || 'Neočekivana greška na poslužitelju.' };
+  }
+}
+
+export async function deleteDocument(id: string, storageUrl: string) {
+  try {
+    // 1. Delete from DB
+    const { error: dbError } = await supabase
+      .from('dokumenti')
+      .delete()
+      .eq('id', id);
+
+    if (dbError) {
+      return { error: `Greška pri brisanju iz baze: ${dbError.message}` };
+    }
+
+    // 2. Extract path from storage URL and delete from storage
+    if (storageUrl && storageUrl.includes('/spisi/')) {
+      const filePath = storageUrl.split('/spisi/')[1];
+      if (filePath) {
+        await supabase.storage.from('spisi').remove([filePath]);
+      }
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Server Action Error:", err);
+    return { error: err.message || 'Neočekivana greška pri brisanju.' };
   }
 }

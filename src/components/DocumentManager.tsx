@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { uploadAndParseDocument } from '@/app/actions/documentActions';
+import { uploadAndParseDocument, deleteDocument } from '@/app/actions/documentActions';
 
 type Dokument = {
   id: string;
@@ -59,6 +59,20 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
     }
   }
 
+  async function handleDelete(id: string, storageUrl: string) {
+    if (!confirm('Jeste li sigurni da želite obrisati ovaj dokument?')) return;
+    
+    setError(null);
+    try {
+      const result = await deleteDocument(id, storageUrl);
+      if (result.error) throw new Error(result.error);
+      fetchDokumenti();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Greška pri brisanju dokumenta.');
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       {/* Upload Form */}
@@ -73,6 +87,7 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
           >
             <option value="Prvostupanjsko rješenje">Prvostupanjsko rješenje</option>
             <option value="Žalba">Žalba</option>
+            <option value="Spis">Spis</option>
             <option value="Ostalo">Ostalo</option>
           </select>
           <input 
@@ -97,18 +112,26 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
         ) : (
           <ul className="space-y-3">
             {dokumenti.map(doc => (
-              <li key={doc.id} className="p-3 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-between">
-                <div>
+              <li key={doc.id} className="p-3 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col gap-2">
+                <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-slate-800">{doc.tip_dokumenta}</p>
+                  <div className="flex items-center space-x-3">
+                    <a 
+                      href={doc.storage_url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Pregledaj
+                    </a>
+                    <button 
+                      onClick={() => handleDelete(doc.id, doc.storage_url)}
+                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                    >
+                      Obriši
+                    </button>
+                  </div>
                 </div>
-                <a 
-                  href={doc.storage_url} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  Pregledaj
-                </a>
               </li>
             ))}
           </ul>

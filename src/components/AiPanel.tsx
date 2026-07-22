@@ -11,23 +11,22 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
   const [zalbe, setZalbe] = useState<any[]>([]);
 
   useEffect(() => {
-    // Fetch available documents, specially "Žalba"
-    async function fetchDocs() {
-      const { data } = await supabase
-        .from('dokumenti')
-        .select('id, tip_dokumenta')
-        .eq('predmet_id', predmetId);
-      
-      if (data) {
-        const zalbeDocs = data.filter(d => d.tip_dokumenta === 'Žalba' || d.tip_dokumenta === 'Prvostupanjsko rješenje');
-        setZalbe(zalbeDocs);
-        if (zalbeDocs.length > 0) {
-          setDocumentId(zalbeDocs[0].id);
-        }
-      }
-    }
     fetchDocs();
   }, [predmetId]);
+
+  async function fetchDocs() {
+    const { data } = await supabase
+      .from('dokumenti')
+      .select('id, tip_dokumenta')
+      .eq('predmet_id', predmetId);
+    
+    if (data) {
+      setZalbe(data);
+      if (data.length > 0 && !documentId) {
+        setDocumentId(data[0].id);
+      }
+    }
+  }
 
   async function handleAnalyze() {
     if (!documentId) {
@@ -63,11 +62,14 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
 
   return (
     <section className="w-1/3 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-      <div className="p-4 border-b border-slate-200 bg-slate-50">
+      <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
         <h2 className="font-semibold text-slate-800 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
           AI Analiza
         </h2>
+        <button onClick={fetchDocs} className="text-xs text-blue-600 hover:underline">
+          Osvježi popis
+        </button>
       </div>
       <div className="flex-1 p-4 flex flex-col overflow-y-auto">
         {!analysis && !isAnalyzing && (
@@ -99,7 +101,7 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
               </div>
             ) : (
               <p className="text-xs text-orange-600 mt-2">
-                Prvo učitajte dokument (npr. Žalbu) u lijevom stupcu. Osvježite stranicu nakon uploada.
+                Prvo učitajte dokument (npr. Žalbu ili Spis) u lijevom stupcu.
               </p>
             )}
 

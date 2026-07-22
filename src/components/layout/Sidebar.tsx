@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BazaPrakseMenu } from './BazaPrakseMenu';
 
 export function Sidebar() {
   return (
@@ -9,16 +10,17 @@ export function Sidebar() {
       <nav className="flex-1 px-4 space-y-2 mt-4">
         <Link 
           href="/" 
-          className="flex items-center px-4 py-3 bg-slate-800 text-white rounded-lg transition-colors hover:bg-slate-700 font-medium"
+          className="flex items-center px-4 py-3 bg-slate-800 text-white rounded-lg transition-colors hover:bg-slate-700 font-medium mb-2"
         >
           Aktivni predmeti
         </Link>
         <Link 
           href="/baza-prakse" 
-          className="flex items-center px-4 py-3 text-slate-300 rounded-lg transition-colors hover:bg-slate-800 hover:text-white font-medium"
+          className="flex items-center px-4 py-3 bg-slate-800 text-white rounded-lg transition-colors hover:bg-slate-700 font-medium mb-4"
         >
-          Baza prakse
+          Pregled baze prakse
         </Link>
+        <BazaPrakseMenu />
       </nav>
       <div className="p-4 text-xs text-slate-500 border-t border-slate-800">
         © 2026 Sustav
