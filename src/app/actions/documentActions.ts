@@ -3,6 +3,8 @@
 import { supabase } from '@/lib/supabase';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
 
 export async function uploadAndParseDocument(formData: FormData) {
   const file = formData.get('file') as File;
@@ -29,8 +31,30 @@ export async function uploadAndParseDocument(formData: FormData) {
       rawText = mammothData.value;
     }
 
+    // Fallback: Ako je tekst prazan ili jako kratak (npr. skenirani PDF), pokušaj s Gemini modelom
+    if (!rawText || rawText.trim().length < 50) {
+      try {
+        const { text } = await generateText({
+          model: google('gemini-flash-latest'),
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Molim te izvuci sav tekst iz ovog dokumenta. Prepiši ga točno onako kako piše. Ne dodaj nikakve svoje komentare, samo vrati sadržaj dokumenta.' },
+                { type: 'file', data: buffer.toString('base64'), mediaType: file.type || 'application/pdf' }
+              ]
+            }
+          ]
+        });
+        rawText = text;
+      } catch (aiError: any) {
+        console.error("Greška pri AI ekstrakciji teksta:", aiError);
+        return { error: `AI greška pri čitanju dokumenta: ${aiError.message || JSON.stringify(aiError)}` };
+      }
+    }
+
     if (!rawText || rawText.trim() === '') {
-      return { error: 'Nije moguće izvući tekst iz dokumenta. Ako je ovo PDF, možda je skeniran kao slika, a takve dokumente asistent trenutno ne može pročitati.' };
+      return { error: 'Nije moguće izvući tekst iz dokumenta. Dokument je možda oštećen ili nečitljiv.' };
     }
 
     // 2. Upload na Supabase Storage
