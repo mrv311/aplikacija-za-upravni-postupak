@@ -12,13 +12,13 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
   const [modelPreference, setModelPreference] = useState<'pro' | 'flash'>('pro');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
-    api: '/api/chat',
-    body: { predmetId },
-    onError: (err) => {
-      setError(err.message || 'Greška u komunikaciji s AI asistentom.');
+  const { messages, sendMessage, status, error: chatError } = useChat();
+
+  useEffect(() => {
+    if (chatError) {
+      setError(chatError.message || 'Greška u komunikaciji s AI asistentom.');
     }
-  });
+  }, [chatError]);
 
   const isLoading = status === 'submitted' || status === 'streaming';
 
