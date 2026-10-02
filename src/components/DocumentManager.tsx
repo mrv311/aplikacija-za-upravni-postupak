@@ -12,7 +12,7 @@ type Dokument = {
 
 export function DocumentManager({ predmetId }: { predmetId: string }) {
   const [dokumenti, setDokumenti] = useState<Dokument[]>([]);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [tipDokumenta, setTipDokumenta] = useState<string>('Prvostupanjsko rješenje');
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,24 +32,28 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
   }
 
   async function handleUpload() {
-    if (!file) return;
+    if (files.length === 0) return;
     setIsUploading(true);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('predmetId', predmetId);
-      formData.append('tipDokumenta', tipDokumenta);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('predmetId', predmetId);
+        formData.append('tipDokumenta', tipDokumenta);
 
-      const result = await uploadAndParseDocument(formData);
+        const result = await uploadAndParseDocument(formData);
 
-      if (result.error) {
-        throw new Error(result.error);
+        if (result.error) {
+          throw new Error(`Greška kod dokumenta ${file.name}: ${result.error}`);
+        }
       }
 
       // Reset and refresh
-      setFile(null);
+      setFiles([]);
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
       fetchDokumenti();
     } catch (err: any) {
       console.error(err);
@@ -77,7 +81,7 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
     <div className="h-full flex flex-col">
       {/* Upload Form */}
       <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Dodaj novi dokument</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Dodaj dokument(e) u spis</h3>
         {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
         <div className="flex flex-col gap-3">
           <select 
@@ -91,16 +95,19 @@ export function DocumentManager({ predmetId }: { predmetId: string }) {
             <option value="Ostalo">Ostalo</option>
           </select>
           <input 
+            id="file-upload"
             type="file" 
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            multiple
+            accept=".pdf,.doc,.docx"
+            onChange={(e) => setFiles(Array.from(e.target.files || []))}
             className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
           />
           <button 
             onClick={handleUpload}
-            disabled={!file || isUploading}
+            disabled={files.length === 0 || isUploading}
             className="mt-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
           >
-            {isUploading ? 'Učitavanje...' : 'Spremi dokument'}
+            {isUploading ? 'Učitavanje...' : 'Spremi dokumente'}
           </button>
         </div>
       </div>

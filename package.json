@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.19",
+    "@ai-sdk/react": "^4.0.126",
     "@supabase/supabase-js": "^2.110.7",
     "ai": "^7.0.32",
     "lucide-react": "^1.25.0",

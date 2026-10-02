@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import NewPredmetButton from '@/components/NewPredmetButton';
 
 // Define the type matching our DB schema
 type Predmet = {
@@ -41,9 +42,7 @@ export default async function Home() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Drugostupanjski upravni predmeti</h1>
           <p className="text-slate-500 mt-1">Pregled i upravljanje aktivnim predmetima</p>
         </div>
-        <button className="px-4 py-2 bg-slate-900 text-white rounded-lg shadow hover:bg-slate-800 transition-colors font-medium">
-          Novi predmet
-        </button>
+        <NewPredmetButton />
       </header>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
