@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { google } from '@ai-sdk/google';
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, embed } from 'ai';
 
 export async function POST(req: Request) {
   try {
@@ -28,10 +28,52 @@ export async function POST(req: Request) {
       documentsContext = 'Trenutno nema učitanih dokumenata u spisu.';
     }
 
-    const systemPrompt = `Ti si stručni pravni asistent za drugostupanjski upravni postupak. Korisnik ti šalje cjelokupni spis koji se sastoji od više dokumenata. Tvoj zadatak je analizirati te dokumente u cjelini i precizno odgovarati na korisnikova pitanja temeljem tog spisa. Ako korisnik pošalje upit 'Analiziraj', napravi detaljan sažetak spisa, izdvoji ključne pravne probleme i predloži smjer rješavanja.
+    const lastUserMessage = messages[messages.length - 1];
+    let queryText = '';
+    if (lastUserMessage) {
+      if (typeof lastUserMessage.content === 'string') {
+        queryText = lastUserMessage.content;
+      } else if (Array.isArray(lastUserMessage.parts)) {
+        queryText = lastUserMessage.parts.map((p: any) => p.text || '').join(' ');
+      }
+    }
 
-Sadržaj spisa (dokumenti):
-${documentsContext}`;
+    let retrievedPracticeContext = 'Nema pronađene relevantne prakse za ovaj slučaj.';
+    try {
+      const embedValue = (queryText + '\n\n' + documentsContext).substring(0, 1000);
+      const { embedding } = await embed({
+        model: google.textEmbeddingModel('gemini-embedding-001'),
+        value: embedValue,
+      });
+
+      const { data: praksa, error: rpcError } = await supabase
+        .rpc('match_praksa', {
+          query_embedding: embedding,
+          match_threshold: 0.5,
+          match_count: 5
+        });
+
+      if (rpcError) {
+        console.error('Greška pri match_praksa RPC pozivu:', rpcError);
+      } else if (praksa && praksa.length > 0) {
+        retrievedPracticeContext = praksa.map((p: any) => `Kategorija: ${p.kategorija}\nNaslov: ${p.naslov}\nSadržaj: ${p.sadrzaj}\n`).join('\n---\n');
+      }
+    } catch (ragError) {
+      console.error('RAG Error:', ragError);
+    }
+
+    const systemPrompt = `Ti si stručni pravni asistent za drugostupanjski upravni postupak. 
+Evo teksta konkretnog predmeta (spisa) koji analiziraš:
+<spis>
+${documentsContext}
+</spis>
+
+A ovo su relevantni izvadci iz zakona i sudske prakse iz naše baze koji ti mogu pomoći u rješavanju ovog predmeta:
+<praksa>
+${retrievedPracticeContext}
+</praksa>
+
+Zadatak: Odgovori na korisnikov upit temeljem činjenica iz spisa, ali strogo primjenjujući pravna shvaćanja i zakone iz priložene baze prakse. U svom odgovoru obavezno citiraj (navedi klasu, broj presude ili članak zakona) iz baze prakse ako je relevantno. Ako korisnik pošalje upit 'Analiziraj', napravi detaljan sažetak spisa, izdvoji ključne pravne probleme i predloži smjer rješavanja.`;
 
     const result = streamText({
       model: google(aiModelName),
