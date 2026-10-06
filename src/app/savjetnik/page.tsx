@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function SavjetnikPage() {
   const [input, setInput] = useState('');
-  const { messages, sendMessage, isLoading, error } = useChat();
+  const { messages, sendMessage, status, error } = useChat();
+  const isLoading = status === 'submitted' || status === 'streaming';
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
