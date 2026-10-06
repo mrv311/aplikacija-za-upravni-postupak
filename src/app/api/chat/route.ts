@@ -7,8 +7,101 @@ export async function POST(req: Request) {
     const { messages, predmetId, modelPreference } = await req.json();
 
     if (!predmetId) {
-      return new Response(JSON.stringify({ error: 'Nedostaje predmetId' }), { status: 400 });
+      // -------------------------------------------------------------
+      // LOGIKA ZA GLOBALNOG AI SAVJETNIKA (Kad nema predmetId)
+      // -------------------------------------------------------------
+      const lastUserMessage = messages[messages.length - 1];
+      let queryText = '';
+      if (typeof lastUserMessage.content === 'string') {
+        queryText = lastUserMessage.content;
+      } else if (Array.isArray(lastUserMessage.parts)) {
+        queryText = lastUserMessage.parts.map((p: any) => p.text || '').join(' ');
+      }
+
+      console.log('Initiating global Savjetnik RAG...');
+      const { embedding } = await embed({
+        model: google.textEmbeddingModel('gemini-embedding-001'),
+        value: queryText,
+      });
+
+      const [zakoniResult, praksaResult, dostupniZakoni, dostupnaPraksa] = await Promise.all([
+        supabase.rpc('match_zakoni', {
+          query_embedding: embedding,
+          match_threshold: 0.3,
+          match_count: 5
+        }),
+        supabase.rpc('match_praksa', {
+          query_embedding: embedding,
+          match_threshold: 0.4,
+          match_count: 5
+        }),
+        supabase.rpc('get_dostupni_zakoni'),
+        supabase.rpc('get_dostupna_praksa')
+      ]);
+
+      const zakoni = zakoniResult.data || [];
+      const praksa = praksaResult.data || [];
+
+      console.log('Broj pronađenih članaka zakona:', zakoni.length);
+      console.log('Broj pronađenih dokumenata prakse:', praksa.length);
+
+      let availableKnowledgeText = 'Dostupni propisi u bazi:\n';
+      if (dostupniZakoni.data && dostupniZakoni.data.length > 0) {
+        availableKnowledgeText += dostupniZakoni.data.map((z: any) => `- ${z.naziv_zakona}`).join('\n') + '\n';
+      }
+      if (dostupnaPraksa.data && dostupnaPraksa.data.length > 0) {
+        availableKnowledgeText += '\nDostupna sudska praksa:\n' + dostupnaPraksa.data.map((p: any) => `- ${p.naziv_datoteke}`).join('\n') + '\n';
+      }
+
+      let tekstoviZakona = '';
+      if (zakoni.length > 0) {
+        zakoni.forEach((z: any) => {
+          tekstoviZakona += `Zakon: ${z.naziv_zakona}\nČlanak: ${z.clanak_broj}\nTekst: ${z.tekst}\n\n`;
+        });
+      } else {
+        tekstoviZakona = 'Nema relevantnih zakona.';
+      }
+
+      let tekstoviPrakse = '';
+      if (praksa.length > 0) {
+        praksa.forEach((p: any) => {
+          tekstoviPrakse += `Dokument: ${p.naziv_datoteke}\nTekst: ${p.sadrzaj}\n\n`;
+        });
+      } else {
+        tekstoviPrakse = 'Nema relevantne prakse.';
+      }
+
+      const contextText = "ZAKONI:\n" + tekstoviZakona + "\n\nSUDSKA PRAKSA:\n" + tekstoviPrakse;
+
+      const systemPrompt = `Ti si stručni savjetnik za upravno pravo. 
+Odgovori na pitanje koristeći isključivo proslijeđene zakone i praksu. 
+Uvijek citiraj točan članak zakona ili naziv rješenja iz kojeg crpiš odgovor.
+Ako te korisnik općenito pita koje zakone ili propise imaš u bazi, koristi "SADRŽAJ BAZE" da mu odgovoriš, čak i ako u "DOSTUPNI KONTEKST" nema točnog članka.
+Ako odgovor na korisničko specifično pitanje o nekom zakonu nije u proslijeđenim dokumentima iz "DOSTUPNI KONTEKST", jasno napomeni da taj specifičan podatak nemaš izvučen.
+
+SADRŽAJ BAZE (Što sustav trenutno poznaje):
+${availableKnowledgeText}
+
+DOSTUPNI KONTEKST (Relevantni isječci Zakoni i Praksa povučeni za ovo pitanje):
+${contextText}`;
+
+      const result = streamText({
+        model: google('gemini-3.1-pro-preview'),
+        messages: await convertToModelMessages(messages),
+        system: systemPrompt,
+      });
+
+      return result.toUIMessageStreamResponse({
+        onError: error => {
+          console.error('AI SDK Stream Error (Savjetnik):', error);
+          return error instanceof Error ? error.message : String(error);
+        }
+      });
     }
+
+    // -------------------------------------------------------------
+    // LOGIKA ZA AI PANEL (Analiza spisa - kada postoji predmetId)
+    // -------------------------------------------------------------
 
     const aiModelName = modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
 
@@ -49,14 +142,14 @@ export async function POST(req: Request) {
       const { data: praksa, error: rpcError } = await supabase
         .rpc('match_praksa', {
           query_embedding: embedding,
-          match_threshold: 0.5,
+          match_threshold: 0.4,
           match_count: 5
         });
 
       if (rpcError) {
         console.error('Greška pri match_praksa RPC pozivu:', rpcError);
       } else if (praksa && praksa.length > 0) {
-        retrievedPracticeContext = praksa.map((p: any) => `Kategorija: ${p.kategorija}\nNaslov: ${p.naslov}\nSadržaj: ${p.sadrzaj}\n`).join('\n---\n');
+        retrievedPracticeContext = praksa.map((p: any) => `Dokument: ${p.naziv_datoteke}\nSadržaj: ${p.sadrzaj}\n`).join('\n---\n');
       }
     } catch (ragError) {
       console.error('RAG Error:', ragError);
