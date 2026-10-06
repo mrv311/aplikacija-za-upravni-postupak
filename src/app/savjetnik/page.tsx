@@ -56,7 +56,7 @@ export default function SavjetnikPage() {
                     : 'bg-white text-slate-800 rounded-bl-none border border-slate-100 leading-relaxed'
                 }`}>
                   <div className="whitespace-pre-wrap">
-                    {m.content ? m.content : m.parts?.map((part: any, index: number) => {
+                    {m.parts?.map((part: any, index: number) => {
                       if (part.type === 'text') return <span key={index}>{part.text}</span>;
                       return null;
                     })}
