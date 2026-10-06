@@ -33,7 +33,7 @@ if (!GEMINI_API_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY as string);
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 

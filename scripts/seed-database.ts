@@ -12,7 +12,7 @@ loadEnvConfig(process.cwd());
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_KEY || process.env.GOOGLE_API_KEY;
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY as string);
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("❌ Nedostaju Supabase varijable u .env datoteci (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).");
