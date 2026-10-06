@@ -12,8 +12,10 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.19",
     "@ai-sdk/react": "^4.0.126",
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.110.7",
     "ai": "^7.0.32",
+    "cheerio": "^1.2.0",
     "lucide-react": "^1.25.0",
     "mammoth": "^1.12.0",
     "next": "16.2.10",
