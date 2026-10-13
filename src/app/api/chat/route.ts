@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { google } from '@ai-sdk/google';
-import { streamText, convertToModelMessages, embed } from 'ai';
+import { streamText, convertToModelMessages } from 'ai';
+import { searchKnowledge, buildRetrievalQuery, formatZakoni, formatPraksa } from '@/lib/rag';
 
 export async function POST(req: Request) {
   try {
@@ -10,80 +11,41 @@ export async function POST(req: Request) {
       // -------------------------------------------------------------
       // LOGIKA ZA GLOBALNOG AI SAVJETNIKA (Kad nema predmetId)
       // -------------------------------------------------------------
-      const lastUserMessage = messages[messages.length - 1];
-      let queryText = '';
-      if (typeof lastUserMessage.content === 'string') {
-        queryText = lastUserMessage.content;
-      } else if (Array.isArray(lastUserMessage.parts)) {
-        queryText = lastUserMessage.parts.map((p: any) => p.text || '').join(' ');
-      }
+      const queryText = buildRetrievalQuery(messages);
 
       console.log('Initiating global Savjetnik RAG...');
-      const { embedding } = await embed({
-        model: google.textEmbeddingModel('gemini-embedding-001'),
-        value: queryText,
-      });
-
-      const [zakoniResult, praksaResult, dostupniZakoni, dostupnaPraksa] = await Promise.all([
-        supabase.rpc('match_zakoni', {
-          query_embedding: embedding,
-          match_threshold: 0.3,
-          match_count: 5
-        }),
-        supabase.rpc('match_praksa', {
-          query_embedding: embedding,
-          match_threshold: 0.4,
-          match_count: 5
-        }),
-        supabase.rpc('get_dostupni_zakoni'),
-        supabase.rpc('get_dostupna_praksa')
-      ]);
-
-      const zakoni = zakoniResult.data || [];
-      const praksa = praksaResult.data || [];
-
-      console.log('Broj pronađenih članaka zakona:', zakoni.length);
-      console.log('Broj pronađenih dokumenata prakse:', praksa.length);
+      const { zakoni, praksa, dostupniZakoni, dostupnaPraksa } = await searchKnowledge(queryText);
 
       let availableKnowledgeText = 'Dostupni propisi u bazi:\n';
-      if (dostupniZakoni.data && dostupniZakoni.data.length > 0) {
-        availableKnowledgeText += dostupniZakoni.data.map((z: any) => `- ${z.naziv_zakona}`).join('\n') + '\n';
-      }
-      if (dostupnaPraksa.data && dostupnaPraksa.data.length > 0) {
-        availableKnowledgeText += '\nDostupna sudska praksa:\n' + dostupnaPraksa.data.map((p: any) => `- ${p.naziv_datoteke}`).join('\n') + '\n';
+      availableKnowledgeText += dostupniZakoni.map((n) => `- ${n}`).join('\n') + '\n';
+      if (dostupnaPraksa.length > 0) {
+        availableKnowledgeText += '\nDostupna sudska praksa:\n' + dostupnaPraksa.map((n) => `- ${n}`).join('\n') + '\n';
       }
 
-      let tekstoviZakona = '';
-      if (zakoni.length > 0) {
-        zakoni.forEach((z: any) => {
-          tekstoviZakona += `Zakon: ${z.naziv_zakona}\nČlanak: ${z.clanak_broj}\nTekst: ${z.tekst}\n\n`;
-        });
-      } else {
-        tekstoviZakona = 'Nema relevantnih zakona.';
-      }
+      const systemPrompt = `Ti si iskusan stručni savjetnik za upravno pravo Republike Hrvatske.
 
-      let tekstoviPrakse = '';
-      if (praksa.length > 0) {
-        praksa.forEach((p: any) => {
-          tekstoviPrakse += `Dokument: ${p.naziv_datoteke}\nTekst: ${p.sadrzaj}\n\n`;
-        });
-      } else {
-        tekstoviPrakse = 'Nema relevantne prakse.';
-      }
+KAKO RADIŠ:
+1. Odgovaraš na temelju članaka zakona i sudske prakse u <zakoni> i <praksa>. Ne izmišljaj sadržaj članaka.
+2. POVEZUJ izvore: kad isječak prakse citira neki članak (npr. "članak 116. ZUP-a"), pronađi taj članak u <zakoni> i objasni kako ga je tijelo/sud primijenilo. Kad objašnjavaš članak zakona, navedi postoji li praksa koja ga primjenjuje.
+3. Svaku tvrdnju potkrijepi citatom: "(čl. 2. st. 1. Zakona o općem upravnom postupku)" ili "(rješenje: naziv_datoteke)".
+4. Članci označeni izvor="citirano u sudskoj praksi" dohvaćeni su jer ih praksa spominje – koristi ih kad su relevantni za pitanje, inače ih zanemari.
+5. Ako se u kontekstu nalaze i nevažni isječci, zanemari ih bez komentiranja.
+6. Samo ako u kontekstu zaista nema odgovora, reci to kratko i navedi što bi korisnik mogao preciznije pitati. Ne opisuj korisniku interne nazive poput "kontekst" ili "isječci".
+7. Na pitanja o tome koji su propisi i praksa u bazi odgovori iz <sadrzaj_baze>.
 
-      const contextText = "ZAKONI:\n" + tekstoviZakona + "\n\nSUDSKA PRAKSA:\n" + tekstoviPrakse;
+Struktura odgovora (kad je primjereno): kratak odgovor → pravna osnova (citati članaka) → povezana praksa → praktična napomena.
 
-      const systemPrompt = `Ti si stručni savjetnik za upravno pravo. 
-Odgovori na pitanje koristeći isključivo proslijeđene zakone i praksu. 
-Uvijek citiraj točan članak zakona ili naziv rješenja iz kojeg crpiš odgovor.
-Ako te korisnik općenito pita koje zakone ili propise imaš u bazi, koristi "SADRŽAJ BAZE" da mu odgovoriš, čak i ako u "DOSTUPNI KONTEKST" nema točnog članka.
-Ako odgovor na korisničko specifično pitanje o nekom zakonu nije u proslijeđenim dokumentima iz "DOSTUPNI KONTEKST", jasno napomeni da taj specifičan podatak nemaš izvučen.
-
-SADRŽAJ BAZE (Što sustav trenutno poznaje):
+<sadrzaj_baze>
 ${availableKnowledgeText}
+</sadrzaj_baze>
 
-DOSTUPNI KONTEKST (Relevantni isječci Zakoni i Praksa povučeni za ovo pitanje):
-${contextText}`;
+<zakoni>
+${formatZakoni(zakoni)}
+</zakoni>
+
+<praksa>
+${formatPraksa(praksa)}
+</praksa>`;
 
       const result = streamText({
         model: google('gemini-3.1-pro-preview'),
@@ -121,36 +83,18 @@ ${contextText}`;
       documentsContext = 'Trenutno nema učitanih dokumenata u spisu.';
     }
 
-    const lastUserMessage = messages[messages.length - 1];
-    let queryText = '';
-    if (lastUserMessage) {
-      if (typeof lastUserMessage.content === 'string') {
-        queryText = lastUserMessage.content;
-      } else if (Array.isArray(lastUserMessage.parts)) {
-        queryText = lastUserMessage.parts.map((p: any) => p.text || '').join(' ');
-      }
-    }
+    const queryText = buildRetrievalQuery(messages);
 
+    let zakoniContext = 'Nema pronađenih relevantnih članaka zakona.';
     let retrievedPracticeContext = 'Nema pronađene relevantne prakse za ovaj slučaj.';
     try {
-      const embedValue = (queryText + '\n\n' + documentsContext).substring(0, 1000);
-      const { embedding } = await embed({
-        model: google.textEmbeddingModel('gemini-embedding-001'),
-        value: embedValue,
+      const embedValue = (queryText + '\n\n' + documentsContext).substring(0, 2000);
+      // Članci koje spominje sam spis (npr. žalba se poziva na čl. 116. ZUP-a) također se dohvaćaju
+      const { zakoni, praksa } = await searchKnowledge(embedValue, {
+        extraTextForRefs: documentsContext.substring(0, 20000),
       });
-
-      const { data: praksa, error: rpcError } = await supabase
-        .rpc('match_praksa', {
-          query_embedding: embedding,
-          match_threshold: 0.4,
-          match_count: 5
-        });
-
-      if (rpcError) {
-        console.error('Greška pri match_praksa RPC pozivu:', rpcError);
-      } else if (praksa && praksa.length > 0) {
-        retrievedPracticeContext = praksa.map((p: any) => `Dokument: ${p.naziv_datoteke}\nSadržaj: ${p.sadrzaj}\n`).join('\n---\n');
-      }
+      if (zakoni.length > 0) zakoniContext = formatZakoni(zakoni);
+      if (praksa.length > 0) retrievedPracticeContext = formatPraksa(praksa);
     } catch (ragError) {
       console.error('RAG Error:', ragError);
     }
@@ -161,12 +105,17 @@ Evo teksta konkretnog predmeta (spisa) koji analiziraš:
 ${documentsContext}
 </spis>
 
-A ovo su relevantni izvadci iz zakona i sudske prakse iz naše baze koji ti mogu pomoći u rješavanju ovog predmeta:
+Relevantni članci zakona iz naše baze (uključujući članke koje spominju spis ili praksa):
+<zakoni>
+${zakoniContext}
+</zakoni>
+
+Relevantni izvadci iz sudske prakse iz naše baze:
 <praksa>
 ${retrievedPracticeContext}
 </praksa>
 
-Zadatak: Odgovori na korisnikov upit temeljem činjenica iz spisa, ali strogo primjenjujući pravna shvaćanja i zakone iz priložene baze prakse. U svom odgovoru obavezno citiraj (navedi klasu, broj presude ili članak zakona) iz baze prakse ako je relevantno. Ako korisnik pošalje upit 'Analiziraj', napravi detaljan sažetak spisa, izdvoji ključne pravne probleme i predloži smjer rješavanja.`;
+Zadatak: Odgovori na korisnikov upit temeljem činjenica iz spisa, strogo primjenjujući zakone i pravna shvaćanja iz priložene baze. Povezuj izvore: kad se spis ili praksa pozivaju na neki članak, pronađi ga u <zakoni> i objasni njegovu primjenu na konkretne činjenice. U odgovoru obavezno citiraj (članak zakona, naziv rješenja/presude) ako je relevantno. Ako korisnik pošalje upit 'Analiziraj', napravi detaljan sažetak spisa, izdvoji ključne pravne probleme i predloži smjer rješavanja.`;
 
     const result = streamText({
       model: google(aiModelName),
