@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { DocumentManager } from '@/components/DocumentManager';
 import { AiPanel } from '@/components/AiPanel';
+import { getStatusBadge } from '@/components/PredmetiTable';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,13 +26,9 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
           <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
             &larr; Natrag na popis
           </Link>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            predmet.status === 'Otvoren' ? 'bg-slate-100 text-slate-800' :
-            predmet.status === 'U radu' ? 'bg-blue-100 text-blue-800' :
-            'bg-emerald-100 text-emerald-800'
-          }`}>
-            {predmet.status}
-          </span>
+          <div>
+            {getStatusBadge(predmet.status)}
+          </div>
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{predmet.klasa}</h1>

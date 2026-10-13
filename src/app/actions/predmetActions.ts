@@ -1,7 +1,11 @@
 'use server';
 
+import { supabaseServer } from '@/lib/supabase-server';
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+
+// Koristi serverski klijent ako je konfiguriran, inače defaultni supabase klijent
+const db = supabaseServer || supabase;
 
 export async function createPredmet(formData: FormData) {
   const klasa = formData.get('klasa') as string;
@@ -14,28 +18,96 @@ export async function createPredmet(formData: FormData) {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('predmeti')
       .insert({
         klasa,
         urbroj,
         stranka,
-        // Using datum_zaprimanja since it's what page.tsx uses, even though prompt said datum_primitka
         datum_zaprimanja: datum,
-        status: 'U radu'
+        status: 'aktivan',
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Greška pri unosu predmeta:", error);
-      return { error: `Baza greška: ${error.message}` };
+      console.error('Greška pri unosu predmeta:', error);
+      return { error: `Greška u bazi: ${error.message}` };
     }
 
     revalidatePath('/');
+    revalidatePath('/arhiva');
     return { success: true, data };
   } catch (err: any) {
-    console.error("Server Action Error:", err);
+    console.error('Server Action Error (createPredmet):', err);
     return { error: err.message || 'Neočekivana greška na poslužitelju.' };
+  }
+}
+
+export async function archivePredmet(id: string) {
+  if (!id) {
+    return { error: 'ID predmeta je obavezan.' };
+  }
+
+  try {
+    const { data, error } = await db
+      .from('predmeti')
+      .update({ status: 'arhiviran' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Greška pri arhiviranju predmeta:', error);
+      if (error.code === '23514') {
+        return {
+          error:
+            'Baza podataka još ima staro ograničenje statusa. Pokrenite SQL skriptu "02_arhiviranje_predmeta.sql" u Supabase SQL Editoru.',
+        };
+      }
+      return { error: `Greška pri arhiviranju: ${error.message}` };
+    }
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Server Action Error (archivePredmet):', err);
+    return { error: err.message || 'Greška pri arhiviranju predmeta.' };
+  }
+}
+
+export async function unarchivePredmet(id: string) {
+  if (!id) {
+    return { error: 'ID predmeta je obavezan.' };
+  }
+
+  try {
+    const { data, error } = await db
+      .from('predmeti')
+      .update({ status: 'aktivan' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Greška pri vraćanju predmeta u aktivne:', error);
+      if (error.code === '23514') {
+        return {
+          error:
+            'Baza podataka još ima staro ograničenje statusa. Pokrenite SQL skriptu "02_arhiviranje_predmeta.sql" u Supabase SQL Editoru.',
+        };
+      }
+      return { error: `Greška pri vraćanju predmeta: ${error.message}` };
+    }
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Server Action Error (unarchivePredmet):', err);
+    return { error: err.message || 'Greška pri vraćanju predmeta.' };
   }
 }

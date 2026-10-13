@@ -9,12 +9,8 @@ loadEnvConfig(process.cwd());
 /// --- POSTAVKE (Promijeni po potrebi) ---
 const ZAKONI_ZA_OBRADU = [
   {
-    url: 'https://www.zakon.hr/z/101/zakon-o-upravnim-sporovima-2024',
-    naziv: 'Zakon o upravnim sporovima'
-  },
-  {
-    url: 'https://www.zakon.hr/z/124/zakon-o-vodama', // Obavezno provjeri je li ovo točan link
-    naziv: 'Zakon o vodama'
+    url: 'https://www.zakon.hr/z/65/zakon-o-opcem-upravnom-postupku',
+    naziv: 'Zakon o općem upravnom postupku'
   }
 ];
 // ---------------------------------------
@@ -75,8 +71,9 @@ async function fetchAndParse(url: string): Promise<string> {
 // Dijeljenje teksta na članke koristeći Regex
 function splitIntoArticles(text: string): { clanak_broj: string, tekst: string }[] {
   // Regex traži "Članak [broj]." (s eventualnim slovom poput 1a) i reže string neposredno PRIJE njega.
-  // Zastavica 'i' osigurava da uhvati "ČLANAK", "članak", itd.
-  const parts = text.split(/(?=Članak\s+\d+[a-z]?\.?)/i);
+  // Namjerno BEZ zastavice 'i': naslov članka uvijek počinje velikim slovom, a reference u tekstu
+  // ("...iz članak 5. ovoga Zakona") malim, pa ih ne želimo tretirati kao novi članak.
+  const parts = text.split(/(?=Članak\s+\d+[a-z]?\.)/);
 
   const articles: { clanak_broj: string, tekst: string }[] = [];
 
@@ -85,7 +82,7 @@ function splitIntoArticles(text: string): { clanak_broj: string, tekst: string }
     if (!trimmed) continue;
 
     // Provjeri počinje li ovaj dio sa "Članak X."
-    const match = trimmed.match(/^(Članak\s+\d+[a-z]?\.?)/i);
+    const match = trimmed.match(/^(Članak\s+\d+[a-z]?\.)/);
 
     if (match) {
       articles.push({
@@ -124,6 +121,12 @@ async function main() {
 
       let successfulChunks = 0;
 
+      // Zapamti postojeće retke ovog zakona – brišemo ih tek nakon uspješnog upisa novih (bez duplikata)
+      const { data: stariRedci } = await supabase.from('zakoni').select('id').eq('naziv_zakona', naziv);
+      const stariIds = (stariRedci || []).map((r: any) => r.id);
+      if (stariIds.length > 0) {
+        console.log(`♻️  U bazi već postoji ${stariIds.length} redaka za "${naziv}" – bit će zamijenjeni novima.`);
+      }
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
         const { clanak_broj, tekst } = article;
@@ -156,6 +159,17 @@ async function main() {
       }
 
       console.log(`\n\n🎉 Završen zakon: ${naziv}. Uspješno spremljeno: ${successfulChunks}/${articles.length} članaka.`);
+
+      if (stariIds.length > 0) {
+        if (successfulChunks === articles.length) {
+          for (let k = 0; k < stariIds.length; k += 100) {
+            await supabase.from('zakoni').delete().in('id', stariIds.slice(k, k + 100));
+          }
+          console.log(`🧹 Obrisano ${stariIds.length} starih redaka za "${naziv}".`);
+        } else {
+          console.warn(`⚠️  Nisu svi članci spremljeni – stari redci NISU obrisani. Mogući duplikati: pokreni scripts/dedupe-zakoni.ts`);
+        }
+      }
 
       // Ako nije zadnji zakon u nizu, pričekaj 5 sekundi prije idućeg
       if (z < ZAKONI_ZA_OBRADU.length - 1) {
