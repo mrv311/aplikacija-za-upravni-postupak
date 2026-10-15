@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function SavjetnikPage() {
   const [input, setInput] = useState('');
+  const [modelPreference, setModelPreference] = useState<'flash' | 'pro'>('flash');
   const { messages, sendMessage, status, error } = useChat();
   const isLoading = status === 'submitted' || status === 'streaming';
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -17,8 +18,7 @@ export default function SavjetnikPage() {
     e.preventDefault();
     if (!input || input.trim() === '' || isLoading) return;
     
-    // Koristimo sendMessage umjesto append (novo u AI SDK-u koji koristite)
-    sendMessage({ text: input });
+    sendMessage({ text: input }, { body: { modelPreference } });
     
     setInput('');
   };
@@ -29,9 +29,24 @@ export default function SavjetnikPage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 w-full">
-      <header className="bg-white border-b border-slate-200 px-8 py-6 shrink-0 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">✨ AI Savjetnik</h1>
-        <p className="text-slate-500 mt-2 font-medium">Globalni pravni asistent temeljen na bazi zakona i sudske prakse</p>
+      <header className="bg-white border-b border-slate-200 px-8 py-6 shrink-0 shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">✨ AI Savjetnik</h1>
+          <p className="text-slate-500 mt-2 font-medium">Globalni pravni asistent temeljen na bazi zakona i sudske prakse</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="model-select" className="text-xs font-medium text-slate-500">Model:</label>
+          <select 
+            id="model-select"
+            value={modelPreference}
+            onChange={(e) => setModelPreference(e.target.value as 'flash' | 'pro')}
+            className="text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs font-medium"
+            title="Odaberite brzinu i razinu modela"
+          >
+            <option value="flash">⚡ Flash (Brzi odgovori)</option>
+            <option value="pro">🧠 Pro (Duboka analiza)</option>
+          </select>
+        </div>
       </header>
       
       <div className="flex-1 overflow-y-auto p-8">

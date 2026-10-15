@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { google } from '@ai-sdk/google';
+import { google } from '@/lib/google';
 import { streamText, convertToModelMessages } from 'ai';
 import { searchKnowledge, buildRetrievalQuery, formatZakoni, formatPraksa } from '@/lib/rag';
 
@@ -47,8 +47,11 @@ ${formatZakoni(zakoni)}
 ${formatPraksa(praksa)}
 </praksa>`;
 
+      const aiModelName = modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
+      console.log(`[Savjetnik] Starting stream with model ${aiModelName}...`);
+
       const result = streamText({
-        model: google('gemini-3.1-pro-preview'),
+        model: google(aiModelName),
         messages: await convertToModelMessages(messages),
         system: systemPrompt,
       });

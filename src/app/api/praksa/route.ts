@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { google } from '@ai-sdk/google';
+import { google } from '@/lib/google';
 import { embed } from 'ai';
 
 export async function POST(req: Request) {

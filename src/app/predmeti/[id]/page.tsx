@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { DocumentManager } from '@/components/DocumentManager';
 import { AiPanel } from '@/components/AiPanel';
-import { getStatusBadge } from '@/components/PredmetiTable';
+import { getStatusBadge } from '@/components/StatusBadge';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 

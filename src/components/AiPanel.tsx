@@ -9,7 +9,7 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
   const [dokumenti, setDokumenti] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState('');
-  const [modelPreference, setModelPreference] = useState<'pro' | 'flash'>('pro');
+  const [modelPreference, setModelPreference] = useState<'pro' | 'flash'>('flash');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat();
@@ -78,8 +78,8 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
             className="text-xs bg-white border border-slate-300 rounded px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
             title="Odaberite razinu inteligencije asistenta"
           >
-            <option value="pro">Pro (Duboka analiza)</option>
-            <option value="flash">Flash (Brzi odgovori)</option>
+            <option value="flash">⚡ Flash (Brzi odgovori)</option>
+            <option value="pro">🧠 Pro (Duboka analiza)</option>
           </select>
           <button onClick={fetchDocs} className="text-xs text-blue-600 hover:underline">
             Osvježi

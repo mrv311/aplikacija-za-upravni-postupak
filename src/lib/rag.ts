@@ -1,5 +1,5 @@
 import { supabaseServer as supabase } from '@/lib/supabase-server';
-import { google } from '@ai-sdk/google';
+import { google } from '@/lib/google';
 import { embed } from 'ai';
 
 /**

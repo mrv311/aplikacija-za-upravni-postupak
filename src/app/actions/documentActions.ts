@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabase';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
-import { google } from '@ai-sdk/google';
+import { google } from '@/lib/google';
 import { generateText } from 'ai';
 
 export async function uploadAndParseDocument(formData: FormData) {
@@ -35,7 +35,7 @@ export async function uploadAndParseDocument(formData: FormData) {
     if (!rawText || rawText.trim().length < 50) {
       try {
         const { text } = await generateText({
-          model: google('gemini-flash-latest'),
+          model: google('gemini-3.8-flash'),
           messages: [
             {
               role: 'user',
