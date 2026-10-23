@@ -62,7 +62,7 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
   let godina = 'Ostalo';
   let cleanName = name;
 
-  const fullTagMatch = name.match(/^\[(.*?)\s*-\s*(\d{4})\]\s*/);
+  const fullTagMatch = name.match(/^\[(.*?)\s*-\s*(.*?)\]\s*/);
   const yearOnlyMatch = name.match(/^\[(\d{4})\]\s*/);
 
   if (fullTagMatch) {
@@ -158,7 +158,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
     return Array.from(set).sort((a, b) => {
       if (a === 'Ostalo') return 1;
       if (b === 'Ostalo') return -1;
-      return parseInt(b) - parseInt(a);
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numB - numA;
+      }
+      return a.localeCompare(b);
     });
   }, [parsedDocs]);
 
@@ -418,10 +423,10 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
               onChange={(e) => setFilterGodina(e.target.value)}
               className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
-              <option value="sve">Sve godine</option>
+              <option value="sve">Sve grupe / godine</option>
               {godineList.map((g) => (
                 <option key={g} value={g}>
-                  {g === 'Ostalo' ? 'Ostalo' : `${g}.`}
+                  {g === 'Ostalo' ? 'Ostalo' : isNaN(Number(g)) ? g : `${g}.`}
                 </option>
               ))}
             </select>
@@ -479,7 +484,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             const sortedYears = Object.keys(yearsMap).sort((a, b) => {
               if (a === 'Ostalo') return 1;
               if (b === 'Ostalo') return -1;
-              return parseInt(b) - parseInt(a);
+              const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numB - numA;
+      }
+      return a.localeCompare(b);
             });
 
             return (
@@ -505,7 +515,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                         {podrucje}
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Zbirka upravnih rješenja ({sortedYears.length} {sortedYears.length === 1 ? 'godište' : 'godišta'})
+                        {podrucje.toLowerCase().includes('sud') ? 'Sudska praksa i presude' : 'Zbirka upravnih rješenja'} ({sortedYears.length} {sortedYears.length === 1 ? 'grupa' : 'grupa'})
                       </p>
                     </div>
                   </div>
@@ -549,7 +559,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                       const isYearOpen = !!openGodine[yearKey];
                       const docsInYear = yearsMap[godina];
                       const isYearDeleting = loadingAction === `folder:${yearKey}`;
-                      const yearTitle = godina === 'Ostalo' ? 'Ostalo / Neodređena godina' : `${godina}. godina`;
+                      const yearTitle =
+                        godina === 'Ostalo'
+                          ? 'Ostalo / Neodređeno'
+                          : isNaN(Number(godina))
+                          ? godina
+                          : `${godina}. godina`;
 
                       return (
                         <div

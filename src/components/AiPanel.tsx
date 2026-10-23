@@ -113,7 +113,7 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
           <div className="flex flex-wrap gap-2">
             {dokumenti.map(doc => (
               <div key={doc.id} className="flex items-center gap-1 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-700 shadow-sm">
-                <span className="truncate max-w-[120px]">{doc.tip_dokumenta}</span>
+                <span className="truncate max-w-30">{doc.tip_dokumenta}</span>
                 <button 
                   onClick={() => handleRemoveDoc(doc.id, doc.storage_url)}
                   className="text-slate-400 hover:text-red-500 transition-colors ml-1"
@@ -185,7 +185,7 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
           <button 
             type="submit" 
             disabled={isLoading || !input || input.trim() === ''}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center min-w-20"
           >
             {isLoading ? '...' : 'Pošalji'}
           </button>
