@@ -190,10 +190,11 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
     });
   }, [parsedDocs, search, filterPodrucje, filterGodina, filterIshod]);
 
+  // Grupiranje po samom Području (Vodni doprinos, Naknada za uređenje voda...)
   const groupedDocs = useMemo(() => {
     const groups: Record<string, ParsedPraksaDoc[]> = {};
     for (const doc of filteredDocs) {
-      const key = `${doc.podrucje} - ${doc.godina}`;
+      const key = doc.podrucje;
       if (!groups[key]) groups[key] = [];
       groups[key].push(doc);
     }
@@ -453,7 +454,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
       ) : (
         <div className="space-y-4">
           {Object.entries(groupedDocs).map(([groupKey, docs]) => {
-            const isOpen = openGroups[groupKey] ?? true;
+            const isOpen = openGroups[groupKey] ?? false;
             const isFolderDeleting = loadingAction === `folder:${groupKey}`;
 
             return (
@@ -536,6 +537,13 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                 Odbijena žalba
+                              </span>
+                            )}
+
+                            {/* Godina rješenja */}
+                            {doc.godina && doc.godina !== 'Ostalo' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-800 text-slate-100 border border-slate-700/60 shadow-2xs">
+                                {doc.godina}.
                               </span>
                             )}
 
