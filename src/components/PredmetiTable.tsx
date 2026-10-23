@@ -29,7 +29,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [search, setSearch] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Sinkroniziraj items kad initialPredmeti promijeni vrijednost (npr. nakon revalidate-a)
   // ali ne prepisuj ako je korisnik upravo napravio optimistički potez
@@ -79,10 +79,11 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           router.refresh();
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setItems((prev) => [predmetToModify, ...prev]);
+      const msg = err instanceof Error ? err.message : 'Došlo je do greške prilikom obrade zahtjeva.';
       setFeedback({
-        message: err.message || 'Došlo je do greške prilikom obrade zahtjeva.',
+        message: msg,
         type: 'error',
       });
     } finally {

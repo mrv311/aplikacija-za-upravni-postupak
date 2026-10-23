@@ -1,24 +1,27 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useChat } from '@ai-sdk/react';
 import { deleteDocument } from '@/app/actions/documentActions';
 
+interface SpisDokument {
+  id: string;
+  tip_dokumenta: string;
+  storage_url: string;
+}
+
 export function AiPanel({ predmetId }: { predmetId: string }) {
-  const [dokumenti, setDokumenti] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [dokumenti, setDokumenti] = useState<SpisDokument[]>([]);
   const [input, setInput] = useState('');
   const [modelPreference, setModelPreference] = useState<'pro' | 'flash'>('flash');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat();
 
-  useEffect(() => {
-    if (chatError) {
-      setError(chatError.message || 'Greška u komunikaciji s AI asistentom.');
-    }
-  }, [chatError]);
+  const displayError = chatError
+    ? chatError.message || 'Greška u komunikaciji s AI asistentom.'
+    : null;
 
   const isLoading = status === 'submitted' || status === 'streaming';
 
@@ -37,20 +40,33 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
     setInput('');
   };
 
-  useEffect(() => {
-    fetchDocs();
-  }, [predmetId]);
-
-  async function fetchDocs() {
+  const fetchDocs = useCallback(async () => {
     const { data } = await supabase
       .from('dokumenti')
       .select('id, tip_dokumenta, storage_url')
       .eq('predmet_id', predmetId);
-    
+
     if (data) {
-      setDokumenti(data);
+      setDokumenti(data as SpisDokument[]);
     }
-  }
+  }, [predmetId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    supabase
+      .from('dokumenti')
+      .select('id, tip_dokumenta, storage_url')
+      .eq('predmet_id', predmetId)
+      .then(({ data }) => {
+        if (isMounted && data) {
+          setDokumenti(data as SpisDokument[]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [predmetId]);
 
   async function handleRemoveDoc(id: string, storageUrl: string) {
     if (!confirm('Jeste li sigurni da želite ukloniti ovaj dokument iz spisa?')) return;
@@ -58,9 +74,10 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
       const result = await deleteDocument(id, storageUrl);
       if (result.error) throw new Error(result.error);
       fetchDocs();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || 'Greška pri brisanju dokumenta.');
+      const msg = err instanceof Error ? err.message : 'Greška pri brisanju dokumenta.';
+      alert(msg);
     }
   }
 
@@ -122,9 +139,9 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
           </div>
         )}
 
-        {error && (
+        {displayError && (
           <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
-            {error}
+            {displayError}
           </div>
         )}
 
