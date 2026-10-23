@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   FileText,
@@ -14,7 +15,11 @@ import {
   Filter,
   Layers,
   X,
+  Trash2,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { deletePraksaDoc, deletePraksaFolder } from '@/app/actions/praksaActions';
 
 export type PraksaDoc = {
   naziv_datoteke: string;
@@ -85,7 +90,6 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
     for (let i = 2; i < parts.length; i++) {
       const p = parts[i];
       const pLow = p.toLowerCase();
-      // Filtriraj poznate elemente da ostanu samo stvarni pravni prigovori/tagovi
       const isIshod = pLow.includes('poništ') || pLow.includes('odbij');
       const isLoc = Object.keys(LOCATIONS).some((loc) => pLow === loc || pLow.includes(loc));
       const isNumber = /^\d+$/.test(p);
@@ -95,7 +99,6 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
       }
     }
   } else {
-    // Stariji pojedinačni unosi
     if (lower.includes('vodn') || lower.includes('doprinos')) {
       podrucje = 'Vodni doprinos';
     }
@@ -114,28 +117,31 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
 }
 
 export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
+  const router = useRouter();
+  const [items, setItems] = useState<PraksaDoc[]>(documents);
   const [search, setSearch] = useState('');
   const [filterPodrucje, setFilterPodrucje] = useState('sve');
   const [filterIshod, setFilterIshod] = useState('sve');
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [, startTransition] = useTransition();
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'Vodni doprinos - 2019': true,
     'Opća upravna praksa - Ostalo': true,
   });
 
   const parsedDocs = useMemo(() => {
-    return documents.map(parseDocument);
-  }, [documents]);
+    return items.map(parseDocument);
+  }, [items]);
 
-  // Izdvajanje jedinstvenih područja za filter
   const podrucjaList = useMemo(() => {
     const set = new Set(parsedDocs.map((d) => d.podrucje));
     return Array.from(set).sort();
   }, [parsedDocs]);
 
-  // Filtriranje dokumenata
   const filteredDocs = useMemo(() => {
     return parsedDocs.filter((doc) => {
-      // Pretraga
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchesName = doc.naziv_datoteke.toLowerCase().includes(q);
@@ -147,12 +153,10 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         }
       }
 
-      // Filter područja
       if (filterPodrucje !== 'sve' && doc.podrucje !== filterPodrucje) {
         return false;
       }
 
-      // Filter ishoda
       if (filterIshod !== 'sve') {
         if (filterIshod === 'ponisteno' && doc.ishod !== 'Poništeno rješenje') return false;
         if (filterIshod === 'odbijeno' && doc.ishod !== 'Odbijena žalba') return false;
@@ -162,7 +166,6 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
     });
   }, [parsedDocs, search, filterPodrucje, filterIshod]);
 
-  // Grupiranje po "Područje - Godina"
   const groupedDocs = useMemo(() => {
     const groups: Record<string, ParsedPraksaDoc[]> = {};
     for (const doc of filteredDocs) {
@@ -189,17 +192,116 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   };
 
   const totalChunks = useMemo(() => {
-    return documents.reduce((acc, d) => acc + (d.ukupno_chunkova || 1), 0);
-  }, [documents]);
+    return items.reduce((acc, d) => acc + (d.ukupno_chunkova || 1), 0);
+  }, [items]);
+
+  // Brisanje pojedinačnog dokumenta
+  const handleDeleteDoc = async (doc: ParsedPraksaDoc) => {
+    const confirmMsg = `Jeste li sigurni da želite trajno obrisati dokument:\n"${doc.stranka}" (${doc.naziv_datoteke})\ni sve njegove pripadajuće vektore iz baze prakse?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setLoadingAction(doc.naziv_datoteke);
+    setFeedback(null);
+
+    // Optimističko uklanjanje
+    const previousItems = [...items];
+    setItems((prev) => prev.filter((d) => d.naziv_datoteke !== doc.naziv_datoteke));
+
+    try {
+      const res = await deletePraksaDoc(doc.naziv_datoteke);
+      if (res?.error) {
+        setItems(previousItems);
+        setFeedback({ message: res.error, type: 'error' });
+      } else {
+        setFeedback({
+          message: `Dokument "${doc.stranka}" je uspješno uklonjen iz baze prakse.`,
+          type: 'success',
+        });
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } catch (err: unknown) {
+      setItems(previousItems);
+      const msg = err instanceof Error ? err.message : 'Greška pri brisanju dokumenta.';
+      setFeedback({ message: msg, type: 'error' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  // Brisanje cijele mape / grupe
+  const handleDeleteFolder = async (groupKey: string, docs: ParsedPraksaDoc[], e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const confirmMsg = `UPOZORENJE:\nŽelite li obrisati SVE dokumente (${docs.length}) iz mape "${groupKey}" iz baze prakse?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    const namesToDelete = docs.map((d) => d.naziv_datoteke);
+    setLoadingAction(`folder:${groupKey}`);
+    setFeedback(null);
+
+    const previousItems = [...items];
+    const deleteSet = new Set(namesToDelete);
+    setItems((prev) => prev.filter((d) => !deleteSet.has(d.naziv_datoteke)));
+
+    try {
+      const res = await deletePraksaFolder(namesToDelete);
+      if (res?.error) {
+        setItems(previousItems);
+        setFeedback({ message: res.error, type: 'error' });
+      } else {
+        setFeedback({
+          message: `Uspješno obrisano svih ${docs.length} dokumenata iz mape "${groupKey}".`,
+          type: 'success',
+        });
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } catch (err: unknown) {
+      setItems(previousItems);
+      const msg = err instanceof Error ? err.message : 'Greška pri brisanju mape.';
+      setFeedback({ message: msg, type: 'error' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Obavijest o uspjehu ili greški */}
+      {feedback && (
+        <div
+          className={`flex items-start justify-between p-4 rounded-xl border text-sm transition-all shadow-xs ${
+            feedback.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-800'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {feedback.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            )}
+            <p className="font-medium">{feedback.message}</p>
+          </div>
+          <button
+            onClick={() => setFeedback(null)}
+            className="text-xs font-semibold underline ml-4 hover:opacity-75 transition-opacity"
+          >
+            Zatvori
+          </button>
+        </div>
+      )}
+
       {/* Kartice sa statistikom */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Ukupno spisa u bazi</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{documents.length}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{items.length}</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
             <FileText className="w-6 h-6" />
@@ -230,7 +332,6 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
       {/* Kontrolna traka: Tražilica + Filteri */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          {/* Tražilica */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -250,14 +351,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             )}
           </div>
 
-          {/* Filteri */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium pl-1">
               <Filter className="w-3.5 h-3.5" />
               <span>Filteri:</span>
             </div>
 
-            {/* Područje */}
             <select
               value={filterPodrucje}
               onChange={(e) => setFilterPodrucje(e.target.value)}
@@ -271,7 +370,6 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
               ))}
             </select>
 
-            {/* Ishod */}
             <select
               value={filterIshod}
               onChange={(e) => setFilterIshod(e.target.value)}
@@ -284,10 +382,9 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
           </div>
         </div>
 
-        {/* Rezultati info + Brzi gumbi */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
           <div>
-            Prikazano <strong>{filteredDocs.length}</strong> od ukupno <strong>{documents.length}</strong> spisa
+            Prikazano <strong>{filteredDocs.length}</strong> od ukupno <strong>{items.length}</strong> spisa
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -320,6 +417,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         <div className="space-y-4">
           {Object.entries(groupedDocs).map(([groupKey, docs]) => {
             const isOpen = openGroups[groupKey] ?? true;
+            const isFolderDeleting = loadingAction === `folder:${groupKey}`;
 
             return (
               <div
@@ -327,8 +425,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                 className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden transition-all"
               >
                 {/* Zaglavlje grupe / mape */}
-                <button
-                  type="button"
+                <div
                   onClick={() => toggleGroup(groupKey)}
                   className="w-full px-6 py-4.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors flex items-center justify-between text-left border-b border-slate-200/70 cursor-pointer"
                 >
@@ -350,7 +447,24 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                     <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
                       {docs.length} {docs.length === 1 ? 'predmet' : 'predmeta'}
                     </span>
-                    <div className="text-slate-400">
+
+                    {/* Gumb za brisanje cijele mape */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteFolder(groupKey, docs, e)}
+                      disabled={isFolderDeleting}
+                      title="Ukloni cijelu mapu i sve njezine dokumente iz baze"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 rounded-lg transition-all shadow-2xs disabled:opacity-50 cursor-pointer ml-1"
+                    >
+                      {isFolderDeleting ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span className="hidden sm:inline">Obriši mapu</span>
+                    </button>
+
+                    <div className="text-slate-400 pl-1">
                       {isOpen ? (
                         <ChevronDown className="w-5 h-5" />
                       ) : (
@@ -358,22 +472,25 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                       )}
                     </div>
                   </div>
-                </button>
+                </div>
 
                 {/* Sadržaj grupe (Rasklopljene kartice rješenja) */}
                 {isOpen && (
                   <div className="divide-y divide-slate-100">
-                    {docs.map((doc, idx) => (
-                      <div
-                        key={idx}
-                        className="p-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
-                      >
-                        {/* Lijeva strana: Stranka, ishod, prigovori */}
-                        <div className="space-y-2 flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {/* Ishod bedž */}
-                            {doc.ishod === 'Poništeno rješenje' && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+                    {docs.map((doc, idx) => {
+                      const isDeletingThis = loadingAction === doc.naziv_datoteke;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                        >
+                          {/* Lijeva strana: Stranka, ishod, prigovori */}
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* Ishod bedž */}
+                              {doc.ishod === 'Poništeno rješenje' && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
                                 <RotateCcw className="w-3 h-3 text-amber-600" />
                                 Poništeno rješenje
                               </span>
@@ -421,25 +538,42 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                           </div>
                         </div>
 
-                        {/* Desna strana: Broj RAG chunkova */}
-                        <div className="shrink-0 flex items-center justify-end">
+                        {/* Desna strana: Broj RAG chunkova + Gumb za brisanje */}
+                        <div className="shrink-0 flex items-center justify-end gap-2.5">
                           <span
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/70"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/70"
                             title="Broj indeksiranih vektorskih dijelova dostupnih AI asistentu"
                           >
-                            <Layers className="w-3 h-3 text-slate-400" />
-                            <span>{doc.ukupno_chunkova} {doc.ukupno_chunkova === 1 ? 'dio' : 'dijelova'}</span>
+                            <Layers className="w-3.5 h-3.5 text-slate-400" />
+                            <span>
+                              {doc.ukupno_chunkova} {doc.ukupno_chunkova === 1 ? 'dio' : 'dijelova'}
+                            </span>
                           </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDoc(doc)}
+                            disabled={isDeletingThis}
+                            title="Trajno ukloni ovaj spis iz baze prakse"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {isDeletingThis ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
 }

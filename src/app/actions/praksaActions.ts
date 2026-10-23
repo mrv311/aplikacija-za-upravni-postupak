@@ -1,9 +1,13 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
+import { revalidatePath } from 'next/cache';
 import pdfParse from 'pdf-parse';
 import { google } from '@/lib/google';
 import { embed, generateText } from 'ai';
+
+const db = supabaseServer || supabase;
 
 export async function addPraksa(formData: FormData) {
   const naslov = formData.get('naslov') as string;
@@ -72,5 +76,57 @@ export async function addPraksa(formData: FormData) {
   } catch (error: any) {
     console.error('Add Praksa Error:', error);
     return { error: error.message || 'Neočekivana greška prilikom obrade sadržaja.' };
+  }
+}
+
+export async function deletePraksaDoc(nazivDatoteke: string) {
+  if (!nazivDatoteke) {
+    return { error: 'Naziv datoteke je obavezan.' };
+  }
+
+  try {
+    const { error } = await db
+      .from('praksa')
+      .delete()
+      .eq('naziv_datoteke', nazivDatoteke);
+
+    if (error) {
+      console.error('Greška pri brisanju prakse:', error);
+      return { error: `Greška u bazi: ${error.message}` };
+    }
+
+    revalidatePath('/baza-prakse');
+    revalidatePath('/savjetnik');
+    return { success: true };
+  } catch (err: unknown) {
+    console.error('deletePraksaDoc Error:', err);
+    const msg = err instanceof Error ? err.message : 'Greška na poslužitelju.';
+    return { error: msg };
+  }
+}
+
+export async function deletePraksaFolder(naziviDatoteka: string[]) {
+  if (!naziviDatoteka || naziviDatoteka.length === 0) {
+    return { error: 'Popis datoteka je prazan.' };
+  }
+
+  try {
+    const { error } = await db
+      .from('praksa')
+      .delete()
+      .in('naziv_datoteke', naziviDatoteka);
+
+    if (error) {
+      console.error('Greška pri brisanju mape prakse:', error);
+      return { error: `Greška u bazi: ${error.message}` };
+    }
+
+    revalidatePath('/baza-prakse');
+    revalidatePath('/savjetnik');
+    return { success: true };
+  } catch (err: unknown) {
+    console.error('deletePraksaFolder Error:', err);
+    const msg = err instanceof Error ? err.message : 'Greška na poslužitelju.';
+    return { error: msg };
   }
 }
