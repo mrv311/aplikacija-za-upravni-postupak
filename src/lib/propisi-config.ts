@@ -27,8 +27,9 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'ZUS',
     podrucje: 'Opći upravni propisi',
     tip: 'Zakon',
-    nn: 'NN 20/10, 143/12, 152/14, 94/16, 29/17, 110/21, 36/24',
-    izvor: 'lokalno',
+    nn: 'NN 36/24, 39/26',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/101/zakon-o-upravnim-sporovima',
     lokalnaDatoteka: 'ZUS - PROČIŠĆENI - NOVO.pdf',
     opis: 'Zakon o sudskoj zaštiti prava građana i pravnih osoba protiv pojedinačnih odluka upravnih tijela.'
   },
@@ -38,7 +39,8 @@ export const PROPISI_LIST: PropisDef[] = [
     podrucje: 'Opći upravni propisi',
     tip: 'Uredba',
     nn: 'NN 75/21',
-    izvor: 'lokalno',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/c/podzakonski-propis/49213/nn-75-2021-%282.7.2021.%29%2C-uredba-o-uredskom-poslovanju',
     lokalnaDatoteka: 'Uredba o uredskom poslovanju NN 75_2021.docx',
     opis: 'Pravila evidentiranja, primanja, raspoređivanja i otpreme akata u tijelima državne uprave.'
   },
@@ -47,8 +49,9 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'UTUP',
     podrucje: 'Opći upravni propisi',
     tip: 'Uredba',
-    nn: 'NN 92/21, 93/21, 95/21, 156/22',
-    izvor: 'lokalno',
+    nn: 'NN 156/22, 130/25',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/c/podzakonski-propis/55507/nn-156-2022-%2830.12.2022.%29%2C-uredba-o-tarifi-upravnih-pristojbi',
     lokalnaDatoteka: 'Uredba o Tarifi upravnih pristojbi_od 1-9-2021.pdf',
     opis: 'Pristojbene tarife za podneske, rješenja i žalbe u upravnim postupcima.'
   },
@@ -80,7 +83,8 @@ export const PROPISI_LIST: PropisDef[] = [
     podrucje: 'Vodno pravo i naknade',
     tip: 'Zakon',
     nn: 'NN 66/19',
-    izvor: 'lokalno',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/2105/zakon-o-vodnim-uslugama',
     lokalnaDatoteka: 'Zakon--o-vodnim-uslugama.pdf',
     opis: 'Obavljanje javne vodoopskrbe i javne odvodnje te institucionalni okvir pružatelja.'
   },
@@ -121,7 +125,7 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'ZG',
     podrucje: 'Gradnja, prostor i ozakonjenje',
     tip: 'Zakon',
-    nn: 'NN 153/13, 20/17, 39/19, 125/19',
+    nn: 'NN 155/25',
     izvor: 'zakon.hr',
     url: 'https://www.zakon.hr/z/690/zakon-o-gradnji',
     opis: 'Projektiranje, građenje, uporaba i održavanje građevina te građevinske dozvole.'
@@ -153,7 +157,7 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'OPZ',
     podrucje: 'Porezi i pristojbe',
     tip: 'Zakon',
-    nn: 'NN 115/16, 106/18, 121/19, 32/20, 42/20, 114/22',
+    nn: 'NN 115/16, 106/18, 121/19, 32/20, 42/20, 114/22, 152/24, 151/25',
     izvor: 'zakon.hr',
     url: 'https://www.zakon.hr/z/100/opci-porezni-zakon',
     opis: 'Temeljne odredbe poreznog postupka, zastara prava na utvrđivanje i naplatu te ovrha.'

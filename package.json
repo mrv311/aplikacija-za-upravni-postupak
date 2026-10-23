@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check-propisi": "npx tsx scripts/check-propisi-updates.ts",
+    "sync-propisi": "npx tsx scripts/check-propisi-updates.ts --fix",
     "postinstall": "node patch-pdf-parse.js"
   },
   "dependencies": {
