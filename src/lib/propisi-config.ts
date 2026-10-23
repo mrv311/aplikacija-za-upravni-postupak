@@ -131,9 +131,9 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'ZKG',
     podrucje: 'Gradnja, prostor i ozakonjenje',
     tip: 'Zakon',
-    nn: 'NN 68/18, 110/18, 32/20',
-    izvor: 'lokalno',
-    lokalnaDatoteka: 'Zakon-o-komunalnom-gospodarstvu_PROČIŠĆENI 2025.pdf',
+    nn: 'NN 68/18, 110/18, 32/20, 145/24',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/319/zakon-o-komunalnom-gospodarstvu',
     opis: 'Komunalne djelatnosti, komunalna naknada i komunalni doprinos jedinica lokalne samouprave.'
   },
   {
@@ -141,9 +141,9 @@ export const PROPISI_LIST: PropisDef[] = [
     kratica: 'ZPNIZ',
     podrucje: 'Gradnja, prostor i ozakonjenje',
     tip: 'Zakon',
-    nn: 'NN 86/12, 143/13, 65/17, 14/19',
-    izvor: 'lokalno',
-    lokalnaDatoteka: 'Zakon_o_postupanju_s_nezakonito_izgradenim_zgradama_2019.doc',
+    nn: 'NN 86/12, 143/13, 65/17, 14/19, 48/26',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/486/zakon-o-postupanju-s-nezakonito-izgradenim-zgradama',
     opis: 'Uvjeti i postupak ozakonjenja (legalizacije) zgrada te obračun vodnoga doprinosa.'
   },
 

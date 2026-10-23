@@ -117,16 +117,28 @@ async function parseFromZakonHr(url: string): Promise<ArticleExtracted[]> {
   const container = $('#pretrazitekst');
   const blocks = container.find('.cms-block');
   const articles: ArticleExtracted[] = [];
+  let currentSection = '';
 
   blocks.each((_, el) => {
     const titleEl = $(el).find('.cms-block-title-plain');
     const titleText = titleEl.text().trim();
 
+    if (titleText.toLowerCase().includes('prijelazne') || titleText.toLowerCase().includes('završne')) {
+      currentSection = titleText;
+    }
+
     // Tražimo "Članak X." ili "Članak Xa."
     const match = titleText.match(/^Članak\s+(\d+[a-z]?)\.?/i);
     if (!match) return;
 
-    const clanakBroj = `Članak ${match[1].toLowerCase()}.`;
+    let clanakBroj = `Članak ${match[1].toLowerCase()}.`;
+    if (currentSection) {
+      const nnMatch = currentSection.match(/NN\s+\d+\/\d+/i);
+      const tag = nnMatch ? ` (${nnMatch[0]})` : '';
+      if (articles.some((a) => a.clanak_broj === clanakBroj)) {
+        clanakBroj = `${clanakBroj} ${tag || '(Prijelazne odredbe)'}`;
+      }
+    }
 
     const clone = $(el).clone();
     clone.find('.cms-block-title-plain').remove();
