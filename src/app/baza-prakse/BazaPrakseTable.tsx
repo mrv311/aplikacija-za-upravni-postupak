@@ -55,7 +55,28 @@ const LOCATIONS: Record<string, string> = {
 
 function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
   const name = doc.naziv_datoteke;
-  const clean = name.replace(/\.(docx?|pdf|txt)$/i, '');
+  
+  // Izvuci kategoriju i godinu ako postoje u formatu [Kategorija - YYYY] ili [YYYY]
+  let podrucje = 'Opća upravna praksa';
+  let godina = 'Ostalo';
+  let cleanName = name;
+
+  const fullTagMatch = name.match(/^\[(.*?)\s*-\s*(\d{4})\]\s*/);
+  const yearOnlyMatch = name.match(/^\[(\d{4})\]\s*/);
+
+  if (fullTagMatch) {
+    podrucje = fullTagMatch[1].trim();
+    godina = fullTagMatch[2].trim();
+    cleanName = name.replace(/^\[.*?\]\s*/, '');
+  } else if (yearOnlyMatch) {
+    godina = yearOnlyMatch[1].trim();
+    podrucje = 'Vodni doprinos';
+    cleanName = name.replace(/^\[\d{4}\]\s*/, '');
+  } else if (name.toLowerCase().includes('vodn') || name.toLowerCase().includes('doprinos')) {
+    podrucje = 'Vodni doprinos';
+  }
+
+  const clean = cleanName.replace(/\.(docx?|pdf|txt)$/i, '');
   const lower = clean.toLowerCase();
 
   let ishod: ParsedPraksaDoc['ishod'] = 'Ostalo';
@@ -73,15 +94,11 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
     }
   }
 
-  let podrucje = 'Opća upravna praksa';
-  let godina = 'Ostalo';
   let stranka = clean;
   const tagovi: string[] = [];
 
-  // Provjera je li iz zbirke Vodni doprinos 2019 (format: XX-Stranka-Broj-...)
+  // Provjera formata npr: XX-Stranka-Broj-...
   if (/^\d{2}-/.test(clean)) {
-    podrucje = 'Vodni doprinos';
-    godina = '2019';
     const parts = clean.split('-').map((p) => p.trim());
     if (parts.length >= 2) {
       stranka = parts[1];
@@ -97,10 +114,6 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
       if (!isIshod && !isLoc && !isNumber && p.length > 2) {
         tagovi.push(p);
       }
-    }
-  } else {
-    if (lower.includes('vodn') || lower.includes('doprinos')) {
-      podrucje = 'Vodni doprinos';
     }
   }
 
@@ -121,15 +134,13 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   const [items, setItems] = useState<PraksaDoc[]>(documents);
   const [search, setSearch] = useState('');
   const [filterPodrucje, setFilterPodrucje] = useState('sve');
+  const [filterGodina, setFilterGodina] = useState('sve');
   const [filterIshod, setFilterIshod] = useState('sve');
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [, startTransition] = useTransition();
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    'Vodni doprinos - 2019': true,
-    'Opća upravna praksa - Ostalo': true,
-  });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const parsedDocs = useMemo(() => {
     return items.map(parseDocument);
@@ -138,6 +149,15 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   const podrucjaList = useMemo(() => {
     const set = new Set(parsedDocs.map((d) => d.podrucje));
     return Array.from(set).sort();
+  }, [parsedDocs]);
+
+  const godineList = useMemo(() => {
+    const set = new Set(parsedDocs.map((d) => d.godina));
+    return Array.from(set).sort((a, b) => {
+      if (a === 'Ostalo') return 1;
+      if (b === 'Ostalo') return -1;
+      return parseInt(b) - parseInt(a);
+    });
   }, [parsedDocs]);
 
   const filteredDocs = useMemo(() => {
@@ -157,6 +177,10 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         return false;
       }
 
+      if (filterGodina !== 'sve' && doc.godina !== filterGodina) {
+        return false;
+      }
+
       if (filterIshod !== 'sve') {
         if (filterIshod === 'ponisteno' && doc.ishod !== 'Poništeno rješenje') return false;
         if (filterIshod === 'odbijeno' && doc.ishod !== 'Odbijena žalba') return false;
@@ -164,7 +188,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
       return true;
     });
-  }, [parsedDocs, search, filterPodrucje, filterIshod]);
+  }, [parsedDocs, search, filterPodrucje, filterGodina, filterIshod]);
 
   const groupedDocs = useMemo(() => {
     const groups: Record<string, ParsedPraksaDoc[]> = {};
@@ -366,6 +390,19 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
               {podrucjaList.map((p) => (
                 <option key={p} value={p}>
                   {p}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filterGodina}
+              onChange={(e) => setFilterGodina(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            >
+              <option value="sve">Sve godine</option>
+              {godineList.map((g) => (
+                <option key={g} value={g}>
+                  {g === 'Ostalo' ? 'Ostalo' : `${g}.`}
                 </option>
               ))}
             </select>

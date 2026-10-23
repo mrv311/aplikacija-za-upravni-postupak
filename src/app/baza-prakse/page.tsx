@@ -4,10 +4,13 @@ import { BazaPrakseTable } from './BazaPrakseTable';
 export const revalidate = 0; // Onemogućava caching kako bi uvijek vidjeli najnovije podatke
 
 export default async function BazaPraksePage() {
-  // Dohvaćamo samo potrebne stupce kako bismo izbjegli povlačenje ogromnih vektora
+  // Dohvaćamo samo prvi dio (chunk_index: 0) svakog dokumenta
+  // kako bismo izbjegli povlačenje tisuća redaka i postigli maksimalnu brzinu
   const { data: chunks, error } = await supabase
     .from('praksa')
-    .select('naziv_datoteke, ukupno_chunkova');
+    .select('naziv_datoteke, ukupno_chunkova')
+    .eq('chunk_index', 0)
+    .range(0, 9999);
 
   // Grupiranje po nazivu datoteke koristeći Map
   const docMap = new Map<string, number>();

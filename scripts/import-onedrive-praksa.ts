@@ -27,8 +27,8 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const ExtractorClass = WordExtractor.default || WordExtractor;
 const extractor = new ExtractorClass();
 
-const DEFAULT_FOLDER =
-  'C:\\Users\\dmalbasa\\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\\P O S A O\\ŽALBE NA VODNE NAKNADE\\VODNI DOPRINOS\\2019';
+const DEFAULT_PARENT =
+  'C:\\Users\\dmalbasa\\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\\P O S A O\\ŽALBE NA VODNE NAKNADE\\VODNI DOPRINOS';
 
 const CHUNK_MAX_SIZE = 1400;
 const CHUNK_OVERLAP = 200;
@@ -36,18 +36,22 @@ const CHUNK_OVERLAP = 200;
 async function extractText(filePath: string): Promise<string> {
   const ext = path.extname(filePath).toLowerCase();
 
-  if (ext === '.doc') {
-    const doc = await extractor.extract(filePath);
-    return doc.getBody() || '';
-  } else if (ext === '.docx') {
-    const result = await mammoth.extractRawText({ path: filePath });
-    return result.value || '';
-  } else if (ext === '.pdf') {
-    const buffer = await fs.readFile(filePath);
-    const data = await pdfParse(buffer);
-    return data.text || '';
-  } else if (ext === '.txt') {
-    return await fs.readFile(filePath, 'utf-8');
+  try {
+    if (ext === '.doc') {
+      const doc = await extractor.extract(filePath);
+      return doc.getBody() || '';
+    } else if (ext === '.docx') {
+      const result = await mammoth.extractRawText({ path: filePath });
+      return result.value || '';
+    } else if (ext === '.pdf') {
+      const buffer = await fs.readFile(filePath);
+      const data = await pdfParse(buffer);
+      return data.text || '';
+    } else if (ext === '.txt') {
+      return await fs.readFile(filePath, 'utf-8');
+    }
+  } catch (err: any) {
+    console.error(`      ⚠️ Greška čitanja teksta: ${err.message}`);
   }
 
   return '';
@@ -99,105 +103,131 @@ async function getEmbedding(text: string): Promise<number[]> {
   return res.embedding.values;
 }
 
+async function processSingleFile(filePath: string, storedName: string): Promise<boolean> {
+  // Provjera postoji li već u bazi
+  const { data: existing } = await supabase
+    .from('praksa')
+    .select('id')
+    .eq('naziv_datoteke', storedName)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return false; // Već uvezeno
+  }
+
+  const rawText = await extractText(filePath);
+  if (!rawText || rawText.trim().length < 80) {
+    return false;
+  }
+
+  const chunks = chunkText(rawText);
+  let savedCount = 0;
+
+  for (let j = 0; j < chunks.length; j++) {
+    const chunk = chunks[j];
+    await delay(400); // 400ms delay
+
+    try {
+      const embedding = await getEmbedding(chunk);
+      const { error: insertErr } = await supabase.from('praksa').insert({
+        naziv_datoteke: storedName,
+        sadrzaj: chunk,
+        chunk_index: j,
+        ukupno_chunkova: chunks.length,
+        embedding: embedding,
+      });
+
+      if (!insertErr) {
+        savedCount++;
+      }
+    } catch (err: any) {
+      console.error(`      ❌ Greška embeddinga (chunk ${j + 1}): ${err.message}`);
+    }
+  }
+
+  return savedCount > 0;
+}
+
 async function main() {
-  const targetFolder = process.argv[2] || DEFAULT_FOLDER;
-  console.log('📂 Ciljna mapa za uvoz prakse:');
-  console.log(`   ${targetFolder}\n`);
+  const parentFolder = process.argv[2] || DEFAULT_PARENT;
+  
+  let categoryTag = 'Vodni doprinos';
+  if (process.argv[3]) {
+    categoryTag = process.argv[3];
+  } else if (/NAKNADA ZA URE[ĐD]ENJE VODA/i.test(parentFolder)) {
+    categoryTag = 'Naknada za uređenje voda';
+  } else if (/NAKNADA ZA KORI[ŠS]TENJE VODA/i.test(parentFolder)) {
+    categoryTag = 'Naknada za korištenje voda';
+  } else if (/NAKNADA ZA ZA[ŠS]TITU VODA/i.test(parentFolder)) {
+    categoryTag = 'Naknada za zaštitu voda';
+  }
+
+  console.log('📂 Glavna mapa za uvoz:');
+  console.log(`   ${parentFolder}`);
+  console.log(`🏷️  Kategorija / Područje: ${categoryTag}\n`);
 
   try {
-    await fs.access(targetFolder);
+    await fs.access(parentFolder);
   } catch {
-    console.error(`❌ Mapa ne postoji ili nije dostupna: ${targetFolder}`);
+    console.error(`❌ Mapa ne postoji ili nije dostupna: ${parentFolder}`);
     process.exit(1);
   }
 
-  const allFiles = await fs.readdir(targetFolder);
-  const files = allFiles.filter((f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$'));
+  const entries = await fs.readdir(parentFolder, { withFileTypes: true });
 
-  console.log(`📄 Pronađeno podržanih dokumenata: ${files.length}\n`);
+  // Filtriraj samo podmape čije je ime 4 znamenke (godina: 2006-2026), preskoči npr. "RJEŠENJA"
+  const yearFolders = entries
+    .filter((e) => e.isDirectory() && /^\d{4}$/.test(e.name))
+    .map((e) => e.name)
+    // Sortiraj od najnovijih prema starijim godinama (2026 -> 2006)
+    .sort((a, b) => parseInt(b) - parseInt(a));
 
-  if (files.length === 0) {
-    console.log('Nema dokumenata za obradu.');
-    return;
-  }
+  console.log(`📅 Pronađene mape godina (${yearFolders.length}):`);
+  console.log(`   ${yearFolders.join(', ')}\n`);
 
-  let totalDocsProcessed = 0;
-  let totalChunksInserted = 0;
-  let skippedDocs = 0;
+  let grandTotalDocs = 0;
+  let grandTotalSkipped = 0;
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const filePath = path.join(targetFolder, file);
+  for (const year of yearFolders) {
+    const folderPath = path.join(parentFolder, year);
+    const filesInFolder = await fs.readdir(folderPath);
+    const supportedFiles = filesInFolder.filter(
+      (f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$')
+    );
 
-    console.log(`[${i + 1}/${files.length}] 🔍 Provjeravam: ${file}`);
+    console.log(`====================================================`);
+    console.log(`📁 [${categoryTag}] Godina ${year} (${supportedFiles.length} spisa u mapi)...`);
 
-    // Provjera postoji li već u bazi
-    const { data: existing, error: checkErr } = await supabase
-      .from('praksa')
-      .select('id')
-      .eq('naziv_datoteke', file)
-      .limit(1);
+    let yearImported = 0;
+    let yearSkipped = 0;
 
-    if (checkErr) {
-      console.error(`   ⚠️ Greška provjere baze: ${checkErr.message}`);
-    } else if (existing && existing.length > 0) {
-      console.log(`   ⏭️ Već postoji u bazi, preskačem.`);
-      skippedDocs++;
-      continue;
+    for (let i = 0; i < supportedFiles.length; i++) {
+      const file = supportedFiles[i];
+      const filePath = path.join(folderPath, file);
+      // Format: [Naknada za uređenje voda - 2026] 01-Ministarstvo...
+      const storedName = `[${categoryTag} - ${year}] ${file}`;
+
+      process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 50)}... `);
+
+      const success = await processSingleFile(filePath, storedName);
+      if (success) {
+        process.stdout.write(`✅ Uvezeno\n`);
+        yearImported++;
+        grandTotalDocs++;
+      } else {
+        process.stdout.write(`⏭️ Preskočeno (već postoji ili nečitljivo)\n`);
+        yearSkipped++;
+        grandTotalSkipped++;
+      }
     }
 
-    try {
-      const rawText = await extractText(filePath);
-      if (!rawText || rawText.trim().length < 80) {
-        console.log(`   ⚠️ Tekst je prekratak ili prazan, preskačem.`);
-        continue;
-      }
-
-      const chunks = chunkText(rawText);
-      console.log(`   🧩 Ekstrahirano ${rawText.length} znakova, generirano ${chunks.length} chunkova.`);
-
-      let savedCount = 0;
-      for (let j = 0; j < chunks.length; j++) {
-        const chunk = chunks[j];
-
-        // Kratka pauza radi stabilnosti Gemini API rate limita
-        await delay(500);
-
-        try {
-          const embedding = await getEmbedding(chunk);
-
-          const { error: insertErr } = await supabase.from('praksa').insert({
-            naziv_datoteke: file,
-            sadrzaj: chunk,
-            chunk_index: j,
-            ukupno_chunkova: chunks.length,
-            embedding: embedding,
-          });
-
-          if (insertErr) {
-            console.error(`   ❌ Greška pri upisu chunka ${j + 1}: ${insertErr.message}`);
-          } else {
-            savedCount++;
-            totalChunksInserted++;
-            process.stdout.write(`\r   💾 Spremljeno: ${savedCount}/${chunks.length} chunkova...`);
-          }
-        } catch (embedErr: any) {
-          console.error(`\n   ❌ Greška pri kreiranju embeddinga za chunk ${j + 1}: ${embedErr.message}`);
-        }
-      }
-
-      console.log(`\n   ✅ Dokument uspješno uvezen (${savedCount}/${chunks.length} chunkova).\n`);
-      totalDocsProcessed++;
-    } catch (docErr: any) {
-      console.error(`   ❌ Greška pri obradi datoteke: ${docErr.message}\n`);
-    }
+    console.log(`✨ Godina ${year} dovršena: ${yearImported} uvezeno, ${yearSkipped} preskočeno.\n`);
   }
 
   console.log('====================================================');
-  console.log(`🎉 Uvoz završen!`);
-  console.log(`   Ukupno obrađeno novih dokumenata: ${totalDocsProcessed}`);
-  console.log(`   Ukupno spremljeno vektorskih dijelova (chunkova): ${totalChunksInserted}`);
-  console.log(`   Preskočeno (već postojalo u bazi): ${skippedDocs}`);
+  console.log(`🎉 UKUPAN UVOZ ZA [${categoryTag}] ZAVRŠEN!`);
+  console.log(`   Ukupno novo uvezeno rješenja: ${grandTotalDocs}`);
+  console.log(`   Ukupno preskočeno (već postojalo): ${grandTotalSkipped}`);
   console.log('====================================================');
 }
 
