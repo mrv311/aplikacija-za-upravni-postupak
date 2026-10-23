@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Search,
   FileText,
+  Folder,
   FolderOpen,
   ChevronDown,
   ChevronRight,
@@ -140,7 +141,8 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [, startTransition] = useTransition();
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [openPodrucja, setOpenPodrucja] = useState<Record<string, boolean>>({});
+  const [openGodine, setOpenGodine] = useState<Record<string, boolean>>({});
 
   const parsedDocs = useMemo(() => {
     return items.map(parseDocument);
@@ -190,30 +192,46 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
     });
   }, [parsedDocs, search, filterPodrucje, filterGodina, filterIshod]);
 
-  // Grupiranje po samom Području (Vodni doprinos, Naknada za uređenje voda...)
-  const groupedDocs = useMemo(() => {
-    const groups: Record<string, ParsedPraksaDoc[]> = {};
+  // Dvorazinsko grupiranje: Područje -> Godina -> Dokumenti
+  const nestedGroups = useMemo(() => {
+    const groups: Record<string, Record<string, ParsedPraksaDoc[]>> = {};
     for (const doc of filteredDocs) {
-      const key = doc.podrucje;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(doc);
+      const podrucje = doc.podrucje;
+      const godina = doc.godina;
+      if (!groups[podrucje]) groups[podrucje] = {};
+      if (!groups[podrucje][godina]) groups[podrucje][godina] = [];
+      groups[podrucje][godina].push(doc);
     }
     return groups;
   }, [filteredDocs]);
 
-  const toggleGroup = (key: string) => {
-    setOpenGroups((prev) => ({
+  const togglePodrucje = (podrucje: string) => {
+    setOpenPodrucja((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [podrucje]: !prev[podrucje],
+    }));
+  };
+
+  const toggleGodina = (yearKey: string) => {
+    setOpenGodine((prev) => ({
+      ...prev,
+      [yearKey]: !prev[yearKey],
     }));
   };
 
   const toggleAllGroups = (expand: boolean) => {
-    const updated: Record<string, boolean> = {};
-    Object.keys(groupedDocs).forEach((k) => {
-      updated[k] = expand;
+    const updatedPodrucja: Record<string, boolean> = {};
+    const updatedGodine: Record<string, boolean> = {};
+
+    Object.entries(nestedGroups).forEach(([podrucje, yearsMap]) => {
+      updatedPodrucja[podrucje] = expand;
+      Object.keys(yearsMap).forEach((godina) => {
+        updatedGodine[`${podrucje}:${godina}`] = expand;
+      });
     });
-    setOpenGroups(updated);
+
+    setOpenPodrucja(updatedPodrucja);
+    setOpenGodine(updatedGodine);
   };
 
   const totalChunks = useMemo(() => {
@@ -346,7 +364,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Teme i mape</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{Object.keys(groupedDocs).length}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{Object.keys(nestedGroups).length}</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <FolderOpen className="w-6 h-6" />
@@ -442,8 +460,8 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         </div>
       </div>
 
-      {/* Popis grupa (Harmonika / Accordion) */}
-      {Object.keys(groupedDocs).length === 0 ? (
+      {/* Popis grupa (Dvorazinska harmonika: Područje -> Godina -> Dokumenti) */}
+      {Object.keys(nestedGroups).length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-slate-800">Nema pronađenih spisa</h3>
@@ -453,58 +471,69 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {Object.entries(groupedDocs).map(([groupKey, docs]) => {
-            const isOpen = openGroups[groupKey] ?? false;
-            const isFolderDeleting = loadingAction === `folder:${groupKey}`;
+          {Object.entries(nestedGroups).map(([podrucje, yearsMap]) => {
+            const isPodrucjeOpen = !!openPodrucja[podrucje];
+            const allDocsInPodrucje = Object.values(yearsMap).flat();
+            const isPodrucjeDeleting = loadingAction === `folder:${podrucje}`;
+
+            const sortedYears = Object.keys(yearsMap).sort((a, b) => {
+              if (a === 'Ostalo') return 1;
+              if (b === 'Ostalo') return -1;
+              return parseInt(b) - parseInt(a);
+            });
 
             return (
               <div
-                key={groupKey}
+                key={podrucje}
                 className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden transition-all"
               >
-                {/* Zaglavlje grupe / mape */}
+                {/* RAZINA 1: Glavna tema / područje */}
                 <div
-                  onClick={() => toggleGroup(groupKey)}
-                  className="w-full px-6 py-4.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors flex items-center justify-between text-left border-b border-slate-200/70 cursor-pointer"
+                  onClick={() => togglePodrucje(podrucje)}
+                  className="w-full px-6 py-4.5 bg-slate-50/80 hover:bg-slate-100/90 transition-colors flex items-center justify-between text-left border-b border-slate-200/70 cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100/70 text-blue-700 flex items-center justify-center shrink-0">
-                      <FolderOpen className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 shadow-2xs">
+                      {isPodrucjeOpen ? (
+                        <FolderOpen className="w-5 h-5" />
+                      ) : (
+                        <Folder className="w-5 h-5" />
+                      )}
                     </div>
                     <div>
-                      <h2 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
-                        {groupKey}
+                      <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                        {podrucje}
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Zbirka upravnih rješenja i pravnih stavova
+                        Zbirka upravnih rješenja ({sortedYears.length} {sortedYears.length === 1 ? 'godište' : 'godišta'})
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
-                      {docs.length} {docs.length === 1 ? 'predmet' : 'predmeta'}
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                      {allDocsInPodrucje.length} {allDocsInPodrucje.length === 1 ? 'predmet' : 'predmeta'}
                     </span>
 
-                    {/* Gumb za brisanje cijele mape */}
+                    {/* Gumb za brisanje cijelog područja */}
                     <button
                       type="button"
-                      onClick={(e) => handleDeleteFolder(groupKey, docs, e)}
-                      disabled={isFolderDeleting}
-                      title="Ukloni cijelu mapu i sve njezine dokumente iz baze"
+                      onClick={(e) => handleDeleteFolder(podrucje, allDocsInPodrucje, e)}
+                      disabled={isPodrucjeDeleting}
+                      title={`Ukloni cijelo područje "${podrucje}" (${allDocsInPodrucje.length} spisa) iz baze`}
                       className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 rounded-lg transition-all shadow-2xs disabled:opacity-50 cursor-pointer ml-1"
                     >
-                      {isFolderDeleting ? (
+                      {isPodrucjeDeleting ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
                         <Trash2 className="w-3.5 h-3.5" />
                       )}
-                      <span className="hidden sm:inline">Obriši mapu</span>
+                      <span className="hidden sm:inline">Obriši područje</span>
                     </button>
 
                     <div className="text-slate-400 pl-1">
-                      {isOpen ? (
-                        <ChevronDown className="w-5 h-5" />
+                      {isPodrucjeOpen ? (
+                        <ChevronDown className="w-5 h-5 text-blue-600" />
                       ) : (
                         <ChevronRight className="w-5 h-5" />
                       )}
@@ -512,113 +541,174 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                   </div>
                 </div>
 
-                {/* Sadržaj grupe (Rasklopljene kartice rješenja) */}
-                {isOpen && (
-                  <div className="divide-y divide-slate-100">
-                    {docs.map((doc, idx) => {
-                      const isDeletingThis = loadingAction === doc.naziv_datoteke;
+                {/* RAZINA 2: Podmape po godinama (zatvorene po defaultu) */}
+                {isPodrucjeOpen && (
+                  <div className="p-4 bg-slate-50/40 space-y-3">
+                    {sortedYears.map((godina) => {
+                      const yearKey = `${podrucje}:${godina}`;
+                      const isYearOpen = !!openGodine[yearKey];
+                      const docsInYear = yearsMap[godina];
+                      const isYearDeleting = loadingAction === `folder:${yearKey}`;
+                      const yearTitle = godina === 'Ostalo' ? 'Ostalo / Neodređena godina' : `${godina}. godina`;
 
                       return (
                         <div
-                          key={idx}
-                          className="p-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                          key={godina}
+                          className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all"
                         >
-                          {/* Lijeva strana: Stranka, ishod, prigovori */}
-                          <div className="space-y-2 flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              {/* Ishod bedž */}
-                              {doc.ishod === 'Poništeno rješenje' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
-                                <RotateCcw className="w-3 h-3 text-amber-600" />
-                                Poništeno rješenje
+                          {/* Zaglavlje pojedine godine */}
+                          <div
+                            onClick={() => toggleGodina(yearKey)}
+                            className="w-full px-5 py-3 hover:bg-slate-50/80 transition-colors flex items-center justify-between text-left cursor-pointer select-none"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                {isYearOpen ? (
+                                  <FolderOpen className="w-4 h-4" />
+                                ) : (
+                                  <Folder className="w-4 h-4" />
+                                )}
+                              </div>
+                              <span className="font-semibold text-slate-800 text-sm">
+                                {yearTitle}
                               </span>
-                            )}
-                            {doc.ishod === 'Odbijena žalba' && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                Odbijena žalba
-                              </span>
-                            )}
+                            </div>
 
-                            {/* Godina rješenja */}
-                            {doc.godina && doc.godina !== 'Ostalo' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-800 text-slate-100 border border-slate-700/60 shadow-2xs">
-                                {doc.godina}.
+                            <div className="flex items-center gap-2.5">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                {docsInYear.length} {docsInYear.length === 1 ? 'predmet' : 'predmeta'}
                               </span>
-                            )}
 
-                            {/* Lokacija */}
-                            {doc.lokacija && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60">
-                                <MapPin className="w-3 h-3 text-slate-400" />
-                                {doc.lokacija}
-                              </span>
-                            )}
+                              {/* Gumb za brisanje određene godine */}
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteFolder(`${podrucje} - ${yearTitle}`, docsInYear, e)}
+                                disabled={isYearDeleting}
+                                title={`Ukloni godinu ${yearTitle} (${docsInYear.length} spisa) iz baze`}
+                                className="inline-flex items-center gap-1 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-md transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                {isYearDeleting ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                                ) : (
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                )}
+                              </button>
 
-                            {/* Stranka */}
-                            <h3 className="text-sm font-bold text-slate-900 truncate">
-                              {doc.stranka}
-                            </h3>
+                              <div className="text-slate-400">
+                                {isYearOpen ? (
+                                  <ChevronDown className="w-4 h-4 text-slate-700" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Pravni prigovori / tagovi */}
-                          {doc.tagovi.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                              {doc.tagovi.map((tag, tIdx) => (
-                                <span
-                                  key={tIdx}
-                                  className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50/70 text-blue-700 border border-blue-100/80"
-                                >
-                                  <Tag className="w-2.5 h-2.5 text-blue-400" />
-                                  {tag}
-                                </span>
-                              ))}
+                          {/* RAZINA 3: Popis spisa unutar odabrane godine */}
+                          {isYearOpen && (
+                            <div className="border-t border-slate-100 divide-y divide-slate-100 bg-white">
+                              {docsInYear.map((doc, idx) => {
+                                const isDeletingThis = loadingAction === doc.naziv_datoteke;
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="p-4 sm:px-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 group"
+                                  >
+                                    {/* Lijeva strana: Stranka, ishod, prigovori */}
+                                    <div className="space-y-1.5 flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        {/* Ishod bedž */}
+                                        {doc.ishod === 'Poništeno rješenje' && (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+                                            <RotateCcw className="w-3 h-3 text-amber-600" />
+                                            Poništeno rješenje
+                                          </span>
+                                        )}
+                                        {doc.ishod === 'Odbijena žalba' && (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                            Odbijena žalba
+                                          </span>
+                                        )}
+
+                                        {/* Lokacija */}
+                                        {doc.lokacija && (
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60">
+                                            <MapPin className="w-3 h-3 text-slate-400" />
+                                            {doc.lokacija}
+                                          </span>
+                                        )}
+
+                                        {/* Stranka */}
+                                        <h3 className="text-sm font-bold text-slate-900 truncate">
+                                          {doc.stranka}
+                                        </h3>
+                                      </div>
+
+                                      {/* Pravni prigovori / tagovi */}
+                                      {doc.tagovi.length > 0 && (
+                                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                          {doc.tagovi.map((tag, tIdx) => (
+                                            <span
+                                              key={tIdx}
+                                              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50/70 text-blue-700 border border-blue-100/80"
+                                            >
+                                              <Tag className="w-2.5 h-2.5 text-blue-400" />
+                                              {tag}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      {/* Izvorni naziv datoteke */}
+                                      <div className="flex items-center gap-2 text-xs text-slate-400 font-mono truncate">
+                                        <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                        <span className="truncate">{doc.naziv_datoteke}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Desna strana: Broj RAG chunkova + Gumb za brisanje */}
+                                    <div className="shrink-0 flex items-center justify-end gap-2.5">
+                                      <span
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/70"
+                                        title="Broj indeksiranih vektorskih dijelova dostupnih AI asistentu"
+                                      >
+                                        <Layers className="w-3.5 h-3.5 text-slate-400" />
+                                        <span>
+                                          {doc.ukupno_chunkova} {doc.ukupno_chunkova === 1 ? 'dio' : 'dijelova'}
+                                        </span>
+                                      </span>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteDoc(doc)}
+                                        disabled={isDeletingThis}
+                                        title="Trajno ukloni ovaj spis iz baze prakse"
+                                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                      >
+                                        {isDeletingThis ? (
+                                          <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                                        ) : (
+                                          <Trash2 className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
-
-                          {/* Izvorni naziv datoteke */}
-                          <div className="flex items-center gap-2 text-xs text-slate-400 font-mono truncate">
-                            <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                            <span className="truncate">{doc.naziv_datoteke}</span>
-                          </div>
                         </div>
-
-                        {/* Desna strana: Broj RAG chunkova + Gumb za brisanje */}
-                        <div className="shrink-0 flex items-center justify-end gap-2.5">
-                          <span
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/70"
-                            title="Broj indeksiranih vektorskih dijelova dostupnih AI asistentu"
-                          >
-                            <Layers className="w-3.5 h-3.5 text-slate-400" />
-                            <span>
-                              {doc.ukupno_chunkova} {doc.ukupno_chunkova === 1 ? 'dio' : 'dijelova'}
-                            </span>
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteDoc(doc)}
-                            disabled={isDeletingThis}
-                            title="Trajno ukloni ovaj spis iz baze prakse"
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-                          >
-                            {isDeletingThis ? (
-                              <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    )}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
   </div>
 );
 }
