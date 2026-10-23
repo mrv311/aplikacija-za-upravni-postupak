@@ -194,46 +194,80 @@ async function importCategory(parentFolder: string, categoryTag: string) {
     // Sortiraj od najnovijih prema starijim godinama (2026 -> 2006)
     .sort((a, b) => parseInt(b) - parseInt(a));
 
-  console.log(`📅 Pronađene mape godina (${yearFolders.length}):`);
-  console.log(`   ${yearFolders.join(', ')}\n`);
-
   let grandTotalDocs = 0;
   let grandTotalSkipped = 0;
 
-  for (const year of yearFolders) {
-    const folderPath = path.join(parentFolder, year);
-    const filesInFolder = await fs.readdir(folderPath);
-    const supportedFiles = filesInFolder.filter(
-      (f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$')
-    );
+  if (yearFolders.length > 0) {
+    console.log(`📅 Pronađene mape godina (${yearFolders.length}):`);
+    console.log(`   ${yearFolders.join(', ')}\n`);
 
-    console.log(`----------------------------------------------------`);
-    console.log(`📁 [${categoryTag}] Godina ${year} (${supportedFiles.length} spisa u mapi)...`);
+    for (const year of yearFolders) {
+      const folderPath = path.join(parentFolder, year);
+      const filesInFolder = await fs.readdir(folderPath);
+      const supportedFiles = filesInFolder.filter(
+        (f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$')
+      );
 
-    let yearImported = 0;
-    let yearSkipped = 0;
+      console.log(`----------------------------------------------------`);
+      console.log(`📁 [${categoryTag}] Godina ${year} (${supportedFiles.length} spisa u mapi)...`);
 
-    for (let i = 0; i < supportedFiles.length; i++) {
-      const file = supportedFiles[i];
-      const filePath = path.join(folderPath, file);
-      // Format: [Naknada za uređenje voda - 2026] 01-Ministarstvo...
-      const storedName = `[${categoryTag} - ${year}] ${file}`;
+      let yearImported = 0;
+      let yearSkipped = 0;
 
-      process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 48)}... `);
+      for (let i = 0; i < supportedFiles.length; i++) {
+        const file = supportedFiles[i];
+        const filePath = path.join(folderPath, file);
+        // Format: [Naknada za uređenje voda - 2026] 01-Ministarstvo...
+        const storedName = `[${categoryTag} - ${year}] ${file}`;
+
+        process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 48)}... `);
+
+        const success = await processSingleFile(filePath, storedName);
+        if (success) {
+          process.stdout.write(`✅ Uvezeno\n`);
+          yearImported++;
+          grandTotalDocs++;
+        } else {
+          process.stdout.write(`⏭️ Preskočeno\n`);
+          yearSkipped++;
+          grandTotalSkipped++;
+        }
+      }
+
+      console.log(`✨ Godina ${year} dovršena: ${yearImported} uvezeno, ${yearSkipped} preskočeno.\n`);
+    }
+  } else {
+    // Slučaj kada su datoteke izravno u mapi bez godišnjih podmapa (npr. Naknada za korištenje voda)
+    const directFiles = entries
+      .filter((e) => e.isFile() && /\.(doc|docx|pdf|txt)$/i.test(e.name) && !e.name.startsWith('~$'))
+      .map((e) => e.name);
+
+    console.log(`📄 Pronađeno spisa izravno u mapi: ${directFiles.length}\n`);
+
+    for (let i = 0; i < directFiles.length; i++) {
+      const file = directFiles[i];
+      const filePath = path.join(parentFolder, file);
+
+      // Ekstrakcija godine iz naziva datoteke ili vremena zadnje izmjene
+      const yearMatch = file.match(/(19\d\d|20\d\d)/);
+      let fileYear = yearMatch ? yearMatch[1] : '';
+      if (!fileYear) {
+        const stat = await fs.stat(filePath);
+        fileYear = stat.mtime.getFullYear().toString();
+      }
+
+      const storedName = `[${categoryTag} - ${fileYear}] ${file}`;
+      process.stdout.write(`   [${i + 1}/${directFiles.length}] [${fileYear}] ${file.substring(0, 44)}... `);
 
       const success = await processSingleFile(filePath, storedName);
       if (success) {
         process.stdout.write(`✅ Uvezeno\n`);
-        yearImported++;
         grandTotalDocs++;
       } else {
         process.stdout.write(`⏭️ Preskočeno\n`);
-        yearSkipped++;
         grandTotalSkipped++;
       }
     }
-
-    console.log(`✨ Godina ${year} dovršena: ${yearImported} uvezeno, ${yearSkipped} preskočeno.\n`);
   }
 
   console.log('====================================================');
@@ -251,6 +285,7 @@ async function main() {
     if (!tag) {
       if (/NAKNADA ZA URE[ĐD]ENJE VODA/i.test(customArg)) tag = 'Naknada za uređenje voda';
       else if (/NAKNADA ZA ZA[ŠS]TITU VODA/i.test(customArg)) tag = 'Naknada za zaštitu voda';
+      else if (/NAKNADA ZA KORI[ŠS]TENJE VODA/i.test(customArg)) tag = 'Naknada za korištenje voda';
       else if (/VODNI DOPRINOS/i.test(customArg)) tag = 'Vodni doprinos';
       else tag = 'Opća upravna praksa';
     }
@@ -272,6 +307,10 @@ async function main() {
   // 2. Naknada za zaštitu voda (od 2026 do 2019)
   const zastitaDir = path.join(baseDir, 'NAKNADA ZA ZAŠTITU VODA');
   await importCategory(zastitaDir, 'Naknada za zaštitu voda');
+
+  // 3. Naknada za korištenje voda
+  const koristenjeDir = path.join(baseDir, 'NAKNADA ZA KORIŠTENJE VODA');
+  await importCategory(koristenjeDir, 'Naknada za korištenje voda');
 }
 
 main().catch(console.error);
