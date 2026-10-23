@@ -16,8 +16,20 @@ const EMBEDDING_MODEL = 'gemini-embedding-001';
 
 // Kratice koje se često koriste u rješenjima i presudama
 const KRATICE_ZAKONA: Record<string, RegExp> = {
-  'Zakon o općem upravnom postupku': /\bZUP\w*\b/,
-  'Zakon o upravnim sporovima': /\bZUS\w*\b/,
+  'Zakon o općem upravnom postupku': /\bZUP\w*\b/i,
+  'Zakon o upravnim sporovima': /\bZUS\w*\b/i,
+  'Zakon o vodama': /\bZOV\w*\b/i,
+  'Zakon o financiranju vodnoga gospodarstva': /\bZFVG\w*\b/i,
+  'Zakon o vodnim uslugama': /\bZVU\w*\b/i,
+  'Opći porezni zakon': /\bOPZ\w*\b/i,
+  'Zakon o gradnji': /\bZG\w*\b/i,
+  'Zakon o komunalnom gospodarstvu': /\bZKG\w*\b/i,
+  'Zakon o postupanju s nezakonito izgrađenim zgradama': /\bZPNIZ\w*\b/i,
+  'Uredba o visini naknade za uređenje voda': /\bU-?NUV\w*\b/i,
+  'Pravilnik o obračunu i naplati naknade za uređenje voda': /\bP-?NUV\w*\b/i,
+  'Uredba o visini naknade za zaštitu voda': /\bU-?NZZV\w*\b/i,
+  'Uredba o uredskom poslovanju': /\bUUP\w*\b/i,
+  'Uredba o Tarifi upravnih pristojbi': /\bUTUP\w*\b/i,
 };
 
 export type ZakonClanak = {
@@ -70,7 +82,7 @@ async function embedQuery(text: string, dimensions: number): Promise<number[]> {
 
 /** Iz naziva zakona ("Zakon o općem upravnom postupku") izvuče dio koji se ne deklinira ("općem upravnom postupku"). */
 function zakonTail(naziv: string): string {
-  return naziv.replace(/^zakon\s+o\s+/i, '').toLowerCase();
+  return naziv.replace(/^(?:zakon|uredba|pravilnik)\s+o\s+/i, '').toLowerCase();
 }
 
 function detectZakon(text: string, nazivi: string[]): string | null {

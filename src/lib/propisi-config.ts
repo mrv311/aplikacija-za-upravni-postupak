@@ -1,0 +1,165 @@
+export interface PropisDef {
+  naziv: string;
+  kratica: string;
+  podrucje: 'Opći upravni propisi' | 'Vodno pravo i naknade' | 'Gradnja, prostor i ozakonjenje' | 'Porezi i pristojbe';
+  tip: 'Zakon' | 'Uredba' | 'Pravilnik';
+  nn: string;
+  izvor: 'zakon.hr' | 'lokalno';
+  url?: string;
+  lokalnaDatoteka?: string;
+  opis?: string;
+}
+
+export const PROPISI_LIST: PropisDef[] = [
+  // 1. OPĆI UPRAVNI PROPISI
+  {
+    naziv: 'Zakon o općem upravnom postupku',
+    kratica: 'ZUP',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Zakon',
+    nn: 'NN 47/09, 110/21',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/65/zakon-o-opcem-upravnom-postupku',
+    opis: 'Temeljni zakon kojim se uređuje postupanje javnopravnih tijela u rješavanju upravnih stvari.'
+  },
+  {
+    naziv: 'Zakon o upravnim sporovima',
+    kratica: 'ZUS',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Zakon',
+    nn: 'NN 20/10, 143/12, 152/14, 94/16, 29/17, 110/21, 36/24',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'ZUS - PROČIŠĆENI - NOVO.pdf',
+    opis: 'Zakon o sudskoj zaštiti prava građana i pravnih osoba protiv pojedinačnih odluka upravnih tijela.'
+  },
+  {
+    naziv: 'Uredba o uredskom poslovanju',
+    kratica: 'UUP',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Uredba',
+    nn: 'NN 75/21',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Uredba o uredskom poslovanju NN 75_2021.docx',
+    opis: 'Pravila evidentiranja, primanja, raspoređivanja i otpreme akata u tijelima državne uprave.'
+  },
+  {
+    naziv: 'Uredba o Tarifi upravnih pristojbi',
+    kratica: 'UTUP',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Uredba',
+    nn: 'NN 92/21, 93/21, 95/21, 156/22',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Uredba o Tarifi upravnih pristojbi_od 1-9-2021.pdf',
+    opis: 'Pristojbene tarife za podneske, rješenja i žalbe u upravnim postupcima.'
+  },
+
+  // 2. VODNO PRAVO I NAKNADE
+  {
+    naziv: 'Zakon o vodama',
+    kratica: 'ZOV',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Zakon',
+    nn: 'NN 66/19, 84/21, 47/23',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/124/zakon-o-vodama',
+    opis: 'Uređuje pravni status voda, vodnog dobra i vodnih građevina te upravljanje vodama.'
+  },
+  {
+    naziv: 'Zakon o financiranju vodnoga gospodarstva',
+    kratica: 'ZFVG',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Zakon',
+    nn: 'NN 153/09, 90/11, 56/13, 154/14, 119/15, 120/16, 127/17, 66/19, 36/24',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/238/zakon-o-financiranju-vodnoga-gospodarstva',
+    opis: 'Izvori financiranja vodnoga gospodarstva, vodne naknade, obveznici, osnovice i obračun.'
+  },
+  {
+    naziv: 'Zakon o vodnim uslugama',
+    kratica: 'ZVU',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Zakon',
+    nn: 'NN 66/19',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Zakon--o-vodnim-uslugama.pdf',
+    opis: 'Obavljanje javne vodoopskrbe i javne odvodnje te institucionalni okvir pružatelja.'
+  },
+  {
+    naziv: 'Uredba o visini naknade za uređenje voda',
+    kratica: 'U-NUV',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Uredba',
+    nn: 'NN 82/10, 108/13',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Uredba o visini naknade za uređenje voda - pročišćeni tekst - 82_10 i 108_13.pdf',
+    opis: 'Visina, korekcijski koeficijenti i zone za obračun naknade za uređenje voda.'
+  },
+  {
+    naziv: 'Pravilnik o obračunu i naplati naknade za uređenje voda',
+    kratica: 'P-NUV',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Pravilnik',
+    nn: 'NN 83/10, 126/13',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Pravilnik o obračunu i naplati naknade za uređenje voda - pročišćeni tekst - 83_10 i 126_13.pdf',
+    opis: 'Postupak obračuna, dostava podataka iz komunalnih evidencija i naplata NUV-a.'
+  },
+  {
+    naziv: 'Uredba o visini naknade za zaštitu voda',
+    kratica: 'U-NZZV',
+    podrucje: 'Vodno pravo i naknade',
+    tip: 'Uredba',
+    nn: 'NN 82/10, 83/12, 151/13, 116/18, 33/24',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Uredba-o-visini-naknade-za-zaštitu-voda.pdf',
+    opis: 'Visina naknade za zaštitu voda i korekcijski koeficijenti prema onečišćenju.'
+  },
+
+  // 3. GRADNJA, PROSTOR I OZAKONJENJE
+  {
+    naziv: 'Zakon o gradnji',
+    kratica: 'ZG',
+    podrucje: 'Gradnja, prostor i ozakonjenje',
+    tip: 'Zakon',
+    nn: 'NN 153/13, 20/17, 39/19, 125/19',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/690/zakon-o-gradnji',
+    opis: 'Projektiranje, građenje, uporaba i održavanje građevina te građevinske dozvole.'
+  },
+  {
+    naziv: 'Zakon o komunalnom gospodarstvu',
+    kratica: 'ZKG',
+    podrucje: 'Gradnja, prostor i ozakonjenje',
+    tip: 'Zakon',
+    nn: 'NN 68/18, 110/18, 32/20',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Zakon-o-komunalnom-gospodarstvu_PROČIŠĆENI 2025.pdf',
+    opis: 'Komunalne djelatnosti, komunalna naknada i komunalni doprinos jedinica lokalne samouprave.'
+  },
+  {
+    naziv: 'Zakon o postupanju s nezakonito izgrađenim zgradama',
+    kratica: 'ZPNIZ',
+    podrucje: 'Gradnja, prostor i ozakonjenje',
+    tip: 'Zakon',
+    nn: 'NN 86/12, 143/13, 65/17, 14/19',
+    izvor: 'lokalno',
+    lokalnaDatoteka: 'Zakon_o_postupanju_s_nezakonito_izgradenim_zgradama_2019.doc',
+    opis: 'Uvjeti i postupak ozakonjenja (legalizacije) zgrada te obračun vodnoga doprinosa.'
+  },
+
+  // 4. POREZI I PRISTOJBE
+  {
+    naziv: 'Opći porezni zakon',
+    kratica: 'OPZ',
+    podrucje: 'Porezi i pristojbe',
+    tip: 'Zakon',
+    nn: 'NN 115/16, 106/18, 121/19, 32/20, 42/20, 114/22',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/100/opci-porezni-zakon',
+    opis: 'Temeljne odredbe poreznog postupka, zastara prava na utvrđivanje i naplatu te ovrha.'
+  }
+];
+
+export const PROPISI_MAP: Record<string, PropisDef> = Object.fromEntries(
+  PROPISI_LIST.map((p) => [p.naziv, p])
+);
