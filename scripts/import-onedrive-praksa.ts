@@ -334,7 +334,6 @@ async function importSudskaPraksa(courtDir: string) {
     const file = allFiles[i];
     process.stdout.write(`   [${i + 1}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
 
-    // Ekstrakcija teksta
     let rawText = await extractText(file.fullPath);
     if (!rawText || rawText.trim().length < 80) {
       if (file.name.toLowerCase().endsWith('.pdf')) {
@@ -349,7 +348,6 @@ async function importSudskaPraksa(courtDir: string) {
       continue;
     }
 
-    // Kategorizacija u podmapu naknade i detekcija godine
     const subkategorija = categorizeCourtDecision(file.name, rawText.substring(0, 3500));
     const yearMatch = file.name.match(/(19\d\d|20\d\d)/);
     const courtYear = yearMatch ? yearMatch[1] : 'Presude';
@@ -378,6 +376,15 @@ async function importSudskaPraksa(courtDir: string) {
   console.log(`   Ukupno novo uvezeno sudskih odluka: ${grandTotalDocs}`);
   console.log(`   Ukupno preskočeno: ${grandTotalSkipped}`);
   console.log('====================================================\n');
+}
+
+function detectCategoryTag(folderName: string): string {
+  if (/NAKNADA ZA URE[ĐD]ENJE VODA|NUV/i.test(folderName)) return 'Naknada za uređenje voda';
+  if (/NAKNADA ZA ZA[ŠS]TITU VODA|NZZV/i.test(folderName)) return 'Naknada za zaštitu voda';
+  if (/NAKNADA ZA KORI[ŠS]TENJE VODA|NZKV/i.test(folderName)) return 'Naknada za korištenje voda';
+  if (/VODNI DOPRINOS|VD/i.test(folderName)) return 'Vodni doprinos';
+  if (/SUDSK|PRESUDE|UPRAVNI SPOR/i.test(folderName)) return 'Praksa upravnih sudova';
+  return folderName;
 }
 
 async function importCategory(parentFolder: string, categoryTag: string) {
@@ -481,24 +488,42 @@ async function importCategory(parentFolder: string, categoryTag: string) {
 async function main() {
   const customArg = process.argv[2];
 
-  if (customArg) {
+  if (customArg && customArg !== '--sve' && customArg !== '--all') {
     if (/presude_scan/i.test(customArg) || /upravni sporovi/i.test(customArg) || /sudsk/i.test(customArg)) {
       await importSudskaPraksa(customArg);
       return;
     }
 
-    if (customArg !== '--sve' && customArg !== '--all') {
-      let tag = process.argv[3];
-      if (!tag) {
-        if (/NAKNADA ZA URE[ĐD]ENJE VODA/i.test(customArg)) tag = 'Naknada za uređenje voda';
-        else if (/NAKNADA ZA ZA[ŠS]TITU VODA/i.test(customArg)) tag = 'Naknada za zaštitu voda';
-        else if (/NAKNADA ZA KORI[ŠS]TENJE VODA/i.test(customArg)) tag = 'Naknada za korištenje voda';
-        else if (/VODNI DOPRINOS/i.test(customArg)) tag = 'Vodni doprinos';
-        else tag = 'Opća upravna praksa';
+    try {
+      const entries = await fs.readdir(customArg, { withFileTypes: true });
+      const subdirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+
+      // Ako je to master mapa (npr. "za aplikaciju") koja sadrži podmape za naknade
+      const isMasterFolder = subdirs.some((d) =>
+        /naknada|vodni|ure[đd]enj|za[šs]tit|kori[šs]tenj|sudsk/i.test(d)
+      );
+
+      if (isMasterFolder) {
+        console.log(`\n📂 Detektirana glavna mapa s podmapama naknada: ${customArg}`);
+        for (const sub of subdirs) {
+          const subPath = path.join(customArg, sub);
+          if (/sudsk|presud/i.test(sub)) {
+            await importSudskaPraksa(subPath);
+          } else {
+            const tag = detectCategoryTag(sub);
+            await importCategory(subPath, tag);
+          }
+        }
+        return;
       }
-      await importCategory(customArg, tag);
-      return;
+    } catch (e: any) {
+      console.warn(`Napomena pri provjeri mape: ${e.message}`);
     }
+
+    // Inače je to izravna mapa jedne naknade
+    let tag = process.argv[3] || detectCategoryTag(path.basename(customArg));
+    await importCategory(customArg, tag);
+    return;
   }
 
   const baseDir = path.join(
