@@ -1,11 +1,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+if (typeof (process as any).loadEnvFile === 'function') {
+  try {
+    (process as any).loadEnvFile('.env.local');
+  } catch {}
+}
+
 const GEMINI_API_KEY =
   process.env.GOOGLE_GEMINI_KEY ||
   process.env.GOOGLE_API_KEY ||
   process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || '');
 
 export interface AnonymizedResult {
   anonymizedText: string;
@@ -65,10 +71,24 @@ Izvorni naziv datoteke: "${originalFileName}"
 Tekst za anonimizaciju:
 ${sanitized.substring(0, 45000)}`;
 
-  try {
-    const res = await model.generateContent(prompt);
-    const parsed = JSON.parse(res.response.text());
+  let parsed: any = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await model.generateContent(prompt);
+      parsed = JSON.parse(res.response.text());
+      break;
+    } catch (err: any) {
+      if (err.message?.includes('429') && attempt < 3) {
+        await new Promise((r) => setTimeout(r, 3500));
+        continue;
+      }
+      if (attempt === 3) {
+        console.warn(`      ⚠️ Greška AI anonimizacije (${err.message}), koristim regex fallback.`);
+      }
+    }
+  }
 
+  if (parsed) {
     const anonymizedParty = (parsed.anonymizedParty || 'Anonimna stranka').trim();
     const location = (parsed.location || '').trim();
     const ishod = (parsed.ishod as AnonymizedResult['ishod']) || 'Ostalo';
@@ -87,15 +107,14 @@ ${sanitized.substring(0, 45000)}`;
       ishod,
       storedName,
     };
-  } catch (err: any) {
-    console.warn(`      ⚠️ Greška AI anonimizacije (${err.message}), koristim regex fallback.`);
-    const fileId = String(fileIndex).padStart(2, '0');
-    return {
-      anonymizedText: sanitized,
-      anonymizedParty: 'Anonimna stranka',
-      location: '',
-      ishod: 'Ostalo',
-      storedName: `[${categoryTag} - ${year}] Anonimna stranka (#${fileId})`,
-    };
   }
+
+  const fileId = String(fileIndex).padStart(2, '0');
+  return {
+    anonymizedText: sanitized,
+    anonymizedParty: 'Anonimna stranka',
+    location: '',
+    ishod: 'Ostalo',
+    storedName: `[${categoryTag} - ${year}] Anonimna stranka (#${fileId})`,
+  };
 }

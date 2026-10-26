@@ -8,6 +8,12 @@ import mammoth from 'mammoth';
 import WordExtractor from 'word-extractor';
 import { anonymizeDocument } from './anonymizer';
 
+if (typeof (process as any).loadEnvFile === 'function') {
+  try {
+    (process as any).loadEnvFile('.env.local');
+  } catch {}
+}
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -379,10 +385,10 @@ async function importSudskaPraksa(courtDir: string) {
 }
 
 function detectCategoryTag(folderName: string): string {
-  if (/NAKNADA ZA URE[ĐD]ENJE VODA|NUV/i.test(folderName)) return 'Naknada za uređenje voda';
-  if (/NAKNADA ZA ZA[ŠS]TITU VODA|NZZV/i.test(folderName)) return 'Naknada za zaštitu voda';
-  if (/NAKNADA ZA KORI[ŠS]TENJE VODA|NZKV/i.test(folderName)) return 'Naknada za korištenje voda';
-  if (/VODNI DOPRINOS|VD/i.test(folderName)) return 'Vodni doprinos';
+  if (/NAKNADA ZA URE[ĐD]ENJE VODA|\bNUV\b/i.test(folderName)) return 'Naknada za uređenje voda';
+  if (/NAKNADA ZA ZA[ŠS]TITU VODA|\bNZZV\b/i.test(folderName)) return 'Naknada za zaštitu voda';
+  if (/NAKNADA ZA KORI[ŠS]TENJE VODA|\bNZKV\b/i.test(folderName)) return 'Naknada za korištenje voda';
+  if (/VODNI DOPRINOS|\bVD\b/i.test(folderName)) return 'Vodni doprinos';
   if (/SUDSK|PRESUDE|UPRAVNI SPOR/i.test(folderName)) return 'Praksa upravnih sudova';
   return folderName;
 }
@@ -500,14 +506,14 @@ async function main() {
 
       // Ako je to master mapa (npr. "za aplikaciju") koja sadrži podmape za naknade
       const isMasterFolder = subdirs.some((d) =>
-        /naknada|vodni|ure[đd]enj|za[šs]tit|kori[šs]tenj|sudsk/i.test(d)
+        /naknada|vodni|ure[đd]enj|za[šs]tit|kori[šs]tenj|sudsk|presud|upravni spor|\bnuv\b|\bvd\b|\bnzzv\b|\bnzkv\b/i.test(d)
       );
 
       if (isMasterFolder) {
         console.log(`\n📂 Detektirana glavna mapa s podmapama naknada: ${customArg}`);
         for (const sub of subdirs) {
           const subPath = path.join(customArg, sub);
-          if (/sudsk|presud/i.test(sub)) {
+          if (/sudsk|presud|upravni spor/i.test(sub)) {
             await importSudskaPraksa(subPath);
           } else {
             const tag = detectCategoryTag(sub);
