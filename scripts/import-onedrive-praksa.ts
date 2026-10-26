@@ -1,6 +1,3 @@
-import { loadEnvConfig } from '@next/env';
-loadEnvConfig(process.cwd());
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import path from 'path';
@@ -9,6 +6,7 @@ import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 // @ts-ignore
 import WordExtractor from 'word-extractor';
+import { anonymizeDocument } from './anonymizer';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY =
@@ -37,14 +35,6 @@ const ExtractorClass = WordExtractor.default || WordExtractor;
 const extractor = new ExtractorClass();
 
 const USER_PROFILE = process.env.USERPROFILE || 'C:\\Users\\dinom';
-const DEFAULT_PARENT = path.join(
-  USER_PROFILE,
-  'OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije',
-  'P O S A O',
-  'ŽALBE NA VODNE NAKNADE',
-  'VODNI DOPRINOS'
-);
-
 const CHUNK_MAX_SIZE = 1400;
 const CHUNK_OVERLAP = 200;
 
@@ -100,7 +90,6 @@ function categorizeCourtDecision(fileName: string, textSnippet: string): string 
   const f = fileName.toLowerCase();
   const t = textSnippet.toLowerCase();
 
-  // 1. Naziv datoteke
   if (
     /\bvd\b/i.test(f) ||
     f.includes('-vd') ||
@@ -153,7 +142,6 @@ function categorizeCourtDecision(fileName: string, textSnippet: string): string 
     return 'Naknada za koncesiju';
   }
 
-  // 2. Pretraga u tekstu odluke (prvih 3500 znakova)
   if (
     t.includes('vodnoga doprinosa') ||
     t.includes('vodnog doprinosa') ||
@@ -249,7 +237,26 @@ async function getEmbedding(text: string, retries = 3): Promise<number[]> {
   return [];
 }
 
-async function processSingleFile(filePath: string, storedName: string, preExtractedText?: string): Promise<boolean> {
+async function processSingleFile(
+  filePath: string,
+  categoryTag: string,
+  year: string,
+  fileIndex: number,
+  preExtractedText?: string
+): Promise<boolean> {
+  const originalFileName = path.basename(filePath);
+  const rawText = preExtractedText || (await extractText(filePath));
+  if (!rawText || rawText.trim().length < 80) {
+    return false;
+  }
+
+  // 1. GDPR Anonimizacija (fizičke i pravne osobe SAMO prva slova/inicijali, OIB -> [OIB], adrese -> [Adresa])
+  process.stdout.write(`(Anonimizacija... `);
+  const anon = await anonymizeDocument(rawText, originalFileName, categoryTag, year, fileIndex);
+  process.stdout.write(`${anon.anonymizedParty}) `);
+
+  const storedName = anon.storedName;
+
   // Provjera postoji li već u bazi
   const { data: existing } = await supabase
     .from('praksa')
@@ -261,12 +268,7 @@ async function processSingleFile(filePath: string, storedName: string, preExtrac
     return false; // Već uvezeno
   }
 
-  const rawText = preExtractedText || (await extractText(filePath));
-  if (!rawText || rawText.trim().length < 80) {
-    return false;
-  }
-
-  const chunks = chunkText(rawText);
+  const chunks = chunkText(anon.anonymizedText);
   let savedCount = 0;
 
   for (let j = 0; j < chunks.length; j++) {
@@ -296,7 +298,7 @@ async function processSingleFile(filePath: string, storedName: string, preExtrac
 
 async function importSudskaPraksa(courtDir: string) {
   console.log('\n====================================================');
-  console.log('⚖️  UVOZ SUDSKE PRAKSE:');
+  console.log('⚖️  UVOZ SUDSKE PRAKSE (S AUTOMATSKOM ANONIMIZACIJOM):');
   console.log(`   ${courtDir}`);
   console.log('🏷️  Kategorija / Područje: Praksa upravnih sudova\n');
 
@@ -330,22 +332,9 @@ async function importSudskaPraksa(courtDir: string) {
 
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
-    process.stdout.write(`   [${i + 1}/${allFiles.length}] ${file.name.substring(0, 40)}... `);
+    process.stdout.write(`   [${i + 1}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
 
-    // Brza provjera postoji li već u bazi po imenu spisa
-    const { data: existing } = await supabase
-      .from('praksa')
-      .select('id')
-      .ilike('naziv_datoteke', `%${file.name}%`)
-      .limit(1);
-
-    if (existing && existing.length > 0) {
-      process.stdout.write(`⏭️ Preskočeno (već u bazi)\n`);
-      grandTotalSkipped++;
-      continue;
-    }
-
-    // 1. Ekstrakcija teksta
+    // Ekstrakcija teksta
     let rawText = await extractText(file.fullPath);
     if (!rawText || rawText.trim().length < 80) {
       if (file.name.toLowerCase().endsWith('.pdf')) {
@@ -360,14 +349,21 @@ async function importSudskaPraksa(courtDir: string) {
       continue;
     }
 
-    // 2. Kategorizacija u podmapu naknade
+    // Kategorizacija u podmapu naknade i detekcija godine
     const subkategorija = categorizeCourtDecision(file.name, rawText.substring(0, 3500));
-    const storedName = `[Praksa upravnih sudova - ${subkategorija}] ${file.name}`;
+    const yearMatch = file.name.match(/(19\d\d|20\d\d)/);
+    const courtYear = yearMatch ? yearMatch[1] : 'Presude';
 
     process.stdout.write(`[${subkategorija}] `);
 
-    // 3. Procesiranje i upis
-    const success = await processSingleFile(file.fullPath, storedName, rawText);
+    const success = await processSingleFile(
+      file.fullPath,
+      `Praksa upravnih sudova - ${subkategorija}`,
+      courtYear,
+      i + 1,
+      rawText
+    );
+
     if (success) {
       process.stdout.write(`✅ Uvezeno\n`);
       grandTotalDocs++;
@@ -386,7 +382,7 @@ async function importSudskaPraksa(courtDir: string) {
 
 async function importCategory(parentFolder: string, categoryTag: string) {
   console.log('\n====================================================');
-  console.log('📂 Glavna mapa za uvoz:');
+  console.log('📂 Glavna mapa za uvoz (s automatskom anonimizacijom):');
   console.log(`   ${parentFolder}`);
   console.log(`🏷️  Kategorija / Područje: ${categoryTag}\n`);
 
@@ -399,11 +395,9 @@ async function importCategory(parentFolder: string, categoryTag: string) {
 
   const entries = await fs.readdir(parentFolder, { withFileTypes: true });
 
-  // Filtriraj SAMO podmape čije je ime točno 4 znamenke (godina: npr. 2006-2026), preskače "RJEŠENJA"
   const yearFolders = entries
     .filter((e) => e.isDirectory() && /^\d{4}$/.test(e.name))
     .map((e) => e.name)
-    // Sortiraj od najnovijih prema starijim godinama (2026 -> 2006)
     .sort((a, b) => parseInt(b) - parseInt(a));
 
   let grandTotalDocs = 0;
@@ -429,12 +423,10 @@ async function importCategory(parentFolder: string, categoryTag: string) {
       for (let i = 0; i < supportedFiles.length; i++) {
         const file = supportedFiles[i];
         const filePath = path.join(folderPath, file);
-        // Format: [Naknada za uređenje voda - 2026] 01-Ministarstvo...
-        const storedName = `[${categoryTag} - ${year}] ${file}`;
 
-        process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 48)}... `);
+        process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 36)}... `);
 
-        const success = await processSingleFile(filePath, storedName);
+        const success = await processSingleFile(filePath, categoryTag, year, i + 1);
         if (success) {
           process.stdout.write(`✅ Uvezeno\n`);
           yearImported++;
@@ -449,7 +441,6 @@ async function importCategory(parentFolder: string, categoryTag: string) {
       console.log(`✨ Godina ${year} dovršena: ${yearImported} uvezeno, ${yearSkipped} preskočeno.\n`);
     }
   } else {
-    // Slučaj kada su datoteke izravno u mapi bez godišnjih podmapa (npr. Naknada za korištenje voda)
     const directFiles = entries
       .filter((e) => e.isFile() && /\.(doc|docx|pdf|txt)$/i.test(e.name) && !e.name.startsWith('~$'))
       .map((e) => e.name);
@@ -460,7 +451,6 @@ async function importCategory(parentFolder: string, categoryTag: string) {
       const file = directFiles[i];
       const filePath = path.join(parentFolder, file);
 
-      // Ekstrakcija godine iz naziva datoteke ili vremena zadnje izmjene
       const yearMatch = file.match(/(19\d\d|20\d\d)/);
       let fileYear = yearMatch ? yearMatch[1] : '';
       if (!fileYear) {
@@ -468,10 +458,9 @@ async function importCategory(parentFolder: string, categoryTag: string) {
         fileYear = stat.mtime.getFullYear().toString();
       }
 
-      const storedName = `[${categoryTag} - ${fileYear}] ${file}`;
-      process.stdout.write(`   [${i + 1}/${directFiles.length}] [${fileYear}] ${file.substring(0, 44)}... `);
+      process.stdout.write(`   [${i + 1}/${directFiles.length}] [${fileYear}] ${file.substring(0, 36)}... `);
 
-      const success = await processSingleFile(filePath, storedName);
+      const success = await processSingleFile(filePath, categoryTag, fileYear, i + 1);
       if (success) {
         process.stdout.write(`✅ Uvezeno\n`);
         grandTotalDocs++;
@@ -519,15 +508,12 @@ async function main() {
     'ŽALBE NA VODNE NAKNADE'
   );
 
-  // 1. Naknada za uređenje voda (redom od 2026 do 2006)
   const uredjenjeDir = path.join(baseDir, 'NAKNADA ZA UREĐENJE VODA');
   await importCategory(uredjenjeDir, 'Naknada za uređenje voda');
 
-  // 2. Naknada za zaštitu voda (od 2026 do 2019)
   const zastitaDir = path.join(baseDir, 'NAKNADA ZA ZAŠTITU VODA');
   await importCategory(zastitaDir, 'Naknada za zaštitu voda');
 
-  // 3. Naknada za korištenje voda
   const koristenjeDir = path.join(baseDir, 'NAKNADA ZA KORIŠTENJE VODA');
   await importCategory(koristenjeDir, 'Naknada za korištenje voda');
 }
