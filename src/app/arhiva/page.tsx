@@ -1,5 +1,6 @@
-import { supabase } from '@/lib/supabase';
-import PredmetiTable, { Predmet } from '@/components/PredmetiTable';
+import { supabaseServer as supabase } from '@/lib/supabase-server';
+import PredmetiTable from '@/components/PredmetiTable';
+import { enrichPredmetRow, type EnrichedPredmet } from '@/lib/predmet-meta';
 import { Archive, AlertCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function ArhivaPage() {
   const { data: predmeti, error } = await supabase
     .from('predmeti')
-    .select('*')
+    .select('*, dokumenti(id, tip_dokumenta, storage_url)')
     .eq('status', 'arhiviran')
     .order('datum_zaprimanja', { ascending: false });
 
@@ -15,25 +16,23 @@ export default async function ArhivaPage() {
     console.error('Supabase Error fetch arhivirani predmeti:', error);
   }
 
-  const arhiviraniLista: Predmet[] = (predmeti as Predmet[]) || [];
+  const arhiviraniLista: EnrichedPredmet[] = (predmeti || []).map(enrichPredmetRow);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Zaglavlje stranice */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-2xs">
-              <Archive className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Arhiva predmeta (A/A)
-              </h1>
-              <p className="text-sm text-slate-500 mt-0.5">
-                Riješeni i arhivirani drugostupanjski upravni predmeti (ad acta)
-              </p>
-            </div>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-2xs">
+            <Archive className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Arhiva predmeta (A/A)
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Riješeni i arhivirani drugostupanjski upravni predmeti s evidencijom ishoda
+            </p>
           </div>
         </div>
       </header>
@@ -49,7 +48,7 @@ export default async function ArhivaPage() {
         </div>
       )}
 
-      {/* Interaktivna tablica arhiviranih predmeta s opcijom "Vrati u aktivne" */}
+      {/* Interaktivna tablica arhiviranih predmeta */}
       <PredmetiTable initialPredmeti={arhiviraniLista} type="arhiva" />
     </div>
   );

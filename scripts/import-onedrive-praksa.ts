@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
@@ -229,12 +230,14 @@ function chunkText(text: string, maxSize = CHUNK_MAX_SIZE, overlap = CHUNK_OVERL
 interface ExistingDbState {
   categoryYearIndex: Set<string>;
   courtIndex: Set<number>;
+  scanIndex: Set<number>;
   storedNames: Set<string>;
 }
 
 const dbState: ExistingDbState = {
   categoryYearIndex: new Set(),
   courtIndex: new Set(),
+  scanIndex: new Set(),
   storedNames: new Set(),
 };
 
@@ -263,6 +266,12 @@ async function loadExistingDbState(): Promise<ExistingDbState> {
       const name = row.naziv_datoteke;
       dbState.storedNames.add(name);
 
+      const scanMatch = name.match(/Praksa upravnih sudova \(presude\).*\(#(\d+)\)$/);
+      if (scanMatch) {
+        dbState.scanIndex.add(parseInt(scanMatch[1], 10));
+        continue;
+      }
+
       const courtMatch = name.match(/Praksa upravnih sudova.*\(#(\d+)\)$/);
       if (courtMatch) {
         dbState.courtIndex.add(parseInt(courtMatch[1], 10));
@@ -283,7 +292,8 @@ async function loadExistingDbState(): Promise<ExistingDbState> {
   }
 
   console.log(`✅ Učitano ${totalDocs} postojećih spisa iz baze u ${Date.now() - start} ms:`);
-  console.log(`   - Upravni sporovi / presude: ${dbState.courtIndex.size}`);
+  console.log(`   - Upravni sporovi (akti/odgovori): ${dbState.courtIndex.size}`);
+  console.log(`   - Skenirane presude sudova: ${dbState.scanIndex.size}`);
   console.log(`   - Upravni postupak (NUV/VD/dr.): ${dbState.categoryYearIndex.size}\n`);
 
   return dbState;
@@ -378,10 +388,13 @@ async function processSingleFile(
 }
 
 async function importSudskaPraksa(courtDir: string) {
+  const isScanDir = /presude_scan/i.test(courtDir);
+  const categoryPrefix = isScanDir ? 'Praksa upravnih sudova (presude)' : 'Praksa upravnih sudova';
+
   console.log('\n====================================================');
-  console.log('⚖️  UVOZ SUDSKE PRAKSE (S AUTOMATSKOM ANONIMIZACIJOM):');
+  console.log(`⚖️  UVOZ SUDSKE PRAKSE (${isScanDir ? 'SKENIRANE PRESUDE' : 'UPRAVNI SPOROVI'} S AUTOMATSKOM ANONIMIZACIJOM):`);
   console.log(`   ${courtDir}`);
-  console.log('🏷️  Kategorija / Područje: Praksa upravnih sudova\n');
+  console.log(`🏷️  Kategorija / Područje: ${categoryPrefix}\n`);
 
   try {
     await fs.access(courtDir);
@@ -410,14 +423,19 @@ async function importSudskaPraksa(courtDir: string) {
 
   let grandTotalDocs = 0;
   let grandTotalSkipped = 0;
+  const seenFileHashes = new Set<string>();
 
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
     const fileIndex = i + 1;
-    const fileId = String(fileIndex).padStart(2, '0');
+    const fileId = String(fileIndex).padStart(isScanDir ? 3 : 2, '0');
 
-    // Provjera duplikata PRIJE obrade ili API poziva
-    if (dbState.courtIndex.has(fileIndex)) {
+    // 1. Provjera u bazi po indeksu PRIJE obrade ili API poziva
+    const isAlreadyInDb = isScanDir
+      ? dbState.scanIndex.has(fileIndex)
+      : dbState.courtIndex.has(fileIndex);
+
+    if (isAlreadyInDb) {
       process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... ⏭️ Već u bazi (#${fileId})\n`);
       grandTotalSkipped++;
       continue;
@@ -425,15 +443,42 @@ async function importSudskaPraksa(courtDir: string) {
 
     process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
 
-    let rawText = await extractText(file.fullPath);
-    if (!rawText || rawText.trim().length < 80) {
+    // 2. Provjera binarnog duplikata unutar mape
+    let fileBuffer: Buffer | null = null;
+    try {
+      fileBuffer = await fs.readFile(file.fullPath);
+      const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
+      if (seenFileHashes.has(fileHash)) {
+        process.stdout.write(`⏭️ Preskočeno (identičan duplikat datoteke)\n`);
+        grandTotalSkipped++;
+        continue;
+      }
+      seenFileHashes.add(fileHash);
+    } catch (e: any) {
+      console.warn(`(Greška čitanja hash: ${e.message}) `);
+    }
+
+    // 3. Brza ekstrakcija teksta iz već učitanog buffera
+    let rawText = '';
+    if (file.name.toLowerCase().endsWith('.pdf') && fileBuffer) {
+      try {
+        const data = await pdfParse(fileBuffer);
+        rawText = (data.text || '').trim();
+      } catch {}
+    }
+
+    if (!rawText || rawText.length < 80) {
+      rawText = await extractText(file.fullPath);
+    }
+
+    if (!rawText || rawText.length < 80) {
       if (file.name.toLowerCase().endsWith('.pdf')) {
         process.stdout.write(`(OCR) `);
         rawText = await ocrPdfWithGemini(file.fullPath);
       }
     }
 
-    if (!rawText || rawText.trim().length < 80) {
+    if (!rawText || rawText.length < 80) {
       process.stdout.write(`⏭️ Preskočeno (prazno / nečitljivo)\n`);
       grandTotalSkipped++;
       continue;
@@ -447,7 +492,7 @@ async function importSudskaPraksa(courtDir: string) {
 
     const success = await processSingleFile(
       file.fullPath,
-      `Praksa upravnih sudova - ${subkategorija}`,
+      `${categoryPrefix} - ${subkategorija}`,
       courtYear,
       fileIndex,
       rawText
@@ -455,7 +500,11 @@ async function importSudskaPraksa(courtDir: string) {
 
     if (success) {
       process.stdout.write(`✅ Uvezeno\n`);
-      dbState.courtIndex.add(fileIndex);
+      if (isScanDir) {
+        dbState.scanIndex.add(fileIndex);
+      } else {
+        dbState.courtIndex.add(fileIndex);
+      }
       grandTotalDocs++;
     } else {
       process.stdout.write(`⏭️ Preskočeno\n`);
@@ -464,9 +513,9 @@ async function importSudskaPraksa(courtDir: string) {
   }
 
   console.log('====================================================');
-  console.log('🎉 ZAVRŠEN UVOZ ZA [Praksa upravnih sudova]!');
+  console.log(`🎉 ZAVRŠEN UVOZ ZA [${categoryPrefix}]!`);
   console.log(`   Ukupno novo uvezeno sudskih odluka: ${grandTotalDocs}`);
-  console.log(`   Ukupno preskočeno (već u bazi ili nečitljivo): ${grandTotalSkipped}`);
+  console.log(`   Ukupno preskočeno (već u bazi, duplikat ili nečitljivo): ${grandTotalSkipped}`);
   console.log('====================================================\n');
 }
 

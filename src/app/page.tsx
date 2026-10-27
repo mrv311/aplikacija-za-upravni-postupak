@@ -1,6 +1,7 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer as supabase } from '@/lib/supabase-server';
 import NewPredmetButton from '@/components/NewPredmetButton';
-import PredmetiTable, { Predmet } from '@/components/PredmetiTable';
+import PredmetiTable from '@/components/PredmetiTable';
+import { enrichPredmetRow, type EnrichedPredmet } from '@/lib/predmet-meta';
 import { Inbox, AlertCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const { data: predmeti, error } = await supabase
     .from('predmeti')
-    .select('*')
+    .select('*, dokumenti(id, tip_dokumenta, storage_url)')
     .eq('status', 'aktivan')
     .order('datum_zaprimanja', { ascending: false });
 
@@ -16,25 +17,21 @@ export default async function Home() {
     console.error('Supabase Error fetch aktivni predmeti:', error);
   }
 
-  const aktivniLista: Predmet[] = (predmeti as Predmet[]) || [];
+  const aktivniLista: EnrichedPredmet[] = (predmeti || []).map(enrichPredmetRow);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Zaglavlje stranice */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shadow-2xs">
-              <Inbox className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Aktivni predmeti
-              </h1>
-              <p className="text-sm text-slate-500 mt-0.5">
-                Drugostupanjski upravni predmeti u radu i rješavanju
-              </p>
-            </div>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shadow-2xs">
+            <Inbox className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Aktivni predmeti</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Drugostupanjski upravni predmeti u radu, praćenje zakonskog roka (60 dana) i faza obrade
+            </p>
           </div>
         </div>
 
@@ -54,7 +51,7 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Interaktivna tablica s filtriranjem i arhiviranjem */}
+      {/* Interaktivna tablica s praćenjem ZUP roka, fazama, uređivanjem, arhiviranjem i brisanjem */}
       <PredmetiTable initialPredmeti={aktivniLista} type="aktivni" />
     </div>
   );
