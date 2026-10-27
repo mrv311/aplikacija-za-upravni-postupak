@@ -1,49 +1,34 @@
-# HANDOFF: Stanje projekta i upute za nastavak
+# HANDOFF: Stanje projekta i upute za rad
 
-Datum: 26.10.2026.
+Datum: 27.10.2026.
 Grana: `master`
 Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 1. Trenutni status i što je sve napravljeno
+## 📌 1. Baza upravne i sudske prakse — 100% DOVRŠENA
 
-1. **Baza prakse i GDPR anonimizacija**:
-   - Skripta `scripts/import-onedrive-praksa.ts` uspješno prepoznaje master mapu `"za aplikaciju"` i njezine podmape:
-     - `NUV` (Naknada za uređenje voda)
-     - `VD` (Vodni doprinos)
-     - `UPRAVNI SPOROVI` (Praksa upravnih sudova)
-   - GDPR anonimizacija (`scripts/anonymizer.ts`) funkcionira izvrsno: fizičke osobe i tvrtke pretvaraju se u inicijale, adrese u `[Adresa]`, OIB-i u `[OIB]`.
-   - **Stanje u bazi Supabase**:
-     - Uspješno uvezeno prvih **12 spisa** (118 vektorskih chunkova) iz kategorije *Naknada za uređenje voda* (cijela 2026. godina i dio 2025.).
-     - Skripta automatski preskače već uvezene spise, tako da se uvoz može prekidati i nastavljati bez duplikata.
+1. **Uspješno uvezena cijela arhiva iz mape `"za aplikaciju"`**:
+   - **Ukupno dokumenata u bazi**: **800 spisa** (točno 800 pronađenih na disku)
+   - **Ukupno vektorskih chunkova**: **4.443 chunka**
+   - **Duplikati**: **0** (baza je potpuno čista, bez ijednog duplikata)
 
-2. **Dopune i stabilnost skripti**:
-   - Dodano automatsko učitavanje `.env.local` varijabli u sve skripte.
-   - Dodan retry mehanizam s automatskom pauzom za Gemini rate-limit (429) greške.
+2. **Raspodjela u bazi po kategorijama**:
+   - **Naknada za uređenje voda (NUV)**: **144 spisa** (2016.–2026. sve godine pokrivene)
+   - **Vodni doprinos (VD)**: **237 spisa** (2016.–2026. sve godine pokrivene)
+   - **Praksa upravnih sudova & upravni sporovi**: **419 spisa** (odgovori na tužbe, odgovori na žalbe, akti po presudama i presude upravnih sudova po svim vrstama naknada)
 
----
+3. **GDPR anonimizacija & optimizacije**:
+   - Svi spisi su prošli automatsku GDPR anonimizaciju (`scripts/anonymizer.ts`) — fizičke osobe i tvrtke svedene na inicijale/skraćene nazive, OIB i adrese zaštićeni, a pravni meritum u potpunosti očuvan.
+   - Ugrađena brza pred-provjera (`loadExistingDbState`) koja u memoriji provjerava postojeće zapise u ~250 ms, sprječavajući bilo kakvo dupliciranje ili nepotrebno trošenje API kvota.
+   - Svi vektorski embeddinzi generirani su modelom `gemini-embedding-001` (3072 dimenzije) i spremni za semantičko pretraživanje (RAG).
 
-## 🎯 2. Kako nastaviti uvoz
-
-Ako nastavite doma (uz mapu na OneDriveu) ili sutra na poslu, naredba za nastavak je:
-```bash
-npx tsx scripts/import-onedrive-praksa.ts "<PUTANJA_DO_MAPE_ZA_APLIKACIJU>"
-```
-*(Skripta će automatski preskočiti onih 12 već ubačenih spisa i nastaviti dalje kroz 2025., 2024., ...)*
-
-Provjera trenutnog stanja u bazi:
-```bash
-npx tsx scripts/check-praksa-db.ts
-```
-
----
-
-## 🏠 3. Koraci za Antigravity kod kuće
-
-1. Otvorite terminal u mapi projekta i povucite zadnje izmjene:
-   ```bash
-   git pull origin master
-   ```
-2. Otvorite Antigravity na kućnom računalu, pokrenite novi chat i napišite:
-   > `@HANDOFF.md Nastavljamo gdje smo stali.`
+4. **Korisne naredbe**:
+   - Provjera stanja baze prakse:
+     ```bash
+     npx tsx scripts/check-praksa-db.ts
+     ```
+   - Provjera propisa / zakona u bazi:
+     ```bash
+     npx tsx scripts/check-propisi-db.ts
+     ```

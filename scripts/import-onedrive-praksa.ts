@@ -226,18 +226,82 @@ function chunkText(text: string, maxSize = CHUNK_MAX_SIZE, overlap = CHUNK_OVERL
   return chunks.filter((c) => c.length > 30);
 }
 
+interface ExistingDbState {
+  categoryYearIndex: Set<string>;
+  courtIndex: Set<number>;
+  storedNames: Set<string>;
+}
+
+const dbState: ExistingDbState = {
+  categoryYearIndex: new Set(),
+  courtIndex: new Set(),
+  storedNames: new Set(),
+};
+
+async function loadExistingDbState(): Promise<ExistingDbState> {
+  console.log('🔄 Učitavam postojeće spise iz baze Supabase radi 100% zaštite od duplikata...');
+  const start = Date.now();
+  let from = 0;
+  const step = 1000;
+  let totalDocs = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('praksa')
+      .select('naziv_datoteke')
+      .eq('chunk_index', 0)
+      .range(from, from + step - 1);
+
+    if (error) {
+      console.error('❌ Greška pri učitavanju postojećih spisa iz baze:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+
+    totalDocs += data.length;
+    for (const row of data) {
+      const name = row.naziv_datoteke;
+      dbState.storedNames.add(name);
+
+      const courtMatch = name.match(/Praksa upravnih sudova.*\(#(\d+)\)$/);
+      if (courtMatch) {
+        dbState.courtIndex.add(parseInt(courtMatch[1], 10));
+        continue;
+      }
+
+      const catMatch = name.match(/^\[(.*?) - (\d{4})\].*\(#(\d+)\)$/);
+      if (catMatch) {
+        const cat = catMatch[1].trim();
+        const year = catMatch[2].trim();
+        const idx = parseInt(catMatch[3], 10);
+        dbState.categoryYearIndex.add(`${cat}:${year}:${idx}`);
+      }
+    }
+
+    if (data.length < step) break;
+    from += step;
+  }
+
+  console.log(`✅ Učitano ${totalDocs} postojećih spisa iz baze u ${Date.now() - start} ms:`);
+  console.log(`   - Upravni sporovi / presude: ${dbState.courtIndex.size}`);
+  console.log(`   - Upravni postupak (NUV/VD/dr.): ${dbState.categoryYearIndex.size}\n`);
+
+  return dbState;
+}
+
 const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-async function getEmbedding(text: string, retries = 3): Promise<number[]> {
+async function getEmbedding(text: string, retries = 5): Promise<number[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await model.embedContent(text);
       return res.embedding.values;
     } catch (err: any) {
-      if (attempt === retries || !err.message?.includes('429')) throw err;
-      console.log(`\n      ⏳ Rate limit (429), pauza 4s (pokušaj ${attempt}/${retries})...`);
-      await delay(4000);
+      if (attempt === retries) throw err;
+      const waitMs = attempt * 3000;
+      console.log(`\n      ⏳ Rate limit (429) embedding, pauza ${waitMs / 1000}s (pokušaj ${attempt}/${retries})...`);
+      await delay(waitMs);
     }
   }
   return [];
@@ -263,7 +327,11 @@ async function processSingleFile(
 
   const storedName = anon.storedName;
 
-  // Provjera postoji li već u bazi
+  // Provjera postoji li već u bazi (i u memorijskom cacheu)
+  if (dbState.storedNames.has(storedName)) {
+    return false;
+  }
+
   const { data: existing } = await supabase
     .from('praksa')
     .select('id')
@@ -271,6 +339,7 @@ async function processSingleFile(
     .limit(1);
 
   if (existing && existing.length > 0) {
+    dbState.storedNames.add(storedName);
     return false; // Već uvezeno
   }
 
@@ -293,13 +362,19 @@ async function processSingleFile(
 
       if (!insertErr) {
         savedCount++;
+      } else {
+        console.error(`      ❌ Greška inserta (chunk ${j + 1}): ${insertErr.message}`);
       }
     } catch (err: any) {
       console.error(`      ❌ Greška embeddinga (chunk ${j + 1}): ${err.message}`);
     }
   }
 
-  return savedCount > 0;
+  if (savedCount > 0) {
+    dbState.storedNames.add(storedName);
+    return true;
+  }
+  return false;
 }
 
 async function importSudskaPraksa(courtDir: string) {
@@ -338,7 +413,17 @@ async function importSudskaPraksa(courtDir: string) {
 
   for (let i = 0; i < allFiles.length; i++) {
     const file = allFiles[i];
-    process.stdout.write(`   [${i + 1}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
+    const fileIndex = i + 1;
+    const fileId = String(fileIndex).padStart(2, '0');
+
+    // Provjera duplikata PRIJE obrade ili API poziva
+    if (dbState.courtIndex.has(fileIndex)) {
+      process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... ⏭️ Već u bazi (#${fileId})\n`);
+      grandTotalSkipped++;
+      continue;
+    }
+
+    process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
 
     let rawText = await extractText(file.fullPath);
     if (!rawText || rawText.trim().length < 80) {
@@ -364,12 +449,13 @@ async function importSudskaPraksa(courtDir: string) {
       file.fullPath,
       `Praksa upravnih sudova - ${subkategorija}`,
       courtYear,
-      i + 1,
+      fileIndex,
       rawText
     );
 
     if (success) {
       process.stdout.write(`✅ Uvezeno\n`);
+      dbState.courtIndex.add(fileIndex);
       grandTotalDocs++;
     } else {
       process.stdout.write(`⏭️ Preskočeno\n`);
@@ -380,7 +466,7 @@ async function importSudskaPraksa(courtDir: string) {
   console.log('====================================================');
   console.log('🎉 ZAVRŠEN UVOZ ZA [Praksa upravnih sudova]!');
   console.log(`   Ukupno novo uvezeno sudskih odluka: ${grandTotalDocs}`);
-  console.log(`   Ukupno preskočeno: ${grandTotalSkipped}`);
+  console.log(`   Ukupno preskočeno (već u bazi ili nečitljivo): ${grandTotalSkipped}`);
   console.log('====================================================\n');
 }
 
@@ -423,9 +509,9 @@ async function importCategory(parentFolder: string, categoryTag: string) {
     for (const year of yearFolders) {
       const folderPath = path.join(parentFolder, year);
       const filesInFolder = await fs.readdir(folderPath);
-      const supportedFiles = filesInFolder.filter(
-        (f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$')
-      );
+      const supportedFiles = filesInFolder
+        .filter((f) => /\.(doc|docx|pdf|txt)$/i.test(f) && !f.startsWith('~$'))
+        .sort((a, b) => a.localeCompare(b));
 
       console.log(`----------------------------------------------------`);
       console.log(`📁 [${categoryTag}] Godina ${year} (${supportedFiles.length} spisa u mapi)...`);
@@ -436,12 +522,24 @@ async function importCategory(parentFolder: string, categoryTag: string) {
       for (let i = 0; i < supportedFiles.length; i++) {
         const file = supportedFiles[i];
         const filePath = path.join(folderPath, file);
+        const fileIndex = i + 1;
+        const fileId = String(fileIndex).padStart(2, '0');
 
-        process.stdout.write(`   [${i + 1}/${supportedFiles.length}] ${file.substring(0, 36)}... `);
+        // Provjera duplikata PRIJE obrade ili API poziva
+        const catKey = `${categoryTag}:${year}:${fileIndex}`;
+        if (dbState.categoryYearIndex.has(catKey)) {
+          process.stdout.write(`   [${fileIndex}/${supportedFiles.length}] ${file.substring(0, 36)}... ⏭️ Već u bazi (#${fileId})\n`);
+          yearSkipped++;
+          grandTotalSkipped++;
+          continue;
+        }
 
-        const success = await processSingleFile(filePath, categoryTag, year, i + 1);
+        process.stdout.write(`   [${fileIndex}/${supportedFiles.length}] ${file.substring(0, 36)}... `);
+
+        const success = await processSingleFile(filePath, categoryTag, year, fileIndex);
         if (success) {
           process.stdout.write(`✅ Uvezeno\n`);
+          dbState.categoryYearIndex.add(catKey);
           yearImported++;
           grandTotalDocs++;
         } else {
@@ -456,13 +554,16 @@ async function importCategory(parentFolder: string, categoryTag: string) {
   } else {
     const directFiles = entries
       .filter((e) => e.isFile() && /\.(doc|docx|pdf|txt)$/i.test(e.name) && !e.name.startsWith('~$'))
-      .map((e) => e.name);
+      .map((e) => e.name)
+      .sort((a, b) => a.localeCompare(b));
 
     console.log(`📄 Pronađeno spisa izravno u mapi: ${directFiles.length}\n`);
 
     for (let i = 0; i < directFiles.length; i++) {
       const file = directFiles[i];
       const filePath = path.join(parentFolder, file);
+      const fileIndex = i + 1;
+      const fileId = String(fileIndex).padStart(2, '0');
 
       const yearMatch = file.match(/(19\d\d|20\d\d)/);
       let fileYear = yearMatch ? yearMatch[1] : '';
@@ -471,11 +572,20 @@ async function importCategory(parentFolder: string, categoryTag: string) {
         fileYear = stat.mtime.getFullYear().toString();
       }
 
-      process.stdout.write(`   [${i + 1}/${directFiles.length}] [${fileYear}] ${file.substring(0, 36)}... `);
+      // Provjera duplikata PRIJE obrade ili API poziva
+      const catKey = `${categoryTag}:${fileYear}:${fileIndex}`;
+      if (dbState.categoryYearIndex.has(catKey)) {
+        process.stdout.write(`   [${fileIndex}/${directFiles.length}] [${fileYear}] ${file.substring(0, 36)}... ⏭️ Već u bazi (#${fileId})\n`);
+        grandTotalSkipped++;
+        continue;
+      }
 
-      const success = await processSingleFile(filePath, categoryTag, fileYear, i + 1);
+      process.stdout.write(`   [${fileIndex}/${directFiles.length}] [${fileYear}] ${file.substring(0, 36)}... `);
+
+      const success = await processSingleFile(filePath, categoryTag, fileYear, fileIndex);
       if (success) {
         process.stdout.write(`✅ Uvezeno\n`);
+        dbState.categoryYearIndex.add(catKey);
         grandTotalDocs++;
       } else {
         process.stdout.write(`⏭️ Preskočeno\n`);
@@ -492,6 +602,8 @@ async function importCategory(parentFolder: string, categoryTag: string) {
 }
 
 async function main() {
+  await loadExistingDbState();
+
   const customArg = process.argv[2];
 
   if (customArg && customArg !== '--sve' && customArg !== '--all') {

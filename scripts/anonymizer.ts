@@ -72,19 +72,25 @@ Tekst za anonimizaciju:
 ${sanitized.substring(0, 45000)}`;
 
   let parsed: any = null;
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 5; attempt++) {
     try {
       const res = await model.generateContent(prompt);
-      parsed = JSON.parse(res.response.text());
+      const rawResText = res.response.text();
+      const cleaned = rawResText
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+      parsed = JSON.parse(cleaned);
       break;
     } catch (err: any) {
-      if (err.message?.includes('429') && attempt < 3) {
-        await new Promise((r) => setTimeout(r, 3500));
+      if (attempt < 5) {
+        const waitMs = attempt * 4000;
+        console.log(`\n      ⏳ Rate limit / greška anonimizacije (${err.message}), čekam ${waitMs / 1000}s (pokušaj ${attempt}/5)...`);
+        await new Promise((r) => setTimeout(r, waitMs));
         continue;
       }
-      if (attempt === 3) {
-        console.warn(`      ⚠️ Greška AI anonimizacije (${err.message}), koristim regex fallback.`);
-      }
+      console.warn(`\n      ⚠️ Greška AI anonimizacije nakon 5 pokušaja (${err.message}), koristim fallback.`);
     }
   }
 
