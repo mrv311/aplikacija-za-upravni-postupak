@@ -430,7 +430,22 @@ async function importSudskaPraksa(courtDir: string) {
     const fileIndex = i + 1;
     const fileId = String(fileIndex).padStart(isScanDir ? 3 : 2, '0');
 
-    // 1. Provjera u bazi po indeksu PRIJE obrade ili API poziva
+    // 1. Učitavanje buffera i provjera binarnog duplikata unutar mape
+    let fileBuffer: Buffer | null = null;
+    try {
+      fileBuffer = await fs.readFile(file.fullPath);
+      const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
+      if (seenFileHashes.has(fileHash)) {
+        process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... ⏭️ Preskočeno (identičan duplikat datoteke)\n`);
+        grandTotalSkipped++;
+        continue;
+      }
+      seenFileHashes.add(fileHash);
+    } catch (e: any) {
+      console.warn(`(Greška čitanja hash: ${e.message}) `);
+    }
+
+    // 2. Provjera u bazi po indeksu PRIJE obrade ili API poziva
     const isAlreadyInDb = isScanDir
       ? dbState.scanIndex.has(fileIndex)
       : dbState.courtIndex.has(fileIndex);
@@ -442,21 +457,6 @@ async function importSudskaPraksa(courtDir: string) {
     }
 
     process.stdout.write(`   [${fileIndex}/${allFiles.length}] ${file.name.substring(0, 36)}... `);
-
-    // 2. Provjera binarnog duplikata unutar mape
-    let fileBuffer: Buffer | null = null;
-    try {
-      fileBuffer = await fs.readFile(file.fullPath);
-      const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
-      if (seenFileHashes.has(fileHash)) {
-        process.stdout.write(`⏭️ Preskočeno (identičan duplikat datoteke)\n`);
-        grandTotalSkipped++;
-        continue;
-      }
-      seenFileHashes.add(fileHash);
-    } catch (e: any) {
-      console.warn(`(Greška čitanja hash: ${e.message}) `);
-    }
 
     // 3. Brza ekstrakcija teksta iz već učitanog buffera
     let rawText = '';
