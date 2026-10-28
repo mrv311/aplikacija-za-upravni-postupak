@@ -6,10 +6,20 @@ import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import { searchKnowledge, formatZakoni, stitchChunks } from '@/lib/rag';
 import { parsePraksaMetadata } from '@/lib/ai-types';
-import { META_DOC_TYPE, CHAT_DOC_TYPE, decodeDocLabel } from '@/lib/predmet-meta';
+import {
+  META_DOC_TYPE,
+  CHAT_DOC_TYPE,
+  decodeDocLabel,
+  decodePredmetMetaUrl,
+  type PredmetIshod,
+} from '@/lib/predmet-meta';
 import { saveDraftToSpis } from '@/app/actions/chatActions';
 import { updatePredmetFaza } from '@/app/actions/predmetActions';
-import { parseFileBufferWithOcrFallback } from '@/app/actions/documentActions';
+import {
+  parseFileBufferWithOcrFallback,
+  previewAnonymizedForPraksa,
+  confirmPublishToPraksa,
+} from '@/app/actions/documentActions';
 import { normalizeExtractedLegalText, cleanDraftActFormatting } from '@/lib/text-formatter';
 
 const db = supabaseServer || supabaseClient;
@@ -619,5 +629,186 @@ export async function parseReferenceDocumentFile(formData: FormData): Promise<{
       success: false,
       error: err?.message || 'Greška pri čitanju datoteke.',
     };
+  }
+}
+
+/**
+ * AI Pravna revizija završenog rješenja:
+ * Uspoređuje dostavljeni tekst akta sa žalbom i prvostupanjskim rješenjem iz spisa.
+ */
+export async function runLegalReviewAction(payload: {
+  predmetId: string;
+  actText: string;
+  modelPreference?: 'flash' | 'pro';
+}): Promise<{
+  success: boolean;
+  reviewText?: string;
+  error?: string;
+}> {
+  const { predmetId, actText, modelPreference = 'pro' } = payload;
+  if (!predmetId) return { success: false, error: 'ID predmeta je obavezan.' };
+  if (!actText || actText.trim().length < 30) {
+    return { success: false, error: 'Molimo unesite ili učitajte tekst rješenja za pregled.' };
+  }
+
+  try {
+    const { predmet, docs, error } = await getDraftingContext(predmetId);
+    if (error || !predmet) {
+      return { success: false, error: error || 'Predmet nije pronađen.' };
+    }
+
+    // Pronađi dokument žalbe u spisu
+    const zalbaDoc = docs.find((d) => {
+      const meta = decodeDocLabel(d.tip_dokumenta);
+      const v = (meta.vrsta || '').toLowerCase();
+      const n = (meta.izvorniNaziv || '').toLowerCase();
+      const raw = (d.tip_dokumenta || '').toLowerCase();
+      return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
+    });
+
+    const tekstZalbe = zalbaDoc?.raw_text ? normalizeExtractedLegalText(zalbaDoc.raw_text) : '';
+    const prvostupanjskoDoc = docs.find((d) => {
+      const meta = decodeDocLabel(d.tip_dokumenta);
+      return (
+        meta.vrsta.toLowerCase().includes('prvostup') ||
+        meta.vrsta.toLowerCase().includes('rješenj')
+      );
+    });
+    const tekstPrvostupanjskog = prvostupanjskoDoc?.raw_text
+      ? normalizeExtractedLegalText(prvostupanjskoDoc.raw_text).slice(0, 10000)
+      : '';
+
+    const modelName = modelPreference === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+
+    const systemPrompt = `Ti si vrhunski viši upravni savjetnik u drugostupanjskom upravnom postupku u Ministarstvu (Republika Hrvatska).
+Tvoj zadatak je provesti detaljnu, objektivnu i strogu pravnu reviziju (kontrolu kvalitete) ZAVRŠENOG NACRTA RJEŠENJA kojeg je savjetnik pripremio.
+
+Nacrt rješenja moraš detaljno usporediti sa ŽALBOM žalitelja i spisom predmeta.
+
+Struktura tvog odgovora MORA biti točno ovakva:
+
+### 1. ODGOVOR NA SVE ŽALBENE NAVODE
+- Navedi taksativno svaki bitan žalbeni navod iz žalbe.
+- Za svaki navod označi: [OBRAĐENO] ili [PROPUŠTENO / NEDOREČENO].
+- UPOZORENJE: Ako ijedan bitan prigovor žalitelja nije jasno i argumentirano otklonjen u obrazloženju, naglasi to kao kritičan propust koji može dovesti do usvajanja tužbe pred Visokim upravnim sudom (povreda prava na obrazloženu odluku).
+
+### 2. ZAKONITOST I MATERIJALNO PRAVO
+- Jesu li pravilno pozvani članci Zakona o općem upravnom postupku (čl. 116. za odbijanje, čl. 117. za poništenje/izmjenu, čl. 114. za odbacivanje)?
+- Jesu li pravilno primijenjeni materijalni propisi (Zakon o vodama, Zakon o financiranju vodnoga gospodarstva, odgovarajući Pravilnik)?
+- Postoje li pitanja zastare (OPZ), nadležnosti ili postupovnih rokova?
+
+### 3. USKLAĐENOST IZREKE I OBRAZLOŽENJA
+- Je li izreka (dispozitiv) jasna, nedvosmislena i pravno izvršiva?
+- Podudara li se ishod u izreci u potpunosti s razlozima iznesenim u obrazloženju?
+- Je li uputa o pravnom lijeku točna (upravni spor tužbom nadležnom upravnom sudu u roku od 30 dana)?
+
+### 4. ZAVRŠNA OCJENA I PREPORUKA
+- 🟢 **SPREMNO ZA POTPIS** (ako je rješenje u potpunosti zakonito, potpuno i argumentirano) ILI
+- 🟡 **POTREBNA DORADA PRIJE POTPISA** (navedi točno koje odlomke, rečenice ili članke treba dopuniti).`;
+
+    const userPrompt = `SPIS PREDMETA:
+Klasa: ${predmet.klasa}
+Stranka: ${predmet.stranka}
+Područje: ${predmet.podrucje}
+
+IZVORNA ŽALBA STRANKE:
+„„„
+${tekstZalbe || 'Nema posebnog dokumenta žalbe u spisu — provjeri prema ostalim dokumentima.'}
+„„„
+
+POBIJANO PRVOSTUPANJSKO RJEŠENJE (IZVADAK):
+„„„
+${tekstPrvostupanjskog || 'Nema posebnog prvostupanjskog akta u spisu.'}
+„„„
+
+========================================
+ZAVRŠENI NACRT RJEŠENJA KOJEG JE SAVJETNIK DOSTAVIO NA PREGLED:
+========================================
+${actText}
+========================================
+
+Provedi detaljnu pravnu reviziju ovog nacrta po zadanim točkama.`;
+
+    const { text } = await generateText({
+      model: google(modelName),
+      system: systemPrompt,
+      prompt: userPrompt,
+    });
+
+    return {
+      success: true,
+      reviewText: text,
+    };
+  } catch (err: any) {
+    console.error('runLegalReviewAction Error:', err);
+    return {
+      success: false,
+      error: err.message || 'Greška pri provođenju pravne revizije.',
+    };
+  }
+}
+
+/**
+ * Objavljuje pregledani akt izravno u Bazu prakse uz GDPR anonimizaciju.
+ */
+export async function publishReviewedActToPraksa(payload: {
+  predmetId: string;
+  actText: string;
+  naslov?: string;
+  ishod?: PredmetIshod;
+}): Promise<{ success: boolean; error?: string; insertedTitle?: string }> {
+  const { predmetId, actText, naslov, ishod = 'Odbijena žalba' } = payload;
+  if (!actText || actText.trim().length < 60) {
+    return { success: false, error: 'Tekst rješenja je prekratak za objavu u praksi.' };
+  }
+
+  try {
+    const { data: predmet } = await db
+      .from('predmeti')
+      .select('id, klasa, stranka, datum_zaprimanja, dokumenti(storage_url, tip_dokumenta)')
+      .eq('id', predmetId)
+      .single();
+
+    const metaDoc = (predmet?.dokumenti || []).find((d: any) => d.tip_dokumenta === META_DOC_TYPE);
+    const meta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+    const podrucje = meta.podrucje || 'NUV';
+    const godina = (predmet?.datum_zaprimanja || new Date().toISOString()).split('-')[0];
+
+    // Korak 1: Anonimizacija preko overrideText
+    const anonymizeRes = await previewAnonymizedForPraksa({
+      predmetId,
+      overrideText: actText,
+      podrucje,
+      ishod,
+      godina,
+    });
+
+    const proposedTitle =
+      naslov ||
+      anonymizeRes.proposedTitle ||
+      `[${podrucje} - ${godina}] Rješenje - ${ishod.toLowerCase()}`;
+    const cleanAnonymizedText = anonymizeRes.anonymizedText || actText;
+
+    // Korak 2: Upis u tablicu praksa
+    const pubRes = await confirmPublishToPraksa({
+      predmetId,
+      nazivDatoteke: proposedTitle,
+      anonymizedText: cleanAnonymizedText,
+    });
+
+    if (pubRes.error) {
+      return { success: false, error: pubRes.error };
+    }
+
+    // Označi poslano_u_praksu u metapodacima predmeta
+    await updatePredmetFaza(predmetId, meta.faza || 'U radu');
+
+    return {
+      success: true,
+      insertedTitle: proposedTitle,
+    };
+  } catch (err: any) {
+    console.error('publishReviewedActToPraksa Error:', err);
+    return { success: false, error: err.message || 'Greška pri objavi u praksu.' };
   }
 }

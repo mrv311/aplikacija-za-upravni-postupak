@@ -302,21 +302,6 @@ export function AiPanel({
     );
   };
 
-  useEffect(() => {
-    const handleRunReview = (e: Event) => {
-      const customDetail = (e as CustomEvent)?.detail;
-      const reviewAction = CASE_QUICK_ACTIONS.find((a) => a.id === 'revizija-nacrta');
-      if (reviewAction) {
-        const extraPrompt = customDetail?.docText
-          ? `Tekst nacrta za reviziju:\n„„„\n${customDetail.docText}\n„„„\n\n${reviewAction.prompt}`
-          : reviewAction.prompt;
-        triggerPrompt(extraPrompt, 'pro');
-      }
-    };
-    window.addEventListener('trigger-ai-review', handleRunReview);
-    return () => window.removeEventListener('trigger-ai-review', handleRunReview);
-  }, [triggerPrompt]);
-
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input || input.trim() === '' || isLoading) return;
@@ -642,6 +627,8 @@ export function AiPanel({
                     onClick={() => {
                       if (action.id === 'case-draft') {
                         setIsGeneratorOpen(true);
+                      } else if (action.id === 'revizija-nacrta') {
+                        window.dispatchEvent(new CustomEvent('trigger-ai-review'));
                       } else {
                         triggerPrompt(action.prompt, action.recommendedModel);
                       }
@@ -833,6 +820,8 @@ export function AiPanel({
                   onClick={() => {
                     if (action.id === 'case-draft') {
                       setIsGeneratorOpen(true);
+                    } else if (action.id === 'revizija-nacrta') {
+                      window.dispatchEvent(new CustomEvent('trigger-ai-review'));
                     } else {
                       triggerPrompt(action.prompt, action.recommendedModel);
                     }

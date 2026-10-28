@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
+import { LegalReviewModal } from '@/components/LegalReviewModal';
 import {
   archivePredmet,
   unarchivePredmet,
@@ -50,6 +51,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
 
   const [faza, setFaza] = useState<PredmetFaza>(predmet.faza);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -75,6 +77,12 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
     predmet.datum_rjesavanja || new Date().toISOString().split('T')[0]
   );
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleOpenReview = () => setReviewModalOpen(true);
+    window.addEventListener('trigger-ai-review', handleOpenReview);
+    return () => window.removeEventListener('trigger-ai-review', handleOpenReview);
+  }, []);
 
   const isArchived = predmet.status === 'arhiviran';
   const deadline = !isArchived ? calculateZupDeadline(predmet.datum_zaprimanja) : null;
@@ -118,8 +126,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   };
 
   const handleTriggerAiReview = () => {
-    window.dispatchEvent(new CustomEvent('trigger-ai-review'));
-    window.dispatchEvent(new CustomEvent('switch-to-ai-tab'));
+    setReviewModalOpen(true);
   };
 
   const handleOpenSmartArchive = async () => {
@@ -771,6 +778,18 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         isOpen={draftModalOpen}
         onClose={() => setDraftModalOpen(false)}
         onDraftSavedToCase={() => {
+          startTransition(() => router.refresh());
+        }}
+      />
+
+      {/* Modal: AI Pregled i revizija završenog rješenja kod savjetnika */}
+      <LegalReviewModal
+        predmetId={predmet.id}
+        klasa={predmet.klasa}
+        stranka={predmet.stranka}
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onActSavedToCase={() => {
           startTransition(() => router.refresh());
         }}
       />

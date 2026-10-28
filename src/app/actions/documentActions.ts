@@ -399,24 +399,33 @@ function chunkPraksaText(text: string, maxSize = 1400, overlap = 200): string[] 
  * Korak 1: GDPR anonimizacija dokumenta spisa za pregled prije trajnog upisa u Bazu prakse.
  */
 export async function previewAnonymizedForPraksa(params: {
-  docId: string;
+  docId?: string;
+  overrideText?: string;
   predmetId: string;
   podrucje: PredmetPodrucje;
   ishod: PredmetIshod;
   godina?: string;
 }) {
   try {
-    const { data: doc, error } = await db
-      .from('dokumenti')
-      .select('raw_text, tip_dokumenta')
-      .eq('id', params.docId)
-      .single();
+    let sourceText = params.overrideText || '';
+    if (!sourceText && params.docId) {
+      const { data: doc, error } = await db
+        .from('dokumenti')
+        .select('raw_text, tip_dokumenta')
+        .eq('id', params.docId)
+        .single();
 
-    if (error || !doc || !doc.raw_text) {
-      return { error: 'Odabrani dokument nema čitljiv tekst za anonimizaciju.' };
+      if (error || !doc || !doc.raw_text) {
+        return { error: 'Odabrani dokument nema čitljiv tekst za anonimizaciju.' };
+      }
+      sourceText = doc.raw_text;
     }
 
-    const preSanitized = doc.raw_text
+    if (!sourceText.trim()) {
+      return { error: 'Nema čitljivog teksta za anonimizaciju.' };
+    }
+
+    const preSanitized = sourceText
       .replace(/\b\d{11}\b/g, '[OIB]')
       .replace(/\bHR\d{19}\b/g, '[IBAN]')
       .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, '[E-MAIL]');
