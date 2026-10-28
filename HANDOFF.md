@@ -33,3 +33,22 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
      ```bash
      npx tsx scripts/check-propisi-db.ts
      ```
+
+---
+
+## 📌 2. Korisničko sučelje & Radni prostor predmeta
+
+1. **PredmetWorkspace & Fleksibilni radni prostor (`/predmeti/[id]`)**:
+   - Omogućeno prebacivanje načina rada:
+     - **Uravnoteženo** (50/50 pregled spisa i AI panel)
+     - **Fokus na spise** (prošireni preglednik dokumenata s thumbnail navigacijom)
+     - **Fokus na AI asistenta** (prošireni AI savjetnik za generiranje nacrta i pravnu analizu)
+   - Ugrađen točan izračun ZUP rokova (60 dana) s vizualnim statusnim trakama i upozorenjima.
+
+2. **Tema i responzivnost**:
+   - Integrirana **tamna tema (Dark Mode)** (`ThemeProvider`) s trajnim stanjem u `localStorage` i sprečavanjem hydration treperenja (`ThemeInitScript`).
+   - Sklopivi lijevi izbornik (Sidebar) s podrškom za mobilne uređaje i ladicu (drawer).
+   - Prilagođene tablice predmeta i arhive (`PredmetiTable`) s filtriranjem po statusu i hitnosti.
+
+3. **Status izgradnje (Build status)**:
+   - `npm run build` prolazi **100% uspješno s 0 TypeScript grešaka**.

@@ -461,23 +461,27 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       )}
 
       {/* 2. TRAŽILICA, FILTERI I SORTIRANJE */}
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs">
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs">
         <div className="relative flex-1 min-w-60">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
+            ref={searchInputRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Pretraži po klasi, urbroju, stranci ili napomeni..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full pl-9 pr-14 py-2 bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
+          <kbd className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 pointer-events-none">
+            Ctrl+K
+          </kbd>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={filterPodrucje}
             onChange={(e) => setFilterPodrucje(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="sve">Sva područja</option>
             {PREDMET_PODRUCJA.map((p) => (
@@ -491,7 +495,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
             <select
               value={filterSecondary}
               onChange={(e) => setFilterSecondary(e.target.value)}
-              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="sve">Sve radne faze</option>
               {PREDMET_FAZE.map((f) => (
@@ -504,7 +508,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
             <select
               value={filterSecondary}
               onChange={(e) => setFilterSecondary(e.target.value)}
-              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="sve">Svi ishodi</option>
               {PREDMET_ISHODI.map((ish) => (
@@ -518,14 +522,14 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'datum' | 'hitnost' | 'stranka')}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="datum">Sortiraj: Najnoviji</option>
             {type === 'aktivni' && <option value="hitnost">Sortiraj: ZUP rok (hitnost)</option>}
             <option value="stranka">Sortiraj: Stranka (A–Ž)</option>
           </select>
 
-          <span className="px-2.5 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg border border-slate-200/70">
+          <span className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg border border-slate-200/70 dark:border-slate-700">
             {filteredItems.length}
           </span>
         </div>
@@ -533,13 +537,13 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
       {/* Traka skupnih akcija kad su označeni predmeti */}
       {selectedIds.size > 0 && (
-        <div className="px-4 py-2.5 rounded-xl bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div className="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex flex-wrap items-center justify-between gap-3 shadow-md border border-slate-700">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <span>Označeno predmeta: {selectedIds.size}</span>
             <button
               type="button"
               onClick={() => setSelectedIds(new Set())}
-              className="text-slate-300 hover:text-white underline ml-2"
+              className="text-slate-300 hover:text-white underline ml-2 cursor-pointer"
             >
               Poništi odabir
             </button>
@@ -548,7 +552,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
             <button
               type="button"
               onClick={() => setDeletingIds(Array.from(selectedIds))}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Trajno obriši označene ({selectedIds.size})
@@ -558,11 +562,11 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       )}
 
       {/* 3. GLAVNA TABLICA PREDMETA */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200/90 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200/90 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                 <th className="pl-4 pr-2 py-3.5 w-9">
                   <input
                     type="checkbox"
@@ -591,26 +595,26 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                 <th className="px-4 py-3.5 text-right">Akcije</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-sm">
               {filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
                         {type === 'aktivni' ? (
                           <Inbox className="w-6 h-6" />
                         ) : (
                           <Archive className="w-6 h-6" />
                         )}
                       </div>
-                      <h3 className="font-semibold text-slate-800 text-base mb-1">
+                      <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-base mb-1">
                         {search.trim() || filterPodrucje !== 'sve' || filterSecondary !== 'sve' || onlyUrgent
                           ? 'Nema predmeta za odabrani filtar'
                           : type === 'aktivni'
                           ? 'Nema aktivnih predmeta'
                           : 'Arhiva je prazna'}
                       </h3>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {type === 'aktivni'
                           ? 'Dodajte novi predmet klikom na gumb "Novi predmet" u gornjem desnom kutu.'
                           : 'Riješeni predmeti koje spremite u A/A pojavit će se ovdje.'}
@@ -630,8 +634,8 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                   return (
                     <tr
                       key={predmet.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${
-                        selectedIds.has(predmet.id) ? 'bg-blue-50/40' : ''
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors ${
+                        selectedIds.has(predmet.id) ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
                       }`}
                     >
                       <td className="pl-4 pr-2 py-3.5 align-top pt-4">
@@ -648,21 +652,21 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                         <div className="flex items-center gap-2 flex-wrap">
                           <Link
                             href={`/predmeti/${predmet.id}`}
-                            className="font-bold text-slate-900 hover:text-blue-600 transition-colors"
+                            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                           >
                             {predmet.klasa}
                           </Link>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             {predmet.podrucje}
                           </span>
                         </div>
                         {predmet.urbroj && (
-                          <p className="text-xs text-slate-500 mt-0.5">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Urbroj: {predmet.urbroj}
                           </p>
                         )}
                         {predmet.napomena && (
-                          <p className="text-xs text-slate-600 italic mt-1 line-clamp-1 max-w-xs">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 italic mt-1 line-clamp-1 max-w-xs">
                             „{predmet.napomena}”
                           </p>
                         )}
@@ -672,7 +676,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       <td className="px-4 py-3.5 align-top">
                         <Link
                           href={`/predmeti/${predmet.id}`}
-                          className="font-semibold text-slate-800 hover:text-blue-600 block max-w-60 truncate"
+                          className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 block max-w-60 truncate"
                         >
                           {predmet.stranka || '-'}
                         </Link>
