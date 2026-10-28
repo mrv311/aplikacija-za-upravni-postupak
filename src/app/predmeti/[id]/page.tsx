@@ -104,7 +104,11 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
           </section>
 
           {/* Desni stupac: AI Pravni Asistent */}
-          <AiPanel predmetId={predmet.id} />
+          <AiPanel
+            predmetId={predmet.id}
+            klasa={predmet.klasa}
+            stranka={predmet.stranka}
+          />
         </div>
       </main>
     </div>

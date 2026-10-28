@@ -19,6 +19,7 @@ import {
   type PredmetPodrucje,
   type PredmetIshod,
 } from '@/lib/predmet-meta';
+import { normalizeExtractedLegalText } from '@/lib/text-formatter';
 
 const db = supabaseServer || supabaseClient;
 // @ts-ignore
@@ -120,7 +121,7 @@ export async function parseFileBufferWithOcrFallback(
     izvorTeksta = 'OCR sken';
   }
 
-  return { rawText: rawText.trim(), izvorTeksta };
+  return { rawText: normalizeExtractedLegalText(rawText.trim()), izvorTeksta };
 }
 
 function sanitizeStorageFileName(originalName: string): string {

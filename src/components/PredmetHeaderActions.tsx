@@ -12,7 +12,9 @@ import {
   X,
   Loader2,
   AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
+import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
 import {
   archivePredmet,
   unarchivePredmet,
@@ -37,6 +39,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [, startTransition] = useTransition();
 
   const [faza, setFaza] = useState<PredmetFaza>(predmet.faza);
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -192,6 +195,16 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
 
         {/* Akcijski gumbi u zaglavlju spisa */}
+        <button
+          type="button"
+          onClick={() => setDraftModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+          title="Generiraj tekst drugostupanjskog akta (Uvod, Izreka, Obrazloženje temeljem spisa i prakse)"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Generiraj nacrt</span>
+        </button>
+
         <button
           type="button"
           onClick={() => {
@@ -510,6 +523,18 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           </div>
         </div>
       )}
+
+      {/* Modal: Generator nacrta akta i obrazloženja (Točka 3) */}
+      <DraftGeneratorModal
+        predmetId={predmet.id}
+        klasa={predmet.klasa}
+        stranka={predmet.stranka}
+        isOpen={draftModalOpen}
+        onClose={() => setDraftModalOpen(false)}
+        onDraftSavedToCase={() => {
+          startTransition(() => router.refresh());
+        }}
+      />
     </>
   );
 }

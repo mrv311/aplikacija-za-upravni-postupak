@@ -54,6 +54,7 @@ import {
   DOKUMENT_VRSTE,
   decodeDocLabel,
 } from '@/lib/predmet-meta';
+import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
 
 interface SpisDokument {
   id: string;
@@ -82,7 +83,15 @@ function QuickActionIcon({
   }
 }
 
-export function AiPanel({ predmetId }: { predmetId: string }) {
+export function AiPanel({
+  predmetId,
+  klasa = '',
+  stranka = '',
+}: {
+  predmetId: string;
+  klasa?: string;
+  stranka?: string;
+}) {
   const [dokumenti, setDokumenti] = useState<SpisDokument[]>([]);
   const [docsExpanded, setDocsExpanded] = useState(false);
   const [input, setInput] = useState('');
@@ -90,6 +99,9 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
   const [filterScope, setFilterScope] = useState<PraksaFilterScope>('sve');
   const [panelSize, setPanelSize] = useState<PanelSize>('normal');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Modal Generator nacrta (Točka 3)
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
   // Status trajnog spremanja razgovora (baza + local)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -433,6 +445,17 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Gumb za pokretanje Generatora nacrta (Točka 3) */}
+            <button
+              type="button"
+              onClick={() => setIsGeneratorOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+              title="Pokreni Generator nacrta akta i obrazloženja"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden xl:inline">Nacrt akta</span>
+            </button>
+
             {/* Odabir modela */}
             <select
               value={modelPreference}
@@ -615,7 +638,13 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
                     key={action.id}
                     type="button"
                     disabled={isLoading}
-                    onClick={() => triggerPrompt(action.prompt, action.recommendedModel)}
+                    onClick={() => {
+                      if (action.id === 'case-draft') {
+                        setIsGeneratorOpen(true);
+                      } else {
+                        triggerPrompt(action.prompt, action.recommendedModel);
+                      }
+                    }}
                     className="text-left p-3.5 rounded-xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-2xs hover:shadow-sm transition-all group flex flex-col justify-between gap-2 disabled:opacity-50"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -800,7 +829,13 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
                   key={action.id}
                   type="button"
                   disabled={isLoading}
-                  onClick={() => triggerPrompt(action.prompt, action.recommendedModel)}
+                  onClick={() => {
+                    if (action.id === 'case-draft') {
+                      setIsGeneratorOpen(true);
+                    } else {
+                      triggerPrompt(action.prompt, action.recommendedModel);
+                    }
+                  }}
                   title={action.shortDesc}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-[11px] font-semibold text-slate-700 hover:text-blue-700 whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"
                 >
@@ -960,6 +995,18 @@ export function AiPanel({ predmetId }: { predmetId: string }) {
           </form>
         </div>
       )}
+
+      {/* Modal: Generator nacrta akta i obrazloženja (Točka 3) */}
+      <DraftGeneratorModal
+        predmetId={predmetId}
+        klasa={klasa}
+        stranka={stranka}
+        isOpen={isGeneratorOpen}
+        onClose={() => setIsGeneratorOpen(false)}
+        onDraftSavedToCase={() => {
+          fetchDocs();
+        }}
+      />
     </>
   );
 }
