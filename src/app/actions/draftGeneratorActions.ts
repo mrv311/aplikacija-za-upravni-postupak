@@ -678,7 +678,8 @@ export async function runLegalReviewAction(payload: {
       ? normalizeExtractedLegalText(prvostupanjskoDoc.raw_text).slice(0, 10000)
       : '';
 
-    const modelName = modelPreference === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    const modelName =
+      modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
 
     const systemPrompt = `Ti si vrhunski viši upravni savjetnik u drugostupanjskom upravnom postupku u Ministarstvu (Republika Hrvatska).
 Tvoj zadatak je provesti detaljnu, objektivnu i strogu pravnu reviziju (kontrolu kvalitete) ZAVRŠENOG NACRTA RJEŠENJA kojeg je savjetnik pripremio.
