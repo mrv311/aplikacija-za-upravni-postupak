@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { ThemeProvider, ThemeInitScript } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Upravni Postupak",
-  description: "Aplikacija za upravne postupke",
+  title: "Upravni Postupak | Sustav za drugostupanjsko rješavanje",
+  description: "Aplikacija za drugostupanjske upravne postupke",
 };
 
 export default function RootLayout({
@@ -27,12 +28,18 @@ export default function RootLayout({
     <html
       lang="hr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex bg-slate-50 text-slate-900">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+      <head>
+        <ThemeInitScript />
+      </head>
+      <body className="min-h-full flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+        <ThemeProvider>
+          <Sidebar />
+          <main className="flex-1 overflow-auto min-w-0">
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

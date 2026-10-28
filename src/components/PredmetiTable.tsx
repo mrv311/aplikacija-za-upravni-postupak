@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useTransition, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -73,6 +73,29 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   // Polja za Arhiviranje
   const [archiveIshod, setArchiveIshod] = useState<PredmetIshod>('Odbijena žalba');
   const [archiveNapomena, setArchiveNapomena] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Prečac na tipkovnici: Ctrl+K ili / za fokus tražilice
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     setItems(initialPredmeti);
@@ -328,14 +351,14 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
               setFilterSecondary('sve');
               setOnlyUrgent(false);
             }}
-            className={`text-left p-4 rounded-xl border transition-all ${
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
               filterSecondary === 'sve' && !onlyUrgent
-                ? 'bg-blue-50/70 border-blue-300 shadow-2xs'
-                : 'bg-white border-slate-200 hover:border-slate-300'
+                ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
-            <p className="text-xs font-semibold text-slate-500">Ukupno u radu</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ukupno u radu</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
           </button>
 
           <button
@@ -344,17 +367,17 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
               setOnlyUrgent((v) => !v);
               setSortBy('hitnost');
             }}
-            className={`text-left p-4 rounded-xl border transition-all ${
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
               onlyUrgent
-                ? 'bg-rose-50 border-rose-300 shadow-2xs'
-                : 'bg-white border-slate-200 hover:border-rose-200'
+                ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900'
             }`}
           >
-            <p className="text-xs font-semibold text-rose-700 flex items-center gap-1">
+            <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
               Blizu isteka / prekoračen rok
             </p>
-            <p className="text-2xl font-bold text-rose-700 mt-1">{stats.urgentCount}</p>
+            <p className="text-2xl font-bold text-rose-700 dark:text-rose-400 mt-1">{stats.urgentCount}</p>
           </button>
 
           <button
@@ -363,14 +386,14 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
               setOnlyUrgent(false);
               setFilterSecondary(filterSecondary === 'Čeka dopunu' ? 'sve' : 'Čeka dopunu');
             }}
-            className={`text-left p-4 rounded-xl border transition-all ${
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
               filterSecondary === 'Čeka dopunu'
-                ? 'bg-amber-50 border-amber-300 shadow-2xs'
-                : 'bg-white border-slate-200 hover:border-amber-200'
+                ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-900'
             }`}
           >
-            <p className="text-xs font-semibold text-amber-800">Čeka dopunu spisa</p>
-            <p className="text-2xl font-bold text-amber-800 mt-1">{stats.cekaDopunuCount}</p>
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-400">Čeka dopunu spisa</p>
+            <p className="text-2xl font-bold text-amber-800 dark:text-amber-400 mt-1">{stats.cekaDopunuCount}</p>
           </button>
 
           <button
@@ -379,33 +402,33 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
               setOnlyUrgent(false);
               setFilterSecondary(filterSecondary === 'Na potpisu' ? 'sve' : 'Na potpisu');
             }}
-            className={`text-left p-4 rounded-xl border transition-all ${
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
               filterSecondary === 'Na potpisu'
-                ? 'bg-purple-50 border-purple-300 shadow-2xs'
-                : 'bg-white border-slate-200 hover:border-purple-200'
+                ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-900'
             }`}
           >
-            <p className="text-xs font-semibold text-purple-800">Nacrt na potpisu</p>
-            <p className="text-2xl font-bold text-purple-800 mt-1">{stats.naPotpisuCount}</p>
+            <p className="text-xs font-semibold text-purple-800 dark:text-purple-400">Nacrt na potpisu</p>
+            <p className="text-2xl font-bold text-purple-800 dark:text-purple-400 mt-1">{stats.naPotpisuCount}</p>
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl bg-white border border-slate-200">
-            <p className="text-xs font-semibold text-slate-500">Ukupno u arhivi (A/A)</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ukupno u arhivi (A/A)</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-slate-200">
-            <p className="text-xs font-semibold text-emerald-700">Odbijene žalbe</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{stats.odbijeneCount}</p>
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Odbijene žalbe</p>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{stats.odbijeneCount}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-slate-200">
-            <p className="text-xs font-semibold text-indigo-700">Poništena rješenja</p>
-            <p className="text-2xl font-bold text-indigo-700 mt-1">{stats.ponistenaCount}</p>
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Poništena rješenja</p>
+            <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mt-1">{stats.ponistenaCount}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-slate-200">
-            <p className="text-xs font-semibold text-blue-700">Ugrađeno u Bazu prakse</p>
-            <p className="text-2xl font-bold text-blue-700 mt-1">{stats.uPraksiCount}</p>
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">Ugrađeno u Bazu prakse</p>
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-400 mt-1">{stats.uPraksiCount}</p>
           </div>
         </div>
       )}
