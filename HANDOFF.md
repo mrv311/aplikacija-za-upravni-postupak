@@ -51,4 +51,44 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - Prilagođene tablice predmeta i arhive (`PredmetiTable`) s filtriranjem po statusu i hitnosti.
 
 3. **Status izgradnje (Build status)**:
-   - `npm run build` prolazi **100% uspješno s 0 TypeScript grešaka**.
+   - `npx tsc --noEmit` prolazi **100% uspješno s 0 grešaka**.
+
+---
+
+## 📌 3. Faza 1: AI Pravna revizija, vođeni tijek akta i baza prakse
+
+1. **AI pravna revizija dovršenog akta (`LegalReviewModal`)**:
+   - Omogućava savjetniku unos teksta (Ctrl+V) ili učitavanje datoteke (.docx, .doc, .pdf) dovršenog rješenja izrađenog izvan aplikacije.
+   - AI savjetnik (`gemini-3.1-pro-preview`) provodi dubinsku kontrolu kvalitete:
+     1. Odgovor na sve žalbene navode ([OBRAĐENO] vs [PROPUŠTENO])
+     2. Zakonitost i materijalno pravo (članci ZUP-a, Zakon o vodama, OPZ)
+     3. Usklađenost izreke (dispozitiva) i obrazloženja
+     4. Završna ocjena i preporuka
+   - Brze akcije izravno iz modala:
+     - **"Dodaj u praksu"** (s pregledom i potvrdom GDPR anonimizacije u hodu)
+     - **"Spremi u spis"** (kao novu verziju ili konačni akt)
+     - **"Pošalji na potpis"** (prelazak u fazu "Na potpisu")
+
+2. **Vođeni tijek akta (Workflow)**:
+   - Statusi predmeta: `Novo` $\rightarrow$ `U radu` $\rightarrow$ `Na potpisu` $\rightarrow$ `Arhiviran (A/A)`.
+   - Pri arhiviranju nudi se automatska provjera i objava rješenja u bazu prakse (`SmartArhivirajModal`).
+
+---
+
+## 📌 4. Faza 2: Modul Izvještaji i Analitika (`/izvjestaji`)
+
+1. **Izvršni kontrolni panel (KPI Dashboard)**:
+   - Prikaz ključnih pokazatelja: ukupno zaprimljeno, riješeno i arhivirano (% dovršenosti), otvoreno u radu, predmeti na potpisu.
+   - Praćenje **zakonskog roka po ZUP-u (60 dana - čl. 121.)**: postotak riješenih unutar roka, popis i broj prekoračenih predmeta.
+   - Prosječno trajanje rješavanja predmeta u danima.
+
+2. **Grafička analitika i trendovi**:
+   - **Struktura odluka (Ishodi)**: Odbijene žalbe (čl. 116. ZUP), Poništena rješenja (čl. 117. ZUP), Odbačene žalbe (čl. 114. ZUP), Obustave.
+   - **Upravna područja i postupci**: Pregled po područjima (NUV, VD, NZZV, Ostalo) uz **dinamičku podršku za sve nove postupke dodane u hodu**.
+   - **Mjesečna dinamika rješavanja**: Usporedni prikaz zaprimljenih vs. riješenih predmeta po mjesecima.
+
+3. **Službeni izvozi i AI asistent**:
+   - **Izvoz u Excel (CSV)**: Prilagođen za hrvatski Excel (točka-zarez, UTF-8 BOM, č, ć, ž, š, đ).
+   - **Službeni ispis / Spremi PDF**: Memorandumska stranica za print sa zaglavljem tijela i potpisnim blokom.
+   - **AI Narativni sažetak**: Jednim klikom generira analitičko tekstualno izvješće za voditelja / Ministarstvo spremno za kopiranje u Word.
+
