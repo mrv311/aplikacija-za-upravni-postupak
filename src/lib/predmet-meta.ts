@@ -195,6 +195,7 @@ export interface PredmetExtendedMeta {
   faza?: PredmetFaza;
   ishod?: PredmetIshod;
   datum_rjesavanja?: string;
+  datum_slanja_na_potpis?: string;
   napomena?: string;
   poslano_u_praksu?: boolean;
 }
@@ -223,6 +224,7 @@ export interface EnrichedPredmet {
   faza: PredmetFaza;
   ishod?: PredmetIshod;
   datum_rjesavanja?: string;
+  datum_slanja_na_potpis?: string;
   napomena?: string;
   poslano_u_praksu?: boolean;
   broj_dokumenata: number;
@@ -265,6 +267,7 @@ export function enrichPredmetRow(row: any): EnrichedPredmet {
     faza: meta.faza || 'Novo',
     ishod: meta.ishod,
     datum_rjesavanja: meta.datum_rjesavanja,
+    datum_slanja_na_potpis: meta.datum_slanja_na_potpis,
     napomena: meta.napomena || '',
     poslano_u_praksu: Boolean(meta.poslano_u_praksu),
     broj_dokumenata: realDocs.length,

@@ -124,12 +124,29 @@ export interface QuickActionTemplate {
   id: string;
   label: string;
   shortDesc: string;
-  iconName: 'clipboard' | 'clock' | 'scale' | 'pen';
+  iconName: 'clipboard' | 'clock' | 'scale' | 'pen' | 'shield';
   prompt: string;
   recommendedModel?: 'flash' | 'pro';
 }
 
 export const CASE_QUICK_ACTIONS: QuickActionTemplate[] = [
+  {
+    id: 'revizija-nacrta',
+    label: 'Pravna revizija nacrta',
+    shortDesc: 'Kontrola odgovora na žalbu, zakonitosti i članaka prije potpisa',
+    iconName: 'shield',
+    recommendedModel: 'pro',
+    prompt:
+      'Provedi detaljnu i strogu pravnu reviziju (kontrolu kvalitete) izrađenog nacrta drugostupanjskog rješenja za ovaj predmet prije potpisivanja.\n\n' +
+      'Usporedi nacrt rješenja s cjelokupnim spisom (žalbom i prvostupanjskim rješenjem) i sastavi izvješće točno po ovim točkama:\n' +
+      '1. ODGOVOR NA SVE ŽALBENE NAVODE: Je li u obrazloženju argumentirano odgovoreno na svaki bitan navod žalitelja? (Upozori ako je ijedan prigovor ostao neobrađen jer to predstavlja bitnu povredu postupka koja vodi do poništenja na Visokom upravnom sudu).\n' +
+      '2. ZAKONITOST I MATERIJALNO PRAVO: Jesu li točno navedeni svi mjerodavni zakonski članci (čl. 116. ili 117. ili 114. ZUP-a, odredbe Zakona o financiranju vodnoga gospodarstva, Zakona o vodama ili OPZ-a)?\n' +
+      '3. USKLAĐENOST IZREKE I OBRAZLOŽENJA: Je li izreka (dispozitiv) jasna, izvršiva i u potpunosti korespondira s razlozima iznesenim u obrazloženju?\n' +
+      '4. UPUTA O PRAVNOM LIJEKU: Je li uputa o pravnom lijeku točna (upravni spor u roku od 30 dana)?\n' +
+      '5. ZAKLJUČNA OCJENA I PREPORUKA:\n' +
+      '   - 🟢 SPREMNO ZA POTPIS (ako je nacrt kompletan i zakonit)\n' +
+      '   - 🟡 POTREBNE KOREKCIJE (navedi konkretne preporuke što točno dopuniti u tekstu).',
+  },
   {
     id: 'analiza-spisa',
     label: 'Analiza spisa',

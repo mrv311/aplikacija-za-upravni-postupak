@@ -18,6 +18,8 @@ import {
 import {
   parseFileBufferWithOcrFallback,
   uploadAndParseDocument,
+  previewAnonymizedForPraksa,
+  confirmPublishToPraksa,
 } from '@/app/actions/documentActions';
 
 const db = supabaseServer || supabase;
@@ -345,6 +347,146 @@ export async function updatePredmetFaza(id: string, faza: PredmetFaza) {
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Greška pri promjeni faze predmeta.' };
+  }
+}
+
+/**
+ * Vođeni tijek akta: Šalje nacrt na potpis i bilježi datum slanja na potpis
+ */
+export async function sendPredmetToSigning(id: string) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    await upsertPredmetMeta(id, {
+      faza: 'Na potpisu',
+      datum_slanja_na_potpis: today,
+    });
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Greška pri slanju predmeta na potpis.' };
+  }
+}
+
+/**
+ * Vođeni tijek akta: Vraća predmet iz potpisa u doradu/rad
+ */
+export async function returnPredmetToWork(id: string) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    await upsertPredmetMeta(id, {
+      faza: 'U radu',
+    });
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Greška pri vraćanju predmeta u rad.' };
+  }
+}
+
+/**
+ * Vođeni tijek akta: Pametno rješavanje i arhiviranje
+ * Arhivira spis, postavlja ishod i datum rješavanja te opcionalno
+ * u istom koraku GDPR anonimizira i uvrštava drugostupanjsko rješenje u Bazu prakse.
+ */
+export async function smartCompleteAndArchivePredmet(
+  id: string,
+  payload: {
+    ishod: PredmetIshod;
+    datum_rjesavanja: string;
+    napomena?: string;
+    publishDocId?: string;
+  }
+) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    // 1. Ažuriraj status predmeta u 'arhiviran'
+    const { data, error } = await db
+      .from('predmeti')
+      .update({ status: 'arhiviran' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23514') {
+        return {
+          error:
+            'Baza podataka ima staro ograničenje statusa. Pokrenite SQL skriptu "02_arhiviranje_predmeta.sql".',
+        };
+      }
+      return { error: `Greška pri arhiviranju: ${error.message}` };
+    }
+
+    let praksaPublished = false;
+    let praksaWarning: string | null = null;
+
+    // 2. Ako je odabrano slanje u Bazu prakse
+    if (payload.publishDocId) {
+      try {
+        const { data: metaDoc } = await db
+          .from('dokumenti')
+          .select('storage_url')
+          .eq('predmet_id', id)
+          .eq('tip_dokumenta', META_DOC_TYPE)
+          .maybeSingle();
+        const currentMeta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+        const podrucje = currentMeta.podrucje || 'NUV';
+
+        const previewRes = await previewAnonymizedForPraksa({
+          predmetId: id,
+          docId: payload.publishDocId,
+          podrucje,
+          ishod: payload.ishod,
+          godina: (payload.datum_rjesavanja || new Date().toISOString()).split('-')[0],
+        });
+
+        if (previewRes.success && previewRes.proposedTitle && previewRes.anonymizedText) {
+          const pubRes = await confirmPublishToPraksa({
+            predmetId: id,
+            nazivDatoteke: previewRes.proposedTitle,
+            anonymizedText: previewRes.anonymizedText,
+          });
+          if (pubRes.success) {
+            praksaPublished = true;
+          } else {
+            praksaWarning = pubRes.error || 'Nije uspjelo spremanje u Bazu prakse.';
+          }
+        } else {
+          praksaWarning = previewRes.error || 'Nije uspjela automatska anonimizacija.';
+        }
+      } catch (pErr: any) {
+        console.warn('Upozorenje pri automatskoj objavi u praksu:', pErr);
+        praksaWarning = pErr.message || 'Greška pri objavi u praksu.';
+      }
+    }
+
+    // 3. Ažuriraj metapodatke predmeta
+    await upsertPredmetMeta(id, {
+      ishod: payload.ishod,
+      datum_rjesavanja: payload.datum_rjesavanja || new Date().toISOString().split('T')[0],
+      ...(payload.napomena !== undefined ? { napomena: payload.napomena.trim() } : {}),
+      ...(praksaPublished ? { poslano_u_praksu: true } : {}),
+    });
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/baza-prakse');
+    revalidatePath(`/predmeti/${id}`);
+
+    return {
+      success: true,
+      data,
+      praksaPublished,
+      praksaWarning,
+    };
+  } catch (err: any) {
+    console.error('smartCompleteAndArchivePredmet Error:', err);
+    return { error: err.message || 'Greška pri dovršetku i arhiviranju predmeta.' };
   }
 }
 

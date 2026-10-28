@@ -36,6 +36,7 @@ import {
   CheckCircle2,
   Loader2,
   BookmarkCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   type LegalUIMessage,
@@ -79,6 +80,8 @@ function QuickActionIcon({
       return <Scale className={className} />;
     case 'pen':
       return <PenTool className={className} />;
+    case 'shield':
+      return <ShieldCheck className={className} />;
   }
 }
 
@@ -298,6 +301,21 @@ export function AiPanel({
       }
     );
   };
+
+  useEffect(() => {
+    const handleRunReview = (e: Event) => {
+      const customDetail = (e as CustomEvent)?.detail;
+      const reviewAction = CASE_QUICK_ACTIONS.find((a) => a.id === 'revizija-nacrta');
+      if (reviewAction) {
+        const extraPrompt = customDetail?.docText
+          ? `Tekst nacrta za reviziju:\n„„„\n${customDetail.docText}\n„„„\n\n${reviewAction.prompt}`
+          : reviewAction.prompt;
+        triggerPrompt(extraPrompt, 'pro');
+      }
+    };
+    window.addEventListener('trigger-ai-review', handleRunReview);
+    return () => window.removeEventListener('trigger-ai-review', handleRunReview);
+  }, [triggerPrompt]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();

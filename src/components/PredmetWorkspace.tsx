@@ -31,6 +31,16 @@ export function PredmetWorkspace({
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('balanced');
   const [mobileTab, setMobileTab] = useState<'docs' | 'ai'>('docs');
 
+  React.useEffect(() => {
+    const handleSwitchToAi = () => setMobileTab('ai');
+    window.addEventListener('switch-to-ai-tab', handleSwitchToAi);
+    window.addEventListener('trigger-ai-review', handleSwitchToAi);
+    return () => {
+      window.removeEventListener('switch-to-ai-tab', handleSwitchToAi);
+      window.removeEventListener('trigger-ai-review', handleSwitchToAi);
+    };
+  }, []);
+
   // Izračun roka i boje za ZUP bedž
   const deadline = calculateZupDeadline(predmet.datum_zaprimanja);
   const dani = deadline ? deadline.daysRemaining : null;

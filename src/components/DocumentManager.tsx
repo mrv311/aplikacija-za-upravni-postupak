@@ -38,6 +38,7 @@ import {
   Landmark,
   ScanLine,
   PenLine,
+  ShieldCheck,
 } from 'lucide-react';
 
 type DokumentRow = {
@@ -582,6 +583,27 @@ export function DocumentManager({
                       <Eye className="w-3.5 h-3.5" />
                       Sken & OCR
                     </button>
+
+                    {(meta.vrsta.toLowerCase().includes('drugostup') ||
+                      meta.vrsta.toLowerCase().includes('rješenje') ||
+                      (doc.raw_text && doc.raw_text.toLowerCase().includes('obrazloženje'))) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.dispatchEvent(
+                            new CustomEvent('trigger-ai-review', {
+                              detail: { docText: doc.raw_text },
+                            })
+                          );
+                          window.dispatchEvent(new CustomEvent('switch-to-ai-tab'));
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 text-xs font-semibold transition-colors cursor-pointer"
+                        title="Pošalji ovaj nacrt na AI pravnu reviziju (kontrola odgovora na žalbu i zakonitosti)"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        Pregled kod savjetnika
+                      </button>
+                    )}
 
                     <button
                       type="button"
