@@ -3,7 +3,7 @@ export const CHAT_DOC_TYPE = '__CHAT__';
 export const SYSTEM_DOC_TYPES = [META_DOC_TYPE, CHAT_DOC_TYPE] as const;
 export const META_URL_PREFIX = 'meta://';
 
-export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo';
+export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo' | (string & {});
 
 export const PREDMET_PODRUCJA: { value: PredmetPodrucje; label: string; fullLabel: string }[] = [
   { value: 'NUV', label: 'NUV', fullLabel: 'Naknada za uređenje voda (NUV)' },

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   Inbox,
   Archive,
+  BarChart3,
   BookOpen,
   Scale,
   Sparkles,
@@ -62,6 +63,12 @@ export function Sidebar() {
       href: '/arhiva',
       label: 'Arhiva (A/A)',
       icon: Archive,
+      exact: false,
+    },
+    {
+      href: '/izvjestaji',
+      label: 'Izvještaji',
+      icon: BarChart3,
       exact: false,
     },
     {
