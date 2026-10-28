@@ -190,8 +190,8 @@ export function PredmetWorkspace({
           </section>
 
           {/* DESNI STUPAC: AI Pravni savjetnik za ovaj spis */}
-          <section
-            className={`min-w-0 bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden transition-all duration-200 ${
+          <div
+            className={`min-w-0 flex flex-col overflow-hidden transition-all duration-200 ${
               mobileTab !== 'ai' ? 'hidden lg:flex' : 'flex'
             } ${
               layoutMode === 'focus-ai'
@@ -201,22 +201,8 @@ export function PredmetWorkspace({
                 : 'lg:flex-1'
             }`}
           >
-            <div className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/70 shrink-0 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                <h2 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">
-                  AI Savjetnik & Izrada nacrta
-                </h2>
-              </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline truncate">
-                RAG pretraga prakse i propisa
-              </span>
-            </div>
-
-            <div className="flex-1 p-3 sm:p-4 overflow-y-auto min-h-0">
-              {childrenAi}
-            </div>
-          </section>
+            {childrenAi}
+          </div>
         </div>
       </div>
     </div>

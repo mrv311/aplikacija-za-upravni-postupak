@@ -18,7 +18,6 @@ import {
   FileSpreadsheet,
   Maximize2,
   Minimize2,
-  Columns2,
   RotateCcw,
   RefreshCw,
   Send,
@@ -62,7 +61,7 @@ interface SpisDokument {
   storage_url: string;
 }
 
-type PanelSize = 'normal' | 'wide' | 'fullscreen';
+type PanelSize = 'normal' | 'fullscreen';
 
 function QuickActionIcon({
   name,
@@ -395,9 +394,7 @@ export function AiPanel({
   const containerSizeClasses =
     panelSize === 'fullscreen'
       ? 'fixed inset-4 z-50 w-auto h-auto shadow-2xl ring-1 ring-slate-900/10'
-      : panelSize === 'wide'
-      ? 'w-[58%] shrink-0 transition-[width] duration-200'
-      : 'w-[42%] shrink-0 transition-[width] duration-200';
+      : 'w-full h-full';
 
   return (
     <>
@@ -409,107 +406,93 @@ export function AiPanel({
       )}
 
       <section
-        className={`${containerSizeClasses} bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden`}
+        className={`${containerSizeClasses} bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden min-h-0`}
       >
         {/* 1. ZAGLAVLJE PANELA */}
-        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-2xs">
+        <div className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/70 flex flex-wrap justify-between items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shadow-2xs shrink-0">
               <Bot className="w-4 h-4" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-sm text-slate-800 leading-tight">
+                <h2 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-tight truncate">
                   AI Pravni Asistent
                 </h2>
                 {/* Indikator trajnog spremanja razgovora u spis */}
                 {saveStatus === 'saving' ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800 shrink-0">
                     <Loader2 className="w-2.5 h-2.5 animate-spin" />
                     Spremam u spis...
                   </span>
                 ) : saveStatus === 'saved' && messages.length > 0 ? (
                   <span
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 shrink-0"
                     title="Razgovor i generirani nacrti su trajno spremljeni u bazi — možete slobodno izaći iz predmeta i vratiti se"
                   >
-                    <BookmarkCheck className="w-3 h-3 text-emerald-600" />
+                    <BookmarkCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     Spremljeno u spis
                   </span>
                 ) : null}
               </div>
-              <p className="text-[11px] text-slate-500 leading-tight">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight hidden sm:block truncate">
                 Analiza spisa, propisi i baza prakse
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Gumb za pokretanje Generatora nacrta (Točka 3) */}
             <button
               type="button"
               onClick={() => setIsGeneratorOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold transition-colors cursor-pointer"
               title="Pokreni Generator nacrta akta i obrazloženja"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden xl:inline">Nacrt akta</span>
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden sm:inline">Nacrt akta</span>
             </button>
 
             {/* Odabir modela */}
             <select
               value={modelPreference}
               onChange={(e) => setModelPreference(e.target.value as 'pro' | 'flash')}
-              className="text-xs font-medium bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="text-xs font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               title="Odaberite brzinu i dubinu analize"
             >
-              <option value="flash">⚡ Flash (Brzo)</option>
-              <option value="pro">🧠 Pro (Duboko)</option>
+              <option value="flash">⚡ Flash</option>
+              <option value="pro">🧠 Pro</option>
             </select>
 
-            {/* Kontrole širine prikaza */}
-            <div className="inline-flex items-center rounded-lg border border-slate-300 bg-white p-0.5">
-              <button
-                type="button"
-                onClick={() => setPanelSize(panelSize === 'wide' ? 'normal' : 'wide')}
-                className={`p-1 rounded transition-colors ${
-                  panelSize === 'wide'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-                title={panelSize === 'wide' ? 'Vrati na standardnu širinu' : 'Proširi panel na 60% ekrana'}
-              >
-                <Columns2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setPanelSize(panelSize === 'fullscreen' ? 'normal' : 'fullscreen')
-                }
-                className={`p-1 rounded transition-colors ${
-                  panelSize === 'fullscreen'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-                title={
-                  panelSize === 'fullscreen'
-                    ? 'Izađi iz punog zaslona (Esc)'
-                    : 'Otvori preko cijelog zaslona'
-                }
-              >
-                {panelSize === 'fullscreen' ? (
-                  <Minimize2 className="w-3.5 h-3.5" />
-                ) : (
-                  <Maximize2 className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
+            {/* Gumb za cijeli zaslon */}
+            <button
+              type="button"
+              onClick={() =>
+                setPanelSize(panelSize === 'fullscreen' ? 'normal' : 'fullscreen')
+              }
+              className={`p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 transition-colors ${
+                panelSize === 'fullscreen'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+              title={
+                panelSize === 'fullscreen'
+                  ? 'Izađi iz punog zaslona (Esc)'
+                  : 'Otvori preko cijelog zaslona'
+              }
+            >
+              {panelSize === 'fullscreen' ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
 
             {messages.length > 0 && (
               <button
                 type="button"
                 onClick={handleResetChat}
-                className="p-1.5 rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors"
+                className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                 title="Očisti razgovor (poništi spremljeni chat za ovaj predmet)"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -519,11 +502,11 @@ export function AiPanel({
         </div>
 
         {/* 2. FILTRIRANJE KONTEKSTA PRAKSE + SAŽETAK DOKUMENATA U SPISU */}
-        <div className="px-3.5 py-2 bg-white border-b border-slate-200 space-y-2 shrink-0">
+        <div className="px-3.5 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
           {/* RAG Filter opsega */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 shrink-0 mr-0.5">
-              <Filter className="w-3 h-3 text-slate-400" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 mr-0.5">
+              <Filter className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               Fokus:
             </span>
             {PRAKSA_FILTER_OPTIONS.map((opt) => {
@@ -537,7 +520,7 @@ export function AiPanel({
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
                     active
                       ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {opt.shortLabel}
@@ -547,16 +530,16 @@ export function AiPanel({
           </div>
 
           {/* Kompaktna traka učitanih dokumenata u spisu */}
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setDocsExpanded((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium"
+              className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
             >
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>
                 Dokumenti u spisu:{' '}
-                <strong className={dokumenti.length > 0 ? 'text-slate-900' : 'text-amber-600'}>
+                <strong className={dokumenti.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-amber-600 dark:text-amber-400'}>
                   {dokumenti.length}
                 </strong>
               </span>
@@ -571,7 +554,7 @@ export function AiPanel({
             <button
               type="button"
               onClick={fetchDocs}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-800"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               title="Ponovno provjeri dokumente spisa"
             >
               <RefreshCw className="w-3 h-3" />
@@ -586,7 +569,7 @@ export function AiPanel({
                 return (
                   <div
                     key={doc.id}
-                    className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-[11px] text-slate-700"
+                    className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-[11px] text-slate-700 dark:text-slate-300"
                     title={doc.tip_dokumenta}
                   >
                     <span className="truncate max-w-48 font-medium">
@@ -596,7 +579,7 @@ export function AiPanel({
                     <button
                       type="button"
                       onClick={() => handleRemoveDoc(doc.id, doc.storage_url)}
-                      className="text-slate-400 hover:text-red-600 transition-colors"
+                      className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                       title="Ukloni dokument iz spisa"
                     >
                       <X className="w-3 h-3" />
@@ -609,22 +592,22 @@ export function AiPanel({
         </div>
 
         {/* 3. PROSTOR RAZGOVORA I REZULTATA */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/60">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/60 dark:bg-slate-950/50">
           {messages.length === 0 && (
             <div className="h-full flex flex-col justify-center py-4">
               <div className="text-center mb-5 px-2">
-                <div className="w-12 h-12 mx-auto mb-3 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                <div className="w-12 h-12 mx-auto mb-3 bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/80 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
                   <Sparkles className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-800">
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
                   Što želite napraviti s ovim spisom?
                 </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
                   Odaberite brzu pravnu radnju jednim klikom ili upišite vlastito pitanje. Svi odgovori i generirani nacrti automatski se trajno spremaju u ovaj predmet.
                 </p>
 
                 {dokumenti.length === 0 && (
-                  <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+                  <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-medium">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     U spisu još nema dokumenata — učitajte rješenje ili žalbu u lijevom stupcu.
                   </div>
@@ -645,23 +628,23 @@ export function AiPanel({
                         triggerPrompt(action.prompt, action.recommendedModel);
                       }
                     }}
-                    className="text-left p-3.5 rounded-xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-2xs hover:shadow-sm transition-all group flex flex-col justify-between gap-2 disabled:opacity-50"
+                    className="text-left p-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs hover:shadow-sm transition-all group flex flex-col justify-between gap-2 disabled:opacity-50"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                         <QuickActionIcon name={action.iconName} className="w-4 h-4" />
                       </div>
                       {action.recommendedModel === 'pro' && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                           🧠 Pro
                         </span>
                       )}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-800 group-hover:text-blue-700">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400">
                         {action.label}
                       </p>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                         {action.shortDesc}
                       </p>
                     </div>
@@ -672,7 +655,7 @@ export function AiPanel({
           )}
 
           {displayError && (
-            <div className="p-3.5 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 flex items-start gap-2">
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 text-xs rounded-xl border border-red-200 dark:border-red-800 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Došlo je do greške:</p>
@@ -708,11 +691,11 @@ export function AiPanel({
               <div key={m.id} className="flex flex-col items-start w-full">
                 {/* Gornja alatna traka odgovora */}
                 <div className="w-full flex items-center justify-between mb-1 px-1">
-                  <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-                    <Bot className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Bot className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     AI Pravni Asistent
                     {sourcesPart?.data?.modelName && (
-                      <span className="text-[10px] font-normal text-slate-400">
+                      <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
                         ({sourcesPart.data.modelName.includes('pro') ? 'Pro' : 'Flash'})
                       </span>
                     )}
@@ -724,17 +707,17 @@ export function AiPanel({
                       <button
                         type="button"
                         onClick={() => handleOpenSaveDraftModal(m.id, textContent)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-[11px] font-semibold text-slate-700 hover:text-emerald-700 transition-colors shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors shadow-2xs cursor-pointer"
                         title="Spremi ovaj nacrt / obrazloženje izravno u dokumente spisa (lijevi stupac)"
                       >
                         {savedDraftKey === m.id ? (
                           <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            <span className="text-emerald-700">Spremljeno u spis!</span>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-700 dark:text-emerald-300">Spremljeno u spis!</span>
                           </>
                         ) : (
                           <>
-                            <Save className="w-3 h-3 text-emerald-600" />
+                            <Save className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                             <span>Spremi u spis</span>
                           </>
                         )}
@@ -744,17 +727,17 @@ export function AiPanel({
                       <button
                         type="button"
                         onClick={() => handleCopyMessage(m.id, textContent, 'word')}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-[11px] font-semibold text-slate-700 hover:text-blue-700 transition-colors shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-300 transition-colors shadow-2xs cursor-pointer"
                         title="Kopiraj formatirani tekst spreman za izravno lijepljenje u Microsoft Word (bez zvjezdica)"
                       >
                         {copiedKey === `${m.id}-word` ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span className="text-emerald-700">Kopirano za Word</span>
+                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-700 dark:text-emerald-300">Kopirano za Word</span>
                           </>
                         ) : (
                           <>
-                            <FileSpreadsheet className="w-3 h-3 text-blue-600" />
+                            <FileSpreadsheet className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                             <span>Kopiraj za Word</span>
                           </>
                         )}
@@ -764,11 +747,11 @@ export function AiPanel({
                       <button
                         type="button"
                         onClick={() => handleCopyMessage(m.id, textContent, 'plain')}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title="Kopiraj čisti neformatirani tekst"
                       >
                         {copiedKey === `${m.id}-plain` ? (
-                          <Check className="w-3 h-3 text-emerald-600" />
+                          <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
                         )}
@@ -778,11 +761,11 @@ export function AiPanel({
                 </div>
 
                 {/* Kartica odgovora s Markdownom i Pravnim inspektorom */}
-                <div className="w-full p-4 rounded-2xl rounded-tl-xs bg-white border border-slate-200/90 shadow-xs">
+                <div className="w-full p-4 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs">
                   {textContent ? (
                     <LegalMarkdown content={textContent} />
                   ) : (
-                    <div className="flex items-center gap-2 py-1 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 py-1 text-xs text-slate-500 dark:text-slate-400">
                       <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
                       <span
                         className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
@@ -803,7 +786,7 @@ export function AiPanel({
           })}
 
           {status === 'submitted' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-500 w-fit shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 w-fit shadow-2xs">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
               <span
                 className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
@@ -821,7 +804,7 @@ export function AiPanel({
         </div>
 
         {/* 4. BRZI PREČACI (kad razgovor već traje) + POLJE ZA UNOS */}
-        <div className="p-3 bg-white border-t border-slate-200 space-y-2 shrink-0">
+        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
           {messages.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
               {CASE_QUICK_ACTIONS.map((action) => (
@@ -837,9 +820,9 @@ export function AiPanel({
                     }
                   }}
                   title={action.shortDesc}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-[11px] font-semibold text-slate-700 hover:text-blue-700 whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  <QuickActionIcon name={action.iconName} className="w-3 h-3 text-blue-600" />
+                  <QuickActionIcon name={action.iconName} className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                   {action.label}
                 </button>
               ))}
@@ -855,7 +838,7 @@ export function AiPanel({
               onKeyDown={handleKeyDown}
               placeholder="Postavite podpitanje o spisu... (Enter za slanje, Shift+Enter za novi red)"
               disabled={isLoading}
-              className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 leading-snug bg-slate-50/50 focus:bg-white transition-colors"
+              className="flex-1 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 leading-snug bg-slate-50/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
 
             {isLoading ? (
@@ -891,12 +874,12 @@ export function AiPanel({
           <form
             onSubmit={handleConfirmSaveDraft}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col"
           >
-            <div className="px-6 py-4 bg-emerald-50 border-b border-emerald-200/80 flex items-center justify-between">
+            <div className="px-6 py-4 bg-emerald-50 dark:bg-emerald-950/60 border-b border-emerald-200/80 dark:border-emerald-850 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Save className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-bold text-slate-900">
+                <Save className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   Spremi nacrt u dokumente spisa
                 </h3>
               </div>
@@ -904,33 +887,33 @@ export function AiPanel({
                 type="button"
                 disabled={savingDraft}
                 onClick={() => setDraftModalData(null)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Ovaj tekst bit će trajno spremljen kao novi službeni dokument/nacrt u lijevom stupcu
                 spisa predmeta. Moći ćete ga naknadno uređivati, pregledavati i slati u Bazu prakse.
               </p>
 
               {draftFeedback && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+                <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl text-xs">
                   {draftFeedback}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Vrsta dokumenta</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Vrsta dokumenta</label>
                   <select
                     value={draftModalData.vrsta}
                     onChange={(e) =>
                       setDraftModalData({ ...draftModalData, vrsta: e.target.value })
                     }
-                    className="px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium bg-white"
+                    className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                   >
                     {DOKUMENT_VRSTE.map((v) => (
                       <option key={v} value={v}>
@@ -941,7 +924,7 @@ export function AiPanel({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-700">Naziv dokumenta</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Naziv dokumenta</label>
                   <input
                     type="text"
                     required
@@ -949,28 +932,28 @@ export function AiPanel({
                     onChange={(e) =>
                       setDraftModalData({ ...draftModalData, naziv: e.target.value })
                     }
-                    className="px-3 py-2 border border-slate-300 rounded-lg text-xs"
+                    className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Pregled teksta za spremanje (prvih nekoliko redaka):
                 </label>
-                <div className="max-h-36 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700 whitespace-pre-wrap">
+                <div className="max-h-36 overflow-y-auto p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                   {draftModalData.text.slice(0, 500)}
                   {draftModalData.text.length > 500 ? '\n...' : ''}
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
               <button
                 type="button"
                 disabled={savingDraft}
                 onClick={() => setDraftModalData(null)}
-                className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 Odustani
               </button>
