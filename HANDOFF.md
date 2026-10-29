@@ -111,3 +111,51 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Izvoz u Excel (CSV)**: Prilagođen za hrvatski Excel (točka-zarez, UTF-8 BOM, č, ć, ž, š, đ).
    - **Službeni ispis / Spremi PDF**: Memorandumska stranica za print sa zaglavljem tijela i potpisnim blokom.
    - **AI Narativni sažetak**: Jednim klikom generira analitičko tekstualno izvješće za voditelja / Ministarstvo spremno za kopiranje u Word.
+
+---
+
+## 📌 5. Baza propisa RH — Službena Narodne novine konsolidacija & Viševerzijska arhitektura
+
+1. **Strategija punjenja baze (Zašto Narodne novine, a ne Zakon.hr / Informator.hr)**:
+   - **Zakon.hr**: Uvjeti korištenja izričito zabranjuju automatizirano i masovno preuzimanje podataka (čl. 6. i 11. ToS). Scraperi su neprecizni i stvaraju duplicirane članke (npr. brisanje sufiksa kod članaka `37a`–`37l`).
+   - **Informator.hr**: Komercijalni pretplatnički paywall bez javnog API-ja.
+   - **Narodne novine (NN)**: Jedini službeni, javni i pravno obvezujući izvor u Republici Hrvatskoj. Pružaju europski zakonodavni identifikator (**ELI** metadata) i direktni pristup čistom HTML-u svih akata.
+
+2. **Automatski redaktorski engine (`scripts/nn-pilot/engine.ts`)**:
+   - Razvijen je modularni engine koji koristi model `gemini-3.8-flash` za precizno pročišćavanje zakona.
+   - **Prirodno sortiranje**: Članci se slažu strogo pravnim redoslijedom (`1`, `2`, ..., `9`, `9a`, `9b`, `10`, ..., `37`, `37a`, `38`).
+   - **Inteligentno raščlanjivanje izmjena (`parseAmendmentArticles`)**: Razlikuje stvarne operativne izmjene od prijelaznih odredbi o stupanju na snagu.
+   - **Stabilno serijsko procesiranje**: Izmjene se obrađuju u kontroliranim serijama po 6 članaka, s ugrađenom eksponencijalnom pauzom na 429 rate limit.
+
+3. **Uspješno konsolidirani i u bazu uneseni pilot zakoni**:
+   - **ZUP (Zakon o općem upravnom postupku)**:
+     - Temeljni akt: NN 47/09 + izmjena NN 110/21.
+     - Točno **171 važećih članaka** u bazi `zakoni` s 768-dimenzijskim embeddingom.
+   - **ZPNIZ (Zakon o postupanju s nezakonito izgrađenim zgradama)**:
+     - Temeljni akt: NN 86/12 + 4 izmjene (NN 143/13, 65/17, 14/19, 48/26).
+     - Točno **59 važećih članaka** u bazi `zakoni` (uklonjeno 77 starih pogrešnih redaka nastalih scraperom).
+   - **OPZ (Opći porezni zakon)**:
+     - Temeljni akt: NN 115/16 + 7 izmjena (NN 106/18, 121/19, 32/20, 42/20, 114/22, 152/24, 151/25).
+     - Točno **207 važećih članaka** u bazi `zakoni` (uključujući nove članke `32a`, `44a`, `63a`, `74a`, `107a`, `190a`).
+   - **Stanje baze `zakoni`**: Ukupno **1.573 važećih članaka**.
+
+4. **Široki katalog propisa RH (`scripts/nn-pilot/broad-catalog.ts`)**:
+   - Definirano **35+ ključnih zakona i uredbi** raspoređenih u 7 temeljnih područja:
+     1. Opće upravni propisi (ZUP, ZUS, ZSDU, ZPPI, ZU, UUP, UTUP)
+     2. Građansko, stvarno i obvezno pravo (ZOO, ZV, ZZK, ZN, OZ)
+     3. Gradnja, prostorno uređenje i nekretnine (ZG, ZPU, ZPNIZ, ZKG, ZC, ZPVN, ZKD)
+     4. Vodno pravo i okoliš (ZOV, ZFVG, ZVU, ZOPO, ZGO)
+     5. Porezi, pristojbe i javne financije (OPZ, ZPD, ZPN, ZJN, ZP)
+     6. Radno pravo i javna služba (ZR, ZDS, ZPDS, ZSLS)
+     7. Prekršaji i inspekcijski nadzor (PZ, ZDI)
+
+5. **Viševerzijska baza podataka (`supabase/migrations/03_propisi_verzije.sql`)**:
+   - Pripremljene relacijske tablice za dugoročno čuvanje povijesti propisa:
+     - `propisi`: Glavni registar (kratica, naziv, podrucje, tip, temeljni_nn, eli_uri).
+     - `propisi_verzije`: Verzije zakona (vrijedi_od, vrijedi_do, je_vazeca, izmjene_obuhvacene).
+     - `propisi_clanci`: Članci po pojedinoj verziji s HNSW vektorskim indeksima (768 dimenzija).
+     - Funkcija `match_propisi_vazeci`: RPC pretraga za semantičko pretraživanje važećih verzija.
+
+6. **Korisničko sučelje (`/propisi`)**:
+   - Ugrađeno dugme za ručno osvježavanje baze propisa u zaglavlju kartice statusa (`PropisiStatusCard`) i unutar modala (`PropisiStatusModal`).
+   - Server Action `refreshPropisiStatusAction` provjerava usklađenost i bilježi točan timestamp provjere u `src/data/propisi-status.json`.
