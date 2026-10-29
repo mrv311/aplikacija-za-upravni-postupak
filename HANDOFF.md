@@ -1,28 +1,44 @@
 # HANDOFF: Stanje projekta i upute za rad
 
-Datum: 28.10.2026.
+Datum: 29.10.2026.
 Grana: `master`
 Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 1. Baza upravne i sudske prakse — 100% KOMPLETIRANA
+## 📌 1. Baza upravne i sudske prakse — 1.600 SPISA / 10.887 CHUNKOVA
 
-1. **Uspješno uvezena cijela arhiva (upravni postupak, sporovi i skenirane presude)**:
-   - **Ukupno dokumenata u bazi**: **1.329 spisa**
-   - **Ukupno vektorskih chunkova**: **8.916 chunkova**
-   - **Duplikati**: **0** (potpuno čista baza bez duplikata)
+1. **Uspješno proširena baza svim upravnim područjima i institutima ZUP-a**:
+   - **Ukupno dokumenata u bazi**: **1.600 spisa** (povećanje s 1.329 na 1.600 spisa — uvezeno 269 novih meritornih odluka)
+   - **Ukupno vektorskih chunkova**: **10.887 chunkova** (svi s `gemini-embedding-001` od 3072 dimenzije)
+   - **Duplikati**: **0** (potpuno čista baza; eliminirano točno 32 `pismohrana`/starije verzije putem naprednog bodovanja)
 
-2. **Raspodjela u bazi po kategorijama**:
-   - **Praksa upravnih sudova (presude)**: **528 spisa** (scannirane stvarne presude Upravnih sudova Zagreb, Split, Rijeka, Osijek i VUSRH)
-   - **Praksa upravnih sudova (akti i odgovori)**: **421 spis** (odgovori na tužbe, odgovori na žalbe, akti doneseni po presudama)
-   - **Vodni doprinos (VD)**: **235 spisa** (2016.–2026. sve godine)
-   - **Naknada za uređenje voda (NUV)**: **145 spisa** (2016.–2026. sve godine)
+2. **Kompletna raspodjela po kategorijama**:
+   - **Sudska praksa**:
+     - **Praksa upravnih sudova (presude)**: **528 spisa** (stvarne presude Upravnih sudova ZG, ST, RI, OS i VUSRH)
+     - **Praksa upravnih sudova (akti i odgovori)**: **421 spis** (odgovori na tužbe, odgovori na žalbe, akti po presudama)
+   - **Upravni postupak (naknade)**:
+     - **Vodni doprinos (VD)**: **235 spisa** (2016.–2026.)
+     - **Naknada za uređenje voda (NUV)**: **147 spisa** (2016.–2026.)
+     - **Naknada za zaštitu voda (NZZV)**: **118 spisa** (2000.–2025.)
+     - **Naknada za korištenje voda (NZKV)**: **22 spisa**
+     - **Naknada za koncesiju**: **13 spisa**
+   - **Posebni upravni instituti & izvanredni pravni lijekovi (ZUP)**:
+     - **Poništavanje i ukidanje rješenja (čl. 129.–132. ZUP)**: **31 spis**
+     - **Obnova postupka**: **28 spisa**
+     - **Zakup javnog vodnog dobra (žalbe/služnosti)**: **26 spisa**
+     - **Troškovi postupka**: **19 spisa**
+     - **Oglašavanje rješenja ništavim**: **6 spisa**
+     - **Rješenja po prigovoru**: **2 spisa**
+     - **Zaključci (ZUP)**: **2 spisa**
+     - **Zaštita od postupanja pružatelja javnih usluga (čl. 157.–158. ZUP)**: **1 spis**
+     - **Akti po presudama Ustavnog suda**: **1 spis**
 
-3. **GDPR anonimizacija & zaštita**:
-   - Svi spisi su prošli automatsku GDPR anonimizaciju (`scripts/anonymizer.ts`) — fizičke osobe i tvrtke svedene na inicijale/skraćene nazive, OIB i adrese zaštićeni, a pravni meritum u potpunosti očuvan.
-   - Ugrađena brza pred-provjera (`loadExistingDbState`) i binarna MD5 provjera datoteka koja sprječava dupliciranje pri ponovnom pokretanju.
-   - Svi vektorski embeddinzi generirani su modelom `gemini-embedding-001` (3072 dimenzije) i spremni za semantičko pretraživanje (RAG).
+3. **Napredna detekcija duplikata ("boja vs. pismohrana")**:
+   - Skripta [`scripts/import-nove-kategorije.ts`](file:///c:/Users/dinom/Documents/vibe%20coding/aplikacija-za-upravni-postupak/scripts/import-nove-kategorije.ts) automatski prepoznaje parove datoteka (`_boja` i `_pismohrana`).
+   - Glavna verzija u boji ima prioritet, a pismohrana se automatski odbacuje kao duplikat.
+   - Ako postoji samo pismohrana, ona se zadržava kako se ne bi izgubila praksa.
+   - Svi spisi su prošli automatsku GDPR anonimizaciju (`scripts/anonymizer.ts`) — fizičke i privatne pravne osobe zaštićene, a meritum netaknut.
 
 4. **Korisne naredbe**:
    - Provjera stanja baze prakse:
@@ -32,6 +48,10 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - Provjera propisa / zakona u bazi:
      ```bash
      npx tsx scripts/check-propisi-db.ts
+     ```
+   - Ponovni ili selektivni uvoz kategorija:
+     ```bash
+     npx tsx scripts/import-nove-kategorije.ts [opcionalni-filter]
      ```
 
 ---
@@ -91,4 +111,3 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Izvoz u Excel (CSV)**: Prilagođen za hrvatski Excel (točka-zarez, UTF-8 BOM, č, ć, ž, š, đ).
    - **Službeni ispis / Spremi PDF**: Memorandumska stranica za print sa zaglavljem tijela i potpisnim blokom.
    - **AI Narativni sažetak**: Jednim klikom generira analitičko tekstualno izvješće za voditelja / Ministarstvo spremno za kopiranje u Word.
-
