@@ -17,7 +17,7 @@ import {
   Coins,
   FileCheck2,
 } from 'lucide-react';
-import { PROPISI_MAP, PropisDef } from '@/lib/propisi-config';
+import { PROPISI_MAP, PROPISI_LIST, PropisDef } from '@/lib/propisi-config';
 
 export interface ClanakItem {
   id: number;
@@ -48,16 +48,34 @@ function parseArticleSort(clanakBroj: string): number {
   return match ? parseInt(match[0], 10) : 9999;
 }
 
+function resolvePropisMeta(naziv: string): PropisDef {
+  if (PROPISI_MAP[naziv]) return PROPISI_MAP[naziv];
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9čćžšđ]/gi, '');
+  const target = norm(naziv);
+  const found = PROPISI_LIST.find((p) => norm(p.naziv) === target || norm(p.kratica) === target);
+  if (found) return found;
+  return {
+    naziv,
+    kratica: naziv.split(' ').map((w) => w[0]?.toUpperCase()).join(''),
+    podrucje: 'Opći upravni propisi',
+    tip: naziv.toLowerCase().includes('uredb')
+      ? 'Uredba'
+      : naziv.toLowerCase().includes('pravilnik')
+      ? 'Pravilnik'
+      : 'Zakon',
+    nn: '',
+    izvor: 'lokalno',
+    opis: 'Pravni propis',
+  };
+}
+
 export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
   const [search, setSearch] = useState('');
   const [filterPodrucje, setFilterPodrucje] = useState('sve');
   const [filterTip, setFilterTip] = useState('sve');
 
-  // Stanja otvorenih harmonika
-  const [openPodrucja, setOpenPodrucja] = useState<Record<string, boolean>>({
-    'Opći upravni propisi': true,
-    'Vodno pravo i naknade': true,
-  });
+  // Stanja otvorenih harmonika (zadano sva polja i propisi zatvoreni)
+  const [openPodrucja, setOpenPodrucja] = useState<Record<string, boolean>>({});
   const [openPropisi, setOpenPropisi] = useState<Record<string, boolean>>({});
   const [expandedClanci, setExpandedClanci] = useState<Record<number, boolean>>({});
 

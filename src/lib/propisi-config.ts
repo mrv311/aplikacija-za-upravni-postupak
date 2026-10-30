@@ -56,6 +56,26 @@ export const PROPISI_LIST: PropisDef[] = [
     opis: 'Pristojbene tarife za podneske, rješenja i žalbe u upravnim postupcima.'
   },
 
+  {
+    naziv: 'Zakon o sustavu državne uprave',
+    kratica: 'ZSDU',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Zakon',
+    nn: 'NN 66/19',
+    izvor: 'lokalno',
+    opis: 'Ustrojstvo, ovlasti i načela rada tijela državne uprave te upravni i inspekcijski nadzor.'
+  },
+  {
+    naziv: 'Zakon o pravu na pristup informacijama',
+    kratica: 'ZPPI',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Zakon',
+    nn: 'NN 25/13, 85/15, 69/22',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/126/zakon-o-pravu-na-pristup-informacijama',
+    opis: 'Ostvarivanje prava na pristup informacijama i ponovnu uporabu informacija tijela javne vlasti.'
+  },
+
   // 2. VODNO PRAVO I NAKNADE
   {
     naziv: 'Zakon o vodama',

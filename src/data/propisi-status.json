@@ -1,14 +1,14 @@
 {
-  "checkedAt": "2026-10-29T12:16:11.396Z",
+  "checkedAt": "2026-10-30T09:55:56.277Z",
   "portalInfo": "Baza je ažurirana 20.10.2026. zaključno sa NN 110/26 EU 2024/2679",
-  "totalArticlesInDb": 1607,
+  "totalArticlesInDb": 1772,
   "allUpToDate": true,
   "outdatedCount": 0,
   "results": [
     {
       "kratica": "ZUP",
       "naziv": "Zakon o općem upravnom postupku",
-      "dbClanciCount": 172,
+      "dbClanciCount": 171,
       "liveClanciCount": 154,
       "bazaNn": "NN 47/09, 110/21",
       "liveNn": "NN 47/09, 110/21",
@@ -17,7 +17,7 @@
       "extraInBazaNn": [],
       "articleCountMismatch": true,
       "status": "AZURNO",
-      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 172 čl., portal prikazuje: 154 čl./stavki)",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 171 čl., portal prikazuje: 154 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/65/zakon-o-opcem-upravnom-postupku",
       "canAutoSync": true
     },
@@ -72,6 +72,40 @@
       "status": "AZURNO",
       "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama",
       "provjeraUrl": "https://www.zakon.hr/c/podzakonski-propis/55507/nn-156-2022-%2830.12.2022.%29%2C-uredba-o-tarifi-upravnih-pristojbi",
+      "canAutoSync": true
+    },
+    {
+      "kratica": "ZSDU",
+      "naziv": "Zakon o sustavu državne uprave",
+      "dbClanciCount": 71,
+      "liveClanciCount": 0,
+      "bazaNn": "NN 66/19",
+      "liveNn": "NN 66/19",
+      "naSnaziOd": "",
+      "missingNn": [],
+      "extraInBazaNn": [
+        "66/19"
+      ],
+      "articleCountMismatch": false,
+      "status": "AZURNO",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama",
+      "provjeraUrl": "https://www.zakon.hr/z/2104/zakon-o-sustavu-drzavne-uprave",
+      "canAutoSync": true
+    },
+    {
+      "kratica": "ZPPI",
+      "naziv": "Zakon o pravu na pristup informacijama",
+      "dbClanciCount": 77,
+      "liveClanciCount": 53,
+      "bazaNn": "NN 25/13, 85/15, 69/22",
+      "liveNn": "NN 25/13, 85/15, 69/22",
+      "naSnaziOd": "na snazi od 25.06.2022.",
+      "missingNn": [],
+      "extraInBazaNn": [],
+      "articleCountMismatch": true,
+      "status": "AZURNO",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 77 čl., portal prikazuje: 53 čl./stavki)",
+      "provjeraUrl": "https://www.zakon.hr/z/126/zakon-o-pravu-na-pristup-informacijama",
       "canAutoSync": true
     },
     {
@@ -185,23 +219,23 @@
     {
       "kratica": "ZG",
       "naziv": "Zakon o gradnji",
-      "dbClanciCount": 162,
+      "dbClanciCount": 217,
       "liveClanciCount": 162,
       "bazaNn": "NN 155/25",
       "liveNn": "NN 155/25",
       "naSnaziOd": "na snazi od 01.01.2026.",
       "missingNn": [],
       "extraInBazaNn": [],
-      "articleCountMismatch": false,
+      "articleCountMismatch": true,
       "status": "AZURNO",
-      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 217 čl., portal prikazuje: 162 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/690/zakon-o-gradnji",
       "canAutoSync": true
     },
     {
       "kratica": "ZKG",
       "naziv": "Zakon o komunalnom gospodarstvu",
-      "dbClanciCount": 141,
+      "dbClanciCount": 137,
       "liveClanciCount": 124,
       "bazaNn": "NN 68/18, 110/18, 32/20, 145/24",
       "liveNn": "NN 68/18, 110/18, 32/20, 145/24",
@@ -210,14 +244,14 @@
       "extraInBazaNn": [],
       "articleCountMismatch": true,
       "status": "AZURNO",
-      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 141 čl., portal prikazuje: 124 čl./stavki)",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 137 čl., portal prikazuje: 124 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/319/zakon-o-komunalnom-gospodarstvu",
       "canAutoSync": true
     },
     {
       "kratica": "ZPNIZ",
       "naziv": "Zakon o postupanju s nezakonito izgrađenim zgradama",
-      "dbClanciCount": 77,
+      "dbClanciCount": 59,
       "liveClanciCount": 33,
       "bazaNn": "NN 86/12, 143/13, 65/17, 14/19, 48/26",
       "liveNn": "NN 86/12, 143/13, 65/17, 14/19, 48/26",
@@ -226,14 +260,14 @@
       "extraInBazaNn": [],
       "articleCountMismatch": true,
       "status": "AZURNO",
-      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 77 čl., portal prikazuje: 33 čl./stavki)",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 59 čl., portal prikazuje: 33 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/486/zakon-o-postupanju-s-nezakonito-izgradenim-zgradama",
       "canAutoSync": true
     },
     {
       "kratica": "OPZ",
       "naziv": "Opći porezni zakon",
-      "dbClanciCount": 222,
+      "dbClanciCount": 207,
       "liveClanciCount": 160,
       "bazaNn": "NN 115/16, 106/18, 121/19, 32/20, 42/20, 114/22, 152/24, 151/25",
       "liveNn": "NN 115/16, 106/18, 121/19, 32/20, 42/20, 114/22, 152/24, 151/25",
@@ -242,7 +276,7 @@
       "extraInBazaNn": [],
       "articleCountMismatch": true,
       "status": "AZURNO",
-      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 222 čl., portal prikazuje: 160 čl./stavki)",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 207 čl., portal prikazuje: 160 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/100/opci-porezni-zakon",
       "canAutoSync": true
     }

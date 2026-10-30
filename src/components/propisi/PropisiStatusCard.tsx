@@ -64,7 +64,7 @@ export function PropisiStatusCard({ initialStatus }: PropisiStatusCardProps) {
         <div
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2.5 cursor-pointer flex-1"
-          title="Kliknite za detaljni pregled svih 14 propisa i povijest provjera"
+          title="Kliknite za detaljni pregled propisa i povijest provjera"
         >
           {allUpToDate ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -76,7 +76,7 @@ export function PropisiStatusCard({ initialStatus }: PropisiStatusCardProps) {
             <div className="font-semibold flex items-center gap-1.5">
               <span>
                 {allUpToDate
-                  ? 'Svi propisi (14/14) su 100% ažurni s Narodnim novinama'
+                  ? `Svi propisi (${status?.results?.length ?? 16}/${status?.results?.length ?? 16}) su 100% ažurni s Narodnim novinama`
                   : `Dostupne nove izmjene za ${outdatedCount} propisa`}
               </span>
               <Eye className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />

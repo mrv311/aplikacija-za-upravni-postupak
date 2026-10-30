@@ -110,6 +110,14 @@ const CHECK_SOURCES: Record<
     type: 'law_page',
     url: 'https://www.zakon.hr/z/100/opci-porezni-zakon',
   },
+  ZSDU: {
+    type: 'law_page',
+    url: 'https://www.zakon.hr/z/2104/zakon-o-sustavu-drzavne-uprave',
+  },
+  ZPPI: {
+    type: 'law_page',
+    url: 'https://www.zakon.hr/z/126/zakon-o-pravu-na-pristup-informacijama',
+  },
 };
 
 function extractNnList(nnString: string): string[] {

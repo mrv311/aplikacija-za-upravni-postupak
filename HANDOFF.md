@@ -1,6 +1,6 @@
 # HANDOFF: Stanje projekta i upute za rad
 
-Datum: 29.10.2026.
+Datum: 30.10.2026. (ažurirano nakon konsolidacije paketa opće uprave)
 Grana: `master`
 Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
@@ -127,17 +127,17 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Inteligentno raščlanjivanje izmjena (`parseAmendmentArticles`)**: Razlikuje stvarne operativne izmjene od prijelaznih odredbi o stupanju na snagu.
    - **Stabilno serijsko procesiranje**: Izmjene se obrađuju u kontroliranim serijama po 6 članaka, s ugrađenom eksponencijalnom pauzom na 429 rate limit.
 
-3. **Uspješno konsolidirani i u bazu uneseni pilot zakoni**:
-   - **ZUP (Zakon o općem upravnom postupku)**:
-     - Temeljni akt: NN 47/09 + izmjena NN 110/21.
-     - Točno **171 važećih članaka** u bazi `zakoni` s 768-dimenzijskim embeddingom.
-   - **ZPNIZ (Zakon o postupanju s nezakonito izgrađenim zgradama)**:
-     - Temeljni akt: NN 86/12 + 4 izmjene (NN 143/13, 65/17, 14/19, 48/26).
-     - Točno **59 važećih članaka** u bazi `zakoni` (uklonjeno 77 starih pogrešnih redaka nastalih scraperom).
-   - **OPZ (Opći porezni zakon)**:
-     - Temeljni akt: NN 115/16 + 7 izmjena (NN 106/18, 121/19, 32/20, 42/20, 114/22, 152/24, 151/25).
-     - Točno **207 važećih članaka** u bazi `zakoni` (uključujući nove članke `32a`, `44a`, `63a`, `74a`, `107a`, `190a`).
-   - **Stanje baze `zakoni`**: Ukupno **1.573 važećih članaka**.
+3. **Uspješno konsolidirani i u bazu uneseni zakoni (Opća uprava, Gradnja, Porezi & pilot)**:
+   - **ZUP (Zakon o općem upravnom postupku)**: Temeljni akt NN 47/09 + izmjena NN 110/21 → **171 važećih članaka**.
+   - **ZUS (Zakon o upravnim sporovima)**: Novi službeni akt NN 36/24 → **172 važećih članaka**.
+   - **ZSDU (Zakon o sustavu državne uprave)**: Temeljni akt NN 66/19 → **71 važećih članaka**.
+   - **UUP (Uredba o uredskom poslovanju)**: Službeni akt NN 75/21 → **69 važećih članaka**.
+   - **ZPPI (Zakon o pravu na pristup informacijama)**: Temeljni NN 25/13 + NN 85/15 + NN 69/22 → **77 važećih članaka** (umetnuti novi članci `9a`, `10a`, `25a`, `28a`, `38a`).
+   - **ZPNIZ (Zakon o postupanju s nezakonito izgrađenim zgradama)**: Temeljni akt NN 86/12 + 4 izmjene → **59 važećih članaka**.
+   - **ZG (Zakon o gradnji)**: Temeljni akt NN 153/13 + NN 20/17 + NN 39/19 + NN 125/19 → **217 važećih članaka** (umetnuti članci `19a`, `21a`–`21d`, `22a`–`22e`, `46a`–`47d`, obrisani čl. 32 i 62).
+   - **ZKG (Zakon o komunalnom gospodarstvu)**: Temeljni akt NN 68/18 + USRH NN 110/18 + NN 32/20 + NN 145/24 → **137 važećih članaka** (ukinut čl. 92. st. 5.).
+   - **OPZ (Opći porezni zakon)**: Temeljni akt NN 115/16 + 7 izmjena → **207 važećih članaka**.
+   - **Stanje baze `zakoni`**: Ukupno **1.772 važećih članaka** (svih 16 registriranih propisa u aplikaciji ima status **100% AŽURNO / 0 ZASTARJELO**).
 
 4. **Široki katalog propisa RH (`scripts/nn-pilot/broad-catalog.ts`)**:
    - Definirano **35+ ključnih zakona i uredbi** raspoređenih u 7 temeljnih područja:
