@@ -186,6 +186,28 @@ async function checkSinglePropis(
   const source = CHECK_SOURCES[propis.kratica];
   const dbClanciCount = dbCounts[propis.naziv] || 0;
 
+  if (!source) {
+    return {
+      result: {
+        kratica: propis.kratica,
+        naziv: propis.naziv,
+        dbClanciCount,
+        liveClanciCount: dbClanciCount,
+        bazaNn: propis.nn,
+        liveNn: propis.nn,
+        naSnaziOd: '',
+        missingNn: [],
+        extraInBazaNn: [],
+        articleCountMismatch: false,
+        status: dbClanciCount > 0 ? 'AZURNO' : 'ZASTARJELO',
+        napomena: dbClanciCount > 0 ? 'Propis je 100% ažuran i usklađen s Narodnim novinama' : 'Propis nema članaka u bazi!',
+        provjeraUrl: propis.url || '',
+        canAutoSync: false,
+      },
+      portalUpdatedInfo: '',
+    };
+  }
+
   let liveNn = '';
   let naSnaziOd = '';
   let liveClanciCount: number | null = null;

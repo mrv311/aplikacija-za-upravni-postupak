@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-30T09:55:56.277Z",
+  "checkedAt": "2026-10-30T10:08:34.888Z",
   "portalInfo": "Baza je ažurirana 20.10.2026. zaključno sa NN 110/26 EU 2024/2679",
-  "totalArticlesInDb": 1772,
+  "totalArticlesInDb": 1785,
   "allUpToDate": true,
   "outdatedCount": 0,
   "results": [
@@ -263,6 +263,22 @@
       "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 59 čl., portal prikazuje: 33 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/486/zakon-o-postupanju-s-nezakonito-izgradenim-zgradama",
       "canAutoSync": true
+    },
+    {
+      "kratica": "P-POVRŠINA",
+      "naziv": "Pravilnik o načinu obračuna površine i obujma u projektima zgrada",
+      "dbClanciCount": 13,
+      "liveClanciCount": 13,
+      "bazaNn": "NN 90/10, 111/10",
+      "liveNn": "NN 90/10, 111/10",
+      "naSnaziOd": "",
+      "missingNn": [],
+      "extraInBazaNn": [],
+      "articleCountMismatch": false,
+      "status": "AZURNO",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama",
+      "provjeraUrl": "",
+      "canAutoSync": false
     },
     {
       "kratica": "OPZ",

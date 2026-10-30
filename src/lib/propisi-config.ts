@@ -170,6 +170,15 @@ export const PROPISI_LIST: PropisDef[] = [
     url: 'https://www.zakon.hr/z/486/zakon-o-postupanju-s-nezakonito-izgradenim-zgradama',
     opis: 'Uvjeti i postupak ozakonjenja (legalizacije) zgrada te obračun vodnoga doprinosa.'
   },
+  {
+    naziv: 'Pravilnik o načinu obračuna površine i obujma u projektima zgrada',
+    kratica: 'P-POVRŠINA',
+    podrucje: 'Gradnja, prostor i ozakonjenje',
+    tip: 'Pravilnik',
+    nn: 'NN 90/10, 111/10',
+    izvor: 'lokalno',
+    opis: 'Način izračuna građevinske (bruto) površine, korisne površine i obujma zgrada te koeficijenti za prostore (čl. 9.a).'
+  },
 
   // 4. POREZI I PRISTOJBE
   {
