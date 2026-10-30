@@ -163,3 +163,16 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 6. **Korisničko sučelje (`/propisi`)**:
    - Ugrađeno dugme za ručno osvježavanje baze propisa u zaglavlju kartice statusa (`PropisiStatusCard`) i unutar modala (`PropisiStatusModal`).
    - Server Action `refreshPropisiStatusAction` provjerava usklađenost i bilježi točan timestamp provjere u `src/data/propisi-status.json`.
+
+---
+
+## 📌 7. Sljedeći koraci & Backlog
+
+1. **Strukturne / hijerarhijske oznake članaka (Dio, Glava, Poglavlje, Odjeljak)**:
+   - Proširiti parser `engine.ts` da pri prolasku kroz HTML Narodnih novina prepoznaje i pamti kontekst nadnaslova (npr. *DIO PRVI*, *GLAVA II. Upis u zemljišne knjige*, *POGLAVLJE 1.*).
+   - Pridružiti svakom članku hijerarhijsku stazu (breadcrumbs) ili podnaslov članka (npr. *Članak 186.a [Elektroničko podnošenje prijedloga]*).
+   - U sučelju `/propisi` prikazati te oznake iznad samog teksta članka radi vrhunske preglednosti i lakšeg snalaženja u opsežnim zakonima.
+2. **Nastavak proširenja stvarnog prava & gradnje**:
+   - **ZV** (Zakon o vlasništvu i drugim stvarnim pravima)
+   - **Pravilnik o jednostavnim i drugim građevinama i radovima** (građenje bez građevinske dozvole)
+   - **Zemljišnoknjižni poslovnik** (zaokruživanje zemljišnoknjižnog referata)
