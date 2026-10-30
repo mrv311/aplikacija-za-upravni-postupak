@@ -1,7 +1,12 @@
 export interface PropisDef {
   naziv: string;
   kratica: string;
-  podrucje: 'Opći upravni propisi' | 'Vodno pravo i naknade' | 'Gradnja, prostor i ozakonjenje' | 'Porezi i pristojbe';
+  podrucje:
+    | 'Opći upravni propisi'
+    | 'Vodno pravo i naknade'
+    | 'Gradnja, prostor i ozakonjenje'
+    | 'Porezi i pristojbe'
+    | 'Građansko, stvarno i zemljišnoknjižno pravo';
   tip: 'Zakon' | 'Uredba' | 'Pravilnik';
   nn: string;
   izvor: 'zakon.hr' | 'lokalno';
@@ -190,6 +195,17 @@ export const PROPISI_LIST: PropisDef[] = [
     izvor: 'zakon.hr',
     url: 'https://www.zakon.hr/z/100/opci-porezni-zakon',
     opis: 'Temeljne odredbe poreznog postupka, zastara prava na utvrđivanje i naplatu te ovrha.'
+  },
+
+  // 5. GRAĐANSKO, STVARNO I ZEMLJIŠNOKNJIŽNO PRAVO
+  {
+    naziv: 'Zakon o zemljišnim knjigama',
+    kratica: 'ZZK',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Zakon',
+    nn: 'NN 63/19, 128/22',
+    izvor: 'lokalno',
+    opis: 'Uređenje, vođenje i osnivanje zemljišnih knjiga, upisi, tabularne isprave i elektroničko poslovanje.'
   }
 ];
 

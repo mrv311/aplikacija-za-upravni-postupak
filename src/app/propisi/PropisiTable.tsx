@@ -18,6 +18,7 @@ import {
   FileCheck2,
   Copy,
   Check,
+  Landmark,
 } from 'lucide-react';
 import { PROPISI_MAP, PROPISI_LIST, PropisDef } from '@/lib/propisi-config';
 
@@ -43,6 +44,7 @@ const PODRUCJE_ICONS: Record<string, React.ReactNode> = {
   'Vodno pravo i naknade': <Droplets className="w-5 h-5 text-blue-600" />,
   'Gradnja, prostor i ozakonjenje': <Building2 className="w-5 h-5 text-amber-600" />,
   'Porezi i pristojbe': <Coins className="w-5 h-5 text-emerald-600" />,
+  'Građansko, stvarno i zemljišnoknjižno pravo': <Landmark className="w-5 h-5 text-rose-600" />,
 };
 
 function parseArticleSort(clanakBroj: string): number {
@@ -281,6 +283,7 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
               <option value="Vodno pravo i naknade">Vodno pravo i naknade</option>
               <option value="Gradnja, prostor i ozakonjenje">Gradnja, prostor i ozakonjenje</option>
               <option value="Porezi i pristojbe">Porezi i pristojbe</option>
+              <option value="Građansko, stvarno i zemljišnoknjižno pravo">Građansko, stvarno i zemljišnoknjižno pravo</option>
             </select>
 
             <select

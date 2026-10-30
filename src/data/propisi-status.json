@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-30T10:08:34.888Z",
+  "checkedAt": "2026-10-30T10:21:32.456Z",
   "portalInfo": "Baza je ažurirana 20.10.2026. zaključno sa NN 110/26 EU 2024/2679",
-  "totalArticlesInDb": 1785,
+  "totalArticlesInDb": 2037,
   "allUpToDate": true,
   "outdatedCount": 0,
   "results": [
@@ -295,6 +295,22 @@
       "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama (U bazi: 207 čl., portal prikazuje: 160 čl./stavki)",
       "provjeraUrl": "https://www.zakon.hr/z/100/opci-porezni-zakon",
       "canAutoSync": true
+    },
+    {
+      "kratica": "ZZK",
+      "naziv": "Zakon o zemljišnim knjigama",
+      "dbClanciCount": 252,
+      "liveClanciCount": 252,
+      "bazaNn": "NN 63/19, 128/22",
+      "liveNn": "NN 63/19, 128/22",
+      "naSnaziOd": "",
+      "missingNn": [],
+      "extraInBazaNn": [],
+      "articleCountMismatch": false,
+      "status": "AZURNO",
+      "napomena": "Propis je 100% ažuran i usklađen s Narodnim novinama",
+      "provjeraUrl": "",
+      "canAutoSync": false
     }
   ]
 }
