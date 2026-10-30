@@ -16,6 +16,8 @@ import {
   Scale,
   Coins,
   FileCheck2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { PROPISI_MAP, PROPISI_LIST, PropisDef } from '@/lib/propisi-config';
 
@@ -78,6 +80,17 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
   const [openPodrucja, setOpenPodrucja] = useState<Record<string, boolean>>({});
   const [openPropisi, setOpenPropisi] = useState<Record<string, boolean>>({});
   const [expandedClanci, setExpandedClanci] = useState<Record<number, boolean>>({});
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const handleCopyClanak = (e: React.MouseEvent, clanak: ClanakItem, propis: GroupedPropis) => {
+    e.stopPropagation();
+    const citation = `${propis.naziv}, ${clanak.clanak_broj}${propis.nn ? ` (${propis.nn})` : ''}\n\n${clanak.tekst}`;
+    navigator.clipboard.writeText(citation);
+    setCopiedId(clanak.id);
+    setTimeout(() => {
+      setCopiedId((prev) => (prev === clanak.id ? null : prev));
+    }, 2000);
+  };
 
   // Grupiranje članaka po propisima i obogaćivanje metapodacima
   const groupedPropisi = useMemo(() => {
@@ -400,34 +413,72 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
                                 const title = hasTitle ? lines[0] : '';
                                 const preview = hasTitle ? lines.slice(1).join(' ') : lines.join(' ');
 
+                                const isCopied = copiedId === clanak.id;
+
                                 return (
                                   <div
                                     key={clanak.id}
-                                    onClick={() => toggleClanak(clanak.id)}
-                                    className="bg-white rounded-xl border border-slate-200/70 p-3.5 hover:border-blue-300 hover:shadow-2xs transition-all cursor-pointer select-none"
+                                    className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-2xs transition-all"
                                   >
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="flex items-center gap-2">
-                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-800 text-xs font-bold rounded-md shrink-0">
+                                    {/* Zaglavlje članka s akcijom sklapanja i gumbom za kopiranje */}
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div
+                                        onClick={() => toggleClanak(clanak.id)}
+                                        className="flex items-center gap-2 flex-wrap cursor-pointer select-none flex-1"
+                                      >
+                                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-md shrink-0 border border-slate-200/80 dark:border-slate-700">
                                           {clanak.clanak_broj}
                                         </span>
                                         {title && (
-                                          <span className="font-semibold text-slate-900 text-xs">
+                                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs">
                                             {title}
                                           </span>
                                         )}
                                       </div>
-                                      <span className="text-slate-400 text-xs shrink-0">
-                                        {isExpanded ? 'Sklopi' : 'Proširi tekst'}
-                                      </span>
+
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleCopyClanak(e, clanak, propis)}
+                                          className="p-1 px-2 text-[11px] font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 bg-slate-50 hover:bg-blue-50/80 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200/80 dark:border-slate-700 transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer select-none"
+                                          title="Kopiraj cijeli članak u međuspremnik sa službenim citatom"
+                                        >
+                                          {isCopied ? (
+                                            <>
+                                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Kopirano!</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Copy className="w-3.5 h-3.5" />
+                                              <span>Kopiraj</span>
+                                            </>
+                                          )}
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleClanak(clanak.id)}
+                                          className="p-1 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer select-none"
+                                        >
+                                          {isExpanded ? 'Sklopi' : 'Proširi tekst'}
+                                        </button>
+                                      </div>
                                     </div>
 
+                                    {/* Tekst članka - potpuno omogućen odabir teksta (select-text) */}
                                     {isExpanded ? (
-                                      <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-700 leading-relaxed whitespace-pre-line font-serif">
+                                      <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-serif select-text cursor-text"
+                                      >
                                         {clanak.tekst}
                                       </div>
                                     ) : (
-                                      <p className="text-xs text-slate-500 mt-1.5 line-clamp-2">
+                                      <p
+                                        onClick={() => toggleClanak(clanak.id)}
+                                        className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 cursor-pointer select-none"
+                                      >
                                         {preview}
                                       </p>
                                     )}
