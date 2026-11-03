@@ -132,71 +132,145 @@ export interface BaseArticle {
   label: string;
   /** Naslov iznad članka (npr. "Predmet Zakona") ako postoji */
   caption: string;
-  /** Dio/glava u kojoj se članak nalazi */
+  /** Hijerarhijska staza npr. "DIO DRUGI ZEMLJIŠNE KNJIGE › GLAVA I. SASTAV ZEMLJIŠNE KNJIGE" */
   section: string;
+  dio?: string;
+  glava?: string;
+  poglavlje?: string;
+  odjeljak?: string;
   text: string;
 }
 
-const ARTICLE_RE = /^Članak\s+(\d+)\.?\s*([a-zA-Z]{0,2})\.?$/;
+const ARTICLE_RE = /^Članak\s+(\d+)\.?\s*([a-zA-Zčćžšđ]{0,3})\.?$/i;
+
+function cleanStructureText(s: string): string {
+  return s.replace(/[ \t\u00a0]+/g, ' ').replace(/\n+/g, ' – ').trim();
+}
 
 export function normalizeArticleKey(num: string, suffix = ''): string {
   return `${parseInt(num, 10)}${suffix.toLowerCase()}`;
 }
 
 export function articleLabel(key: string): string {
-  const m = key.match(/^(\d+)([a-z]*)$/);
+  const m = key.match(/^(\d+)([a-zčćžšđ]*)$/i);
   if (!m) return `Članak ${key}.`;
   return m[2] ? `Članak ${m[1]}.${m[2]}` : `Članak ${m[1]}.`;
 }
 
 /**
  * Raščlamba temeljnog (izvornog ili pročišćenog) teksta zakona na članke.
- * Prepoznaje naslove članaka po tekstu ("Članak 12.", "Članak 12.a"), ne samo po klasi,
- * jer se klase razlikuju između godišta NN.
+ * Prepoznaje hijerarhijski kontekst (DIO, GLAVA, POGLAVLJE, ODJELJAK) i naslove članaka.
  */
 export function parseBaseArticles(html: string): BaseArticle[] {
   const paras = extractParagraphs(html);
   const articles: BaseArticle[] = [];
   let current: BaseArticle | null = null;
+  let currentDio = '';
+  let currentGlava = '';
+  let currentPoglavlje = '';
+  let currentOdjeljak = '';
   let pendingCaption = '';
-  let section = '';
-  let started = false;
+  let inLawBody = false;
 
   for (const p of paras) {
-    const m = p.text.match(ARTICLE_RE);
+    const trimmed = p.text.trim();
+    const m = trimmed.match(ARTICLE_RE);
+
     if (m) {
-      started = true;
+      inLawBody = true;
       if (current) articles.push(current);
+
+      const breadcrumbs = [currentDio, currentGlava, currentPoglavlje, currentOdjeljak]
+        .filter(Boolean)
+        .join(' › ');
+
       const key = normalizeArticleKey(m[1], m[2]);
-      current = { key, label: articleLabel(key), caption: pendingCaption, section, text: '' };
+      current = {
+        key,
+        label: articleLabel(key),
+        caption: pendingCaption,
+        section: breadcrumbs,
+        dio: currentDio || undefined,
+        glava: currentGlava || undefined,
+        poglavlje: currentPoglavlje || undefined,
+        odjeljak: currentOdjeljak || undefined,
+        text: '',
+      };
       pendingCaption = '';
       continue;
     }
-    if (!started) continue;
 
-    // Naslovi dijelova/glava (centrirani, velika slova ili "Glava ...")
-    if (/sred/.test(p.cls) || /^(PRVI|DRUGI|TREĆI|ČETVRTI|PETI|ŠESTI|SEDMI|OSMI|DEVETI|DESETI)\s+DIO/i.test(p.text) || /^Glava\s+[IVXLC]+\./.test(p.text)) {
-      section = p.text.replace(/\n/g, ' – ');
-      continue;
-    }
-    // Naslov iznad članka (kurziv) – pripada sljedećem članku
-    if (/kurz/.test(p.cls) && p.text.length < 200) {
-      pendingCaption = p.text;
-      continue;
-    }
-    // Potpisni blok / klasa na kraju akta
-    if (/klasa|potpis/.test(p.cls)) {
+    if (inLawBody && /klasa|potpis/.test(p.cls)) {
       if (current) {
         articles.push(current);
         current = null;
       }
-      started = false;
+      inLawBody = false;
       continue;
     }
+
+    if (!inLawBody) {
+      if (
+        /^(?:DIO\s+[A-ZČĆŽŠĐ]+|PRVI\s+DIO|GLAVA\s+[IVXLCDM\d]+|\d+\.\s+[A-ZČĆŽŠĐ\s]{4,})/i.test(trimmed)
+      ) {
+        inLawBody = true;
+      } else {
+        continue;
+      }
+    }
+
+    // DIO (npr. "DIO PRVI", "DIO DRUGI OPĆE ODREDBE", "PRVI DIO", "1. OPĆE ODREDBE")
+    if (
+      /^(?:DIO\s+[A-ZČĆŽŠĐ]+|PRVI\s+DIO|DRUGI\s+DIO|TREĆI\s+DIO|ČETVRTI\s+DIO|PETI\s+DIO|ŠESTI\s+DIO|SEDMI\s+DIO|OSMI\s+DIO|DEVETI\s+DIO|DESETI\s+DIO)\b/i.test(trimmed) ||
+      (/^[IVXLCDM\d]+\.\s+[A-ZČĆŽŠĐ\s]{4,}$/.test(trimmed) && !trimmed.includes('('))
+    ) {
+      currentDio = cleanStructureText(trimmed);
+      currentGlava = '';
+      currentPoglavlje = '';
+      currentOdjeljak = '';
+      continue;
+    }
+
+    // GLAVA (npr. "GLAVA I.", "GLAVA I. SASTAV ZEMLJIŠNE KNJIGE")
+    if (/^GLAVA\s+[IVXLCDM\d]+\.?\b/i.test(trimmed)) {
+      currentGlava = cleanStructureText(trimmed);
+      currentPoglavlje = '';
+      currentOdjeljak = '';
+      continue;
+    }
+
+    // POGLAVLJE (npr. "POGLAVLJE I.", "POGLAVLJE 1. OPĆE ODREDBE")
+    if (/^POGLAVLJE\s+[IVXLCDM\d]+\.?\b/i.test(trimmed)) {
+      currentPoglavlje = cleanStructureText(trimmed);
+      currentOdjeljak = '';
+      continue;
+    }
+
+    // ODJELJAK (npr. "ODJELJAK A", "ODJELJAK 1.", "7.1. GRAĐEVINSKA DOZVOLA")
+    if (
+      /^ODJELJAK\s+[A-Z\d]+\.?\b/i.test(trimmed) ||
+      /^\d+\.\d+\.\s+[A-ZČĆŽŠĐ\s]{4,}$/.test(trimmed)
+    ) {
+      currentOdjeljak = cleanStructureText(trimmed);
+      continue;
+    }
+
+    // Naslov članka (kurziv ili kratki centrirani naslov bez točke na kraju, ne počinje sa zagradom)
+    if (
+      (/kurz/i.test(p.cls) || p.cls.includes('T-10-9-kurz-s') || p.cls.includes('podnaslov')) &&
+      trimmed.length < 150 &&
+      !trimmed.startsWith('(') &&
+      !trimmed.startsWith('1.')
+    ) {
+      pendingCaption = cleanStructureText(trimmed).replace(/^[»"„]+|[«"“]+$/g, '').trim();
+      continue;
+    }
+
     if (current) {
-      current.text = current.text ? `${current.text}\n${p.text}` : p.text;
+      current.text = current.text ? `${current.text}\n${trimmed}` : trimmed;
     }
   }
+
   if (current) articles.push(current);
   return articles;
 }

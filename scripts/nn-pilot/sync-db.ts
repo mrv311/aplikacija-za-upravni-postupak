@@ -65,21 +65,59 @@ export async function syncLawToDatabase(kratica: string) {
     console.log(`🗑️ Obrisano ${delCount ?? 0} prethodnih članaka iz tablice 'zakoni'.`);
   }
 
+  // Provjeri podržava li baza nove stupce strukture
+  let supportsStructureColumns = true;
+
   // 2. Unesi nove pročišćene članke s embeddingom
   let successCount = 0;
   for (let i = 0; i < law.articles.length; i++) {
     const art = law.articles[i];
-    const fullTextForEmbedding = `${law.naziv}, ${art.clanak_broj}\n${art.tekst}`;
+    const fullTextForEmbedding = `${law.naziv}, ${art.clanak_broj}${art.naslov ? ` (${art.naslov})` : ''}\n${
+      art.struktura ? `[${art.struktura}]\n` : ''
+    }${art.tekst}`;
 
     try {
       const emb = await getEmbedding768(fullTextForEmbedding);
 
-      const { error: insError } = await supabase.from('zakoni').insert({
-        naziv_zakona: law.naziv,
-        clanak_broj: art.clanak_broj,
-        tekst: art.tekst,
-        embedding: emb,
-      });
+      let insError: any = null;
+
+      if (supportsStructureColumns) {
+        const payload: Record<string, any> = {
+          naziv_zakona: law.naziv,
+          clanak_broj: art.clanak_broj,
+          tekst: art.tekst,
+          embedding: emb,
+        };
+        if (art.naslov) payload.naslov = art.naslov;
+        if (art.struktura) payload.struktura = art.struktura;
+        if (art.dio) payload.dio = art.dio;
+        if (art.glava) payload.glava = art.glava;
+        if (art.poglavlje) payload.poglavlje = art.poglavlje;
+        if (art.odjeljak) payload.odjeljak = art.odjeljak;
+
+        const res = await supabase.from('zakoni').insert(payload);
+        insError = res.error;
+
+        if (insError && (insError.message?.includes('column') || insError.message?.includes('does not exist'))) {
+          // Baza još nema nove stupce - prebaci se na standardni payload
+          supportsStructureColumns = false;
+          const fallbackRes = await supabase.from('zakoni').insert({
+            naziv_zakona: law.naziv,
+            clanak_broj: art.clanak_broj,
+            tekst: art.tekst,
+            embedding: emb,
+          });
+          insError = fallbackRes.error;
+        }
+      } else {
+        const fallbackRes = await supabase.from('zakoni').insert({
+          naziv_zakona: law.naziv,
+          clanak_broj: art.clanak_broj,
+          tekst: art.tekst,
+          embedding: emb,
+        });
+        insError = fallbackRes.error;
+      }
 
       if (insError) {
         console.error(`❌ Greška pri unosu ${art.clanak_broj}:`, insError.message);

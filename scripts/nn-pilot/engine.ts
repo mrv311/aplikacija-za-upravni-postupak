@@ -37,6 +37,12 @@ export interface LawDef {
 
 export interface ConsolidatedArticle {
   clanak_broj: string;
+  naslov?: string;
+  struktura?: string;
+  dio?: string;
+  glava?: string;
+  poglavlje?: string;
+  odjeljak?: string;
   tekst: string;
 }
 
@@ -50,10 +56,21 @@ export interface ConsolidatedLaw {
   articles: ConsolidatedArticle[];
 }
 
+export interface ArticleData {
+  tekst: string;
+  naslov?: string;
+  struktura?: string;
+  dio?: string;
+  glava?: string;
+  poglavlje?: string;
+  odjeljak?: string;
+}
+
 interface ArticlePatch {
   targetArticleKey: string;
   type: string;
   updatedFullArticleText: string;
+  naslov?: string;
 }
 
 export interface ParsedAmendArticle {
@@ -161,11 +178,11 @@ function isOperativeAmendment(a: ParsedAmendArticle): boolean {
  * Obrađuje operativne članke u stabilnim serijama po 5-6 članaka.
  */
 async function applyAmendment(
-  currentArticles: Map<string, string>,
+  currentArticles: Map<string, ArticleData>,
   amendSlug: string,
   amendNn: string,
   lawNaziv: string
-): Promise<Map<string, string>> {
+): Promise<Map<string, ArticleData>> {
   console.log(`\n⚙️ Primjenjujem izmjenu ${amendNn} (${amendSlug})...`);
   const amendHtml = await fetchActHtml({
     slug: amendSlug,
@@ -212,8 +229,10 @@ async function applyAmendment(
     // Pripremi tekst ciljanih članaka
     const relevantBaseSummary = Array.from(targetKeysSet)
       .map((k) => {
-        const text = updatedMap.get(k);
-        return text ? `--- Članak ${k}. ---\n${text}` : `--- Članak ${k}. (još ne postoji u zakonu) ---`;
+        const item = updatedMap.get(k);
+        return item
+          ? `--- Članak ${k}. ${item.naslov ? `(${item.naslov})` : ''} ---\n${item.tekst}`
+          : `--- Članak ${k}. (još ne postoji u zakonu) ---`;
       })
       .join('\n\n');
 
@@ -230,7 +249,7 @@ ${amendBatchText}
 
 ZADATAK:
 1. Za svaki članak temeljnog zakona koji je izmijenjen, zamijenjen ili dopunjen, izradi novi potpun tekst sa svim stavcima.
-2. Ako se dodaje novi članak (npr. "74a"), postavi targetArticleKey na "74a" i u updatedFullArticleText stavi puni tekst tog novog članka.
+2. Ako se dodaje novi članak (npr. "74a"), postavi targetArticleKey na "74a" i u updatedFullArticleText stavi puni tekst tog novog članka. Ako izmjena definira naslov iznad tog članka, navedi ga u "naslov".
 3. Ako se članak briše, postavi targetArticleKey i stavi updatedFullArticleText na "BRISAN" ili type na "brisanje".
 
 Vrati isključivo JSON polje objekata:
@@ -238,7 +257,8 @@ Vrati isključivo JSON polje objekata:
   {
     "targetArticleKey": "broj_članka (npr. '8' ili '74a')",
     "type": "izmjena_stavka" | "zamjena_clanka" | "dodavanje_clanka" | "brisanje",
-    "updatedFullArticleText": "Cjeloviti ažurirani tekst članka..."
+    "updatedFullArticleText": "Cjeloviti ažurirani tekst članka...",
+    "naslov": "Naslov članka ako je definiran u izmjeni ili ostavi prazno"
   }
 ]`;
 
@@ -252,7 +272,37 @@ Vrati isključivo JSON polje objekata:
           updatedMap.delete(key);
           console.log(`   ❌ Obrisan Članak ${key}.`);
         } else {
-          updatedMap.set(key, patch.updatedFullArticleText.trim());
+          const existing = updatedMap.get(key);
+          let inheritedStruktura = existing?.struktura;
+          let inheritedDio = existing?.dio;
+          let inheritedGlava = existing?.glava;
+          let inheritedPoglavlje = existing?.poglavlje;
+          let inheritedOdjeljak = existing?.odjeljak;
+
+          // Za umetnute članke (npr. 186a), naslijedi strukturu od prethodnika (186)
+          if (!existing) {
+            const baseMatch = key.match(/^(\d+)/);
+            if (baseMatch) {
+              const prev = updatedMap.get(baseMatch[1]);
+              if (prev) {
+                inheritedStruktura = prev.struktura;
+                inheritedDio = prev.dio;
+                inheritedGlava = prev.glava;
+                inheritedPoglavlje = prev.poglavlje;
+                inheritedOdjeljak = prev.odjeljak;
+              }
+            }
+          }
+
+          updatedMap.set(key, {
+            tekst: patch.updatedFullArticleText.trim(),
+            naslov: patch.naslov || existing?.naslov,
+            struktura: inheritedStruktura,
+            dio: inheritedDio,
+            glava: inheritedGlava,
+            poglavlje: inheritedPoglavlje,
+            odjeljak: inheritedOdjeljak,
+          });
           console.log(`   ✏️ [${amendNn} | serija ${batchNum}/${totalBatches}] Ažuriran/Dodan Članak ${key}.`);
         }
       }
@@ -278,8 +328,11 @@ export async function consolidateLaw(
     try {
       const raw = await fs.readFile(cacheFile, 'utf-8');
       const cached = JSON.parse(raw) as ConsolidatedLaw;
-      console.log(`⚡ Učitavam već konsolidirani ${law.kratica} iz keša (${cached.articles.length} članaka).`);
-      return cached;
+      // Ako keš već ima strukturirane članke, koristi ga
+      if (cached.articles.length > 0 && (cached.articles[0].struktura || cached.articles[0].naslov !== undefined)) {
+        console.log(`⚡ Učitavam već konsolidirani ${law.kratica} iz keša (${cached.articles.length} članaka sa strukturom).`);
+        return cached;
+      }
     } catch {}
   }
 
@@ -298,10 +351,18 @@ export async function consolidateLaw(
   const parsedBase = parseBaseArticles(baseHtml);
   console.log(`✅ Učitano ${parsedBase.length} temeljnih članaka iz ${law.baseNn}.`);
 
-  let currentMap = new Map<string, string>();
+  let currentMap = new Map<string, ArticleData>();
   for (const a of parsedBase) {
     const cleanKey = a.key.replace(/^(?:članak|clanak)\s+/i, '').replace(/\.$/, '').trim().toLowerCase();
-    currentMap.set(cleanKey, a.text);
+    currentMap.set(cleanKey, {
+      tekst: a.text,
+      naslov: a.caption || undefined,
+      struktura: a.section || undefined,
+      dio: a.dio,
+      glava: a.glava,
+      poglavlje: a.poglavlje,
+      odjeljak: a.odjeljak,
+    });
   }
 
   // 2. Primjenjuj izmjene kronološki
@@ -311,10 +372,19 @@ export async function consolidateLaw(
 
   // 3. Sortiraj članke prirodnim redoslijedom
   const sortedKeys = Array.from(currentMap.keys()).sort(compareArticleKeys);
-  const articles: ConsolidatedArticle[] = sortedKeys.map((key) => ({
-    clanak_broj: formatArticleLabel(key),
-    tekst: currentMap.get(key) || '',
-  }));
+  const articles: ConsolidatedArticle[] = sortedKeys.map((key) => {
+    const data = currentMap.get(key)!;
+    return {
+      clanak_broj: formatArticleLabel(key),
+      naslov: data.naslov || undefined,
+      struktura: data.struktura || undefined,
+      dio: data.dio || undefined,
+      glava: data.glava || undefined,
+      poglavlje: data.poglavlje || undefined,
+      odjeljak: data.odjeljak || undefined,
+      tekst: data.tekst,
+    };
+  });
 
   const consolidated: ConsolidatedLaw = {
     kratica: law.kratica,
@@ -329,7 +399,7 @@ export async function consolidateLaw(
   // 4. Spremi u keš
   await fs.mkdir(path.dirname(cacheFile), { recursive: true });
   await fs.writeFile(cacheFile, JSON.stringify(consolidated, null, 2), 'utf-8');
-  console.log(`💾 Spremljen pročišćeni tekst u ${cacheFile} (${articles.length} članaka).`);
+  console.log(`💾 Spremljen pročišćeni tekst u ${cacheFile} (${articles.length} članaka sa strukturom).`);
 
   return consolidated;
 }

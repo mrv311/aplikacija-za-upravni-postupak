@@ -2,38 +2,82 @@ import { supabase } from '@/lib/supabase';
 import { PropisiTable, ClanakItem } from './PropisiTable';
 import { readStoredPropisiStatus } from '@/lib/propisi-checker';
 import { PropisiStatusCard } from '@/components/propisi/PropisiStatusCard';
+import structureData from '@/data/propisi-structure.json';
 
 export const revalidate = 0; // Onemogućava caching kako bi uvijek vidjeli najnovije podatke
+
+interface StructureEntry {
+  naslov?: string;
+  struktura?: string;
+  dio?: string;
+  glava?: string;
+  poglavlje?: string;
+  odjeljak?: string;
+}
 
 export default async function PropisiPage() {
   const allArticles: ClanakItem[] = [];
   let from = 0;
   const batchSize = 1000;
   let fetchError: string | null = null;
+  const structureMap = structureData as Record<string, Record<string, StructureEntry>>;
+
+  // Pokušaj najprije dohvatiti sa stupcima strukture, s automatskim povratom ako stupci još nisu migrirani u bazi
+  let selectColumns = 'id, naziv_zakona, clanak_broj, tekst, naslov, struktura, dio, glava, poglavlje, odjeljak';
+  let usingExtendedColumns = true;
 
   while (true) {
-    const { data, error } = await supabase
+    let res = await supabase
       .from('zakoni')
-      .select('id, naziv_zakona, clanak_broj, tekst')
+      .select(selectColumns as any)
       .range(from, from + batchSize - 1);
 
-    if (error) {
-      fetchError = error.message;
+    // Ako baza javi da stupci naslov/struktura ne postoje, vrati se na osnovne stupce
+    if (res.error && usingExtendedColumns && res.error.message?.includes('column')) {
+      usingExtendedColumns = false;
+      selectColumns = 'id, naziv_zakona, clanak_broj, tekst';
+      res = await supabase
+        .from('zakoni')
+        .select(selectColumns as any)
+        .range(from, from + batchSize - 1);
+    }
+
+    if (res.error) {
+      fetchError = res.error.message;
       break;
     }
 
-    if (!data || data.length === 0) break;
+    const rows = (res.data || []) as any[];
+    if (rows.length === 0) break;
 
-    for (const item of data) {
+    for (const item of rows) {
+      const artBroj = (item.clanak_broj || '').trim();
+      const cleanNum = artBroj.replace(/^(?:članak|clanak)\s+/i, '').replace(/\.$/, '').trim();
+
+      // Pronađi strukturu u katalogu prema nekoliko mogućih formata ključa
+      const lawMeta = structureMap[item.naziv_zakona];
+      const meta = lawMeta
+        ? lawMeta[artBroj] ||
+          lawMeta[`Članak ${cleanNum}.`] ||
+          lawMeta[`Članak ${cleanNum}`] ||
+          lawMeta[cleanNum]
+        : undefined;
+
       allArticles.push({
         id: item.id,
         naziv_zakona: item.naziv_zakona,
         clanak_broj: item.clanak_broj,
         tekst: item.tekst,
+        naslov: item.naslov || meta?.naslov,
+        struktura: item.struktura || meta?.struktura,
+        dio: item.dio || meta?.dio,
+        glava: item.glava || meta?.glava,
+        poglavlje: item.poglavlje || meta?.poglavlje,
+        odjeljak: item.odjeljak || meta?.odjeljak,
       });
     }
 
-    if (data.length < batchSize) break;
+    if (rows.length < batchSize) break;
     from += batchSize;
   }
 
