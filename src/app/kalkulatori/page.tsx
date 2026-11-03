@@ -5,23 +5,17 @@ import {
   Calendar,
   Clock,
   Scale,
-  FileText,
-  Download,
   Copy,
   Check,
   AlertTriangle,
-  CheckCircle2,
   CalendarDays,
   ShieldAlert,
-  ArrowRight,
-  Sparkles,
   Info,
 } from 'lucide-react';
 import { calculateZupRok, calculateZastara, getCroatianHolidays, ZUP_ROK_PRESETS, ZupRokTip } from '@/lib/rok-kalkulator';
-import { SlužbeniAktData } from '@/lib/docx-generator';
 
 export default function KalkulatoriPage() {
-  const [activeTab, setActiveTab] = useState<'rok' | 'zastara' | 'docx'>('rok');
+  const [activeTab, setActiveTab] = useState<'rok' | 'zastara'>('rok');
 
   // --- 1. STANJE ZA KALKULATOR ROKOVA (ZUP) ---
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -84,97 +78,6 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
     }
   }, [dospijeceDate, vrstaZastare]);
 
-  // --- 3. STANJE ZA GENERATOR SLUŽBENIH AKATA (.DOCX) ---
-  const [docData, setDocData] = useState<SlužbeniAktData>({
-    vrsta: 'rjesenje',
-    nazivTijela: 'UPRAVNI ODJEL ZA PROSTORNO UREĐENJE, GRADNJU I KOMUNALNO GOSPODARSTVO',
-    klasa: 'UP/I-363-01/26-01/142',
-    urbroj: '2181-05/02-26-2',
-    mjesto: 'Split',
-    datum: new Date().toLocaleDateString('hr-HR'),
-    stranka: 'Ivan Horvat, OIB: 12345678901, Zagreb, Ilica 10',
-    predmet: 'Utvrđivanje komunalnog doprinosa za stambenu zgradu',
-    pravniOsnov:
-      'članka 96. Zakona o općem upravnom postupku (»Narodne novine«, br. 47/09. i 110/21.) i članaka 76.–80. Zakona o komunalnom gospodarstvu (»Narodne novine«, br. 68/18., 110/18., 32/20. i 145/24.)',
-    izreka:
-      '1. Obvezniku Ivanu Horvatu iz Zagreba, Ilica 10, utvrđuje se obveza plaćanja komunalnog doprinosa za građenje stambene zgrade na k.č.br. 1245 k.o. Split u iznosu od 2.450,00 EUR.\n\n2. Utvrđeni iznos iz točke 1. ove izreke obveznik je dužan uplatiti u roku od 15 dana od dana izvršnosti ovog rješenja u korist računa Grada Splita.\n\n3. Žalba protiv ovog rješenja ne odgađa njegovo izvršenje.',
-    obrazlozenje:
-      'Obveznik Ivan Horvat podnio je ovom upravnom tijelu zahtjev za obračun komunalnog doprinosa za građenje stambene građevine na k.č.br. 1245 k.o. Split, u skladu s pravomoćnom građevinskom dozvolom.\n\nU provedenom postupku utvrđeno je da obujam građevine iznosi 450 m3 te se nalazi u II. zoni komunalnog doprinosa. Množenjem obujma i jedinične vrijednosti utvrđen je ukupan iznos davanja iz točke 1. izreke.\n\nTemeljem svega navedenog, a u skladu s mjerodavnim odredbama Zakona o komunalnom gospodarstvu i važeće Odluke o komunalnom doprinosu, riješeno je kao u izreci.',
-    uputaOPravnomLijeku:
-      'Protiv ovog rješenja može se izjaviti žalba drugostupanjskom tijelu u roku od 15 dana od dana dostave rješenja. Žalba se predaje neposredno ili šalje poštom preporučeno ovom tijelu u dva istovjetna primjerka.',
-    sluzbenaOsoba: 'Marko Marulić, mag. iur.',
-    funkcijaOsobe: 'Voditelj odsjeka',
-    dostaviti: ['Imenovanom obvezniku, osobna dostava', 'Upravnom tijelu za financije'],
-  });
-
-  const [downloadingDocx, setDownloadingDocx] = useState(false);
-
-  const applyTemplate = (tip: 'vodni' | 'prekid' | 'poziv') => {
-    if (tip === 'vodni') {
-      setDocData({
-        ...docData,
-        vrsta: 'rjesenje',
-        predmet: 'Obračun vodnoga doprinosa',
-        pravniOsnov:
-          'članka 96. Zakona o općem upravnom postupku (»Narodne novine«, br. 47/09. i 110/21.) te članka 14. Zakona o financiranju vodnoga gospodarstva (»Narodne novine«, br. 153/09. do 36/24.)',
-        izreka:
-          '1. Investitoru se utvrđuje obveza plaćanja vodnoga doprinosa za građenje građevine u iznosu od 1.820,00 EUR.\n2. Navedeni iznos investitor je dužan podmiriti u roku od 15 dana od primitka rješenja.',
-        obrazlozenje:
-          'Uvidom u glavni projekt i obračun kubature građevine utvrđeno je da ukupni obujam iznosi 380 m3. Primjenom zakonske tarife utvrđen je iznos kao u izreci.',
-      });
-    } else if (tip === 'prekid') {
-      setDocData({
-        ...docData,
-        vrsta: 'zakljucak',
-        predmet: 'Prekid postupka zbog smrti stranke',
-        pravniOsnov:
-          'članka 55. stavka 1. Zakona o općem upravnom postupku (»Narodne novine«, br. 47/09. i 110/21.) i članka 139. Zakona o nasljeđivanju (»Narodne novine«, br. 48/03. do 14/19.)',
-        izreka:
-          '1. Prekida se upravni postupak pokrenut po zahtjevu stranke Petra Horvata zbog smrti stranke.\n\n2. Postupak će se nastaviti kada pravni sljednici (nasljednici) preuzmu postupak ili kada ih službena osoba na prijedlog druge stranke pozove da to učine.',
-        obrazlozenje:
-          'Uvidom u maticu umrlih utvrđeno je da je stranka Petar Horvat preminuo dana 12. veljače 2026. Sukladno članku 55. ZUP-a, kad stranka umre tijekom postupka, a prava i obveze prelaze na nasljednike po Zakonu o nasljeđivanju, postupak se prekida do preuzimanja od strane nasljednika.',
-      });
-    } else {
-      setDocData({
-        ...docData,
-        vrsta: 'poziv',
-        predmet: 'Poziv na otklanjanje nedostataka u podnesku',
-        pravniOsnov: 'članka 73. stavka 1. Zakona o općem upravnom postupku (»Narodne novine«, br. 47/09. i 110/21.)',
-        izreka:
-          'Poziva se podnositelj zahtjeva da u roku od 8 dana od dana primitka ovog poziva dopuni zahtjev dostavom dokaza o pravnom interesu (izvadak iz zemljišne knjige sukladno Zakonu o zemljišnim knjigama) i idejnog rješenja.',
-        obrazlozenje:
-          'Podnositelj je dana 20. ožujka 2026. podnio nepotpun zahtjev. Sukladno članku 73. ZUP-a, ako podnesak sadrži kakav nedostatak koji onemogućuje postupanje, službena osoba pozvat će podnositelja zaključkom ili pozivom da nedostatak otkloni u određenom roku.',
-      });
-    }
-  };
-
-  const handleDownloadDocx = async () => {
-    setDownloadingDocx(true);
-    try {
-      const res = await fetch('/api/alati/export-docx', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(docData),
-      });
-
-      if (!res.ok) throw new Error('Neuspjelo generiranje dokumenta');
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${docData.vrsta.toUpperCase()}_${docData.klasa.replace(/[/\\?%*:|"<>]/g, '_')}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(`Greška: ${err.message}`);
-    } finally {
-      setDownloadingDocx(false);
-    }
-  };
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* 1. ZAGLAVLJE STRANICE */}
@@ -185,12 +88,11 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
               <Scale className="w-6 h-6" />
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Pravni kalkulatori i izvoz službenih pismena
+              Pravni kalkulatori (ZUP, ZUS & Zastara)
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Službeni izračun ZUP rokova (s neradnim danima i blagdanima RH), kalkulator zastare i Word (.docx) generator
-            akta.
+            Službeni izračun upravnih i sudskih rokova s kalendarom neradnih dana RH, te kalkulator zastare tražbina (OPZ i ZOO).
           </p>
         </div>
 
@@ -206,7 +108,7 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
             }`}
           >
             <Clock className="w-4 h-4" />
-            ZUP Rokovi
+            ZUP & ZUS Rokovi
           </button>
           <button
             type="button"
@@ -219,18 +121,6 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
           >
             <ShieldAlert className="w-4 h-4" />
             Zastara (OPZ / ZOO)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('docx')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'docx'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            Izvoz u Word (.docx)
           </button>
         </div>
       </div>
@@ -703,211 +593,6 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* TAB 3: GENERATOR I IZVOZ SLUŽBENIH AKATA U WORD (.DOCX) */}
-      {/* ========================================================================= */}
-      {activeTab === 'docx' && (
-        <div className="space-y-6">
-          {/* Quick template bar */}
-          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                Učitaj standardizirani predložak s točnim zakonskim osnovama:
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => applyTemplate('vodni')}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-blue-100 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 transition-colors cursor-pointer"
-              >
-                Rješenje o vodnom/komunalnom doprinosu
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate('prekid')}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-blue-100 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 transition-colors cursor-pointer"
-              >
-                Zaključak o prekidu (smrt stranke - čl. 55. ZUP)
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate('poziv')}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-blue-100 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 transition-colors cursor-pointer"
-              >
-                Poziv za dopunu / uvid (čl. 73. ZUP)
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Nacrt službenog akta (memorandum, uvod, izreka, obrazloženje i pravni lijek)
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Izvoz u formatirani Microsoft Word dokument (.docx) usklađen sa standardima Uredbe o uredskom poslovanju.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled={downloadingDocx}
-                onClick={handleDownloadDocx}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                {downloadingDocx ? 'Generiram .docx...' : 'Preuzmi Word dokument (.docx)'}
-              </button>
-            </div>
-
-            {/* Grid polja */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Vrsta akta:</label>
-                <select
-                  value={docData.vrsta}
-                  onChange={(e) => setDocData({ ...docData, vrsta: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-                >
-                  <option value="rjesenje">Rješenje</option>
-                  <option value="zakljucak">Zaključak</option>
-                  <option value="poziv">Poziv</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">KLASA:</label>
-                <input
-                  type="text"
-                  value={docData.klasa}
-                  onChange={(e) => setDocData({ ...docData, klasa: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">URBROJ:</label>
-                <input
-                  type="text"
-                  value={docData.urbroj}
-                  onChange={(e) => setDocData({ ...docData, urbroj: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Naziv javnopravnog tijela:</label>
-                <input
-                  type="text"
-                  value={docData.nazivTijela}
-                  onChange={(e) => setDocData({ ...docData, nazivTijela: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Mjesto i datum:</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={docData.mjesto}
-                    onChange={(e) => setDocData({ ...docData, mjesto: e.target.value })}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                  <input
-                    type="text"
-                    value={docData.datum}
-                    onChange={(e) => setDocData({ ...docData, datum: e.target.value })}
-                    className="w-1/2 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Stranka / Podnositelj:</label>
-                <input
-                  type="text"
-                  value={docData.stranka}
-                  onChange={(e) => setDocData({ ...docData, stranka: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Predmet:</label>
-                <input
-                  type="text"
-                  value={docData.predmet}
-                  onChange={(e) => setDocData({ ...docData, predmet: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div className="md:col-span-3">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Pravni osnov (Uvod):</label>
-                <input
-                  type="text"
-                  value={docData.pravniOsnov}
-                  onChange={(e) => setDocData({ ...docData, pravniOsnov: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-                />
-              </div>
-
-              <div className="md:col-span-3">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Izreka (Dispozitiv):</label>
-                <textarea
-                  rows={4}
-                  value={docData.izreka}
-                  onChange={(e) => setDocData({ ...docData, izreka: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium font-serif leading-relaxed"
-                />
-              </div>
-
-              <div className="md:col-span-3">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Obrazloženje:</label>
-                <textarea
-                  rows={6}
-                  value={docData.obrazlozenje}
-                  onChange={(e) => setDocData({ ...docData, obrazlozenje: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-serif leading-relaxed"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Uputa o pravnom lijeku:</label>
-                <textarea
-                  rows={3}
-                  value={docData.uputaOPravnomLijeku}
-                  onChange={(e) => setDocData({ ...docData, uputaOPravnomLijeku: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs italic"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Službena osoba & Funkcija:</label>
-                <input
-                  type="text"
-                  value={docData.sluzbenaOsoba}
-                  onChange={(e) => setDocData({ ...docData, sluzbenaOsoba: e.target.value })}
-                  placeholder="Ime i prezime"
-                  className="w-full mb-2 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-                <input
-                  type="text"
-                  value={docData.funkcijaOsobe}
-                  onChange={(e) => setDocData({ ...docData, funkcijaOsobe: e.target.value })}
-                  placeholder="Funkcija / zvanje"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
-            </div>
           </div>
         </div>
       )}

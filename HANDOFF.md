@@ -127,9 +127,9 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 6. Pravni kalkulatori i izvoz službenih pismena u Word (.docx)
+## 📌 6. Pravni kalkulatori (ZUP, ZUS & Zastara)
 
-1. **Kalkulator ZUP rokova (`/kalkulatori`)**:
+1. **Kalkulator ZUP i ZUS rokova (`/kalkulatori`)**:
    - **Ključni drugostupanjski rok — članak 121. stavak 1. ZUP-a**:
      - Istaknut na vrhu kao primarni, najvažniji rok za žalbeni postupak (rok od 60 dana za donošenje i dostavu drugostupanjskog rješenja od dana predaje uredne žalbe).
      - Prikaz mjerodavne pravne posljedice proteka roka: pravo stranke na podnošenje tužbe Upravnom sudu zbog šutnje drugostupanjskog tijela sukladno članku 24. stavku 3. Zakona o upravnim sporovima (ZUS).
@@ -161,11 +161,9 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
      - Naknada štete (ZOO čl. 230. – 3 god. subjektivni / 5 god. objektivni rok).
      - Opći zastarni rok (ZOO čl. 225. – 5 god.).
 
-3. **Generator i izvoz službenih pismena u Word (.docx)**:
-   - **Stvarni `.docx` izvoz**: Generira formalni dokument pomoću biblioteke `docx` s potpunim memorandumom Republike Hrvatske, Klasifikacijskim oznakama, Uvodom, Dispozitivom/Izrekom, Obrazloženjem, Uputom o pravnom lijeku, potpisnim blokom i dostavnom naredbom.
-   - **Dostupnost**:
-     - Samostalni alat na ruti `/kalkulatori` s predlošcima (Rješenje o doprinosu, Zaključak o prekidu zbog smrti, Poziv na dopunu).
-     - Izravno unutar radnog prostora predmeta (`DraftGeneratorModal.tsx`): gumb **"Preuzmi Word (.docx)"** omogućava službenicima trenutačno preuzimanje bilo kojeg AI-generiranog nacrta u čist `.docx`.
+3. **Izvoz službenih pismena u Word (.docx) u radnom prostoru**:
+   - Generira formalni dokument pomoću biblioteke `docx` s potpunim memorandumom Republike Hrvatske, Klasifikacijskim oznakama, Uvodom, Dispozitivom/Izrekom, Obrazloženjem, Uputom o pravnom lijeku, potpisnim blokom i dostavnom naredbom.
+   - Integrirano izravno unutar radnog prostora predmeta (`DraftGeneratorModal.tsx`): gumb **"Preuzmi Word (.docx)"** omogućava službenicima trenutačno preuzimanje bilo kojeg AI-generiranog nacrta u čist `.docx`. Kartica kalkulatora je namjenski oslobođena suvišnih formi i posvećena isključivo izračunima rokova i zastare.
 
 ---
 
