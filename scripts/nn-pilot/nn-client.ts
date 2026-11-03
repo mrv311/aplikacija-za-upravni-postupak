@@ -172,7 +172,8 @@ export function parseBaseArticles(html: string): BaseArticle[] {
   let pendingCaption = '';
   let inLawBody = false;
 
-  for (const p of paras) {
+  for (let i = 0; i < paras.length; i++) {
+    const p = paras[i];
     const trimmed = p.text.trim();
     const m = trimmed.match(ARTICLE_RE);
 
@@ -211,7 +212,7 @@ export function parseBaseArticles(html: string): BaseArticle[] {
 
     if (!inLawBody) {
       if (
-        /^(?:DIO\s+[A-ZČĆŽŠĐ]+|PRVI\s+DIO|GLAVA\s+[IVXLCDM\d]+|\d+\.\s+[A-ZČĆŽŠĐ\s]{4,})/i.test(trimmed)
+        /^(?:DIO\s+[A-ZČĆŽŠĐa-zčćžšđ]+|PRVI\s+DIO|GLAVA\s+[IVXLCDM\d]+|\d+\.\s+[A-ZČĆŽŠĐ\s]{4,})/i.test(trimmed)
       ) {
         inLawBody = true;
       } else {
@@ -221,10 +222,16 @@ export function parseBaseArticles(html: string): BaseArticle[] {
 
     // DIO (npr. "DIO PRVI", "DIO DRUGI OPĆE ODREDBE", "PRVI DIO", "1. OPĆE ODREDBE")
     if (
-      /^(?:DIO\s+[A-ZČĆŽŠĐ]+|PRVI\s+DIO|DRUGI\s+DIO|TREĆI\s+DIO|ČETVRTI\s+DIO|PETI\s+DIO|ŠESTI\s+DIO|SEDMI\s+DIO|OSMI\s+DIO|DEVETI\s+DIO|DESETI\s+DIO)\b/i.test(trimmed) ||
+      /^(?:DIO\s+[A-ZČĆŽŠĐa-zčćžšđ]+|PRVI\s+DIO|DRUGI\s+DIO|TREĆI\s+DIO|ČETVRTI\s+DIO|PETI\s+DIO|ŠESTI\s+DIO|SEDMI\s+DIO|OSMI\s+DIO|DEVETI\s+DIO|DESETI\s+DIO)\b/i.test(trimmed) ||
       (/^[IVXLCDM\d]+\.\s+[A-ZČĆŽŠĐ\s]{4,}$/.test(trimmed) && !trimmed.includes('('))
     ) {
-      currentDio = cleanStructureText(trimmed);
+      const nextP = paras[i + 1]?.text.trim() || '';
+      if (nextP && nextP === nextP.toUpperCase() && !nextP.startsWith('ČLANAK') && nextP.length < 120) {
+        currentDio = `${cleanStructureText(trimmed)} – ${cleanStructureText(nextP)}`;
+        i++;
+      } else {
+        currentDio = cleanStructureText(trimmed);
+      }
       currentGlava = '';
       currentPoglavlje = '';
       currentOdjeljak = '';
@@ -233,7 +240,13 @@ export function parseBaseArticles(html: string): BaseArticle[] {
 
     // GLAVA (npr. "GLAVA I.", "GLAVA I. SASTAV ZEMLJIŠNE KNJIGE")
     if (/^GLAVA\s+[IVXLCDM\d]+\.?\b/i.test(trimmed)) {
-      currentGlava = cleanStructureText(trimmed);
+      const nextP = paras[i + 1]?.text.trim() || '';
+      if (nextP && nextP === nextP.toUpperCase() && !nextP.startsWith('ČLANAK') && nextP.length < 120) {
+        currentGlava = `${cleanStructureText(trimmed)} – ${cleanStructureText(nextP)}`;
+        i++;
+      } else {
+        currentGlava = cleanStructureText(trimmed);
+      }
       currentPoglavlje = '';
       currentOdjeljak = '';
       continue;
@@ -255,7 +268,19 @@ export function parseBaseArticles(html: string): BaseArticle[] {
       continue;
     }
 
-    // Naslov članka (kurziv ili kratki centrirani naslov bez točke na kraju, ne počinje sa zagradom)
+    // Naslov članka: prepoznaje kurziv/podnaslov ILI paragraf neposredno ispred "Članak N."
+    const isNextArticle = paras[i + 1]?.text.trim().match(ARTICLE_RE);
+    const looksLikeCaption =
+      trimmed.length < 130 &&
+      !trimmed.startsWith('(') &&
+      !trimmed.endsWith('.') &&
+      !/^(?:DIO|GLAVA|POGLAVLJE|ODJELJAK)/i.test(trimmed);
+
+    if (isNextArticle && looksLikeCaption) {
+      pendingCaption = cleanStructureText(trimmed).replace(/^[»"„]+|[«"“]+$/g, '').trim();
+      continue;
+    }
+
     if (
       (/kurz/i.test(p.cls) || p.cls.includes('T-10-9-kurz-s') || p.cls.includes('podnaslov')) &&
       trimmed.length < 150 &&

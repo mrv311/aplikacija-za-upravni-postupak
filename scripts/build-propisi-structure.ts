@@ -12,6 +12,18 @@ interface ArticleStructureMeta {
 }
 
 const LAW_BASE_SLUGS: Record<string, { slug: string; url: string }> = {
+  'Zakon o vlasništvu i drugim stvarnim pravima': {
+    slug: '2015_07_81_1548',
+    url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2015_07_81_1548.html',
+  },
+  'Pravilnik o jednostavnim i drugim građevinama i radovima': {
+    slug: '2017_11_112_2625',
+    url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2017_11_112_2625.html',
+  },
+  'Zemljišnoknjižni poslovnik': {
+    slug: '1997_08_81_1408',
+    url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/1997_08_81_1408.html',
+  },
   'Zakon o zemljišnim knjigama': {
     slug: '2019_06_63_1234',
     url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2019_06_63_1234.html',
@@ -74,9 +86,43 @@ async function build() {
   console.log('🏗️ Generiram proširenu strukturu propisa RH...');
   const structureData: Record<string, Record<string, ArticleStructureMeta>> = {};
 
+  // 1. Najprije učitaj pročišćene tekstove iz .nn-cache/consolidated/*.json ako postoje
+  const consolidatedDir = path.resolve('.nn-cache', 'consolidated');
+  if (fs.existsSync(consolidatedDir)) {
+    const files = fs.readdirSync(consolidatedDir).filter(f => f.endsWith('.json'));
+    for (const f of files) {
+      try {
+        const raw = fs.readFileSync(path.join(consolidatedDir, f), 'utf-8');
+        const data = JSON.parse(raw);
+        if (data.naziv && Array.isArray(data.articles)) {
+          console.log(`📁 Učitavam strukturu iz pročišćenog akta: ${data.naziv} (${data.articles.length} članaka)...`);
+          structureData[data.naziv] = {};
+          for (const a of data.articles) {
+            structureData[data.naziv][a.clanak_broj] = {
+              naslov: a.naslov || undefined,
+              struktura: a.struktura || undefined,
+              dio: a.dio || undefined,
+              glava: a.glava || undefined,
+              poglavlje: a.poglavlje || undefined,
+              odjeljak: a.odjeljak || undefined,
+            };
+          }
+        }
+      } catch (err: any) {
+        console.error(`  Greška pri čitanju ${f}:`, err.message);
+      }
+    }
+  }
+
+  // 2. Za ostale zakone koji još nisu u .nn-cache/consolidated, parsiraj iz NN HTML-a
   for (const [nazivZakona, meta] of Object.entries(LAW_BASE_SLUGS)) {
+    if (structureData[nazivZakona] && Object.keys(structureData[nazivZakona]).length > 0) {
+      console.log(`⏩ ${nazivZakona} već ima učitanu pročišćenu strukturu (${Object.keys(structureData[nazivZakona]).length} čl.).`);
+      continue;
+    }
+
     try {
-      console.log(`\nObrađujem: ${nazivZakona} (${meta.slug})...`);
+      console.log(`\nObrađujem iz NN HTML-a: ${nazivZakona} (${meta.slug})...`);
       const html = await fetchActHtml({
         slug: meta.slug,
         htmlUrl: meta.url,
@@ -105,7 +151,7 @@ async function build() {
   const outPath = path.resolve('src/data/propisi-structure.json');
   await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
   await fs.promises.writeFile(outPath, JSON.stringify(structureData, null, 2), 'utf-8');
-  console.log(`\n🎉 Spremljena struktura u: ${outPath}`);
+  console.log(`\n🎉 Spremljena struktura u: ${outPath} (${Object.keys(structureData).length} propisa).`);
 }
 
 build().catch(console.error);

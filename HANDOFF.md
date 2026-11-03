@@ -80,9 +80,36 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 4. Sljedeći koraci & Backlog (Točka 2)
+## 📌 4. Baza propisa RH — Proširenje stvarnopravnih i građevinskih propisa (Dovršena točka 2)
 
-1. **Nastavak proširenja stvarnog prava & gradnje (Točka 2)**:
-   - **ZV** (Zakon o vlasništvu i drugim stvarnim pravima — NN 91/96, 68/98, 137/99, 22/00, 73/00, 129/00, 114/01, 79/06, 141/06, 146/08, 38/09, 153/09, 143/12, 152/14, 81/15, 94/17)
-   - **Pravilnik o jednostavnim i drugim građevinama i radovima** (građenje bez građevinske dozvole — NN 112/17, 34/18, 36/19, 98/19, 31/20, 74/22, 155/23)
-   - **Zemljišnoknjižni poslovnik** (NN 123/19 — zaokruživanje zemljišnoknjižnog referata)
+1. **Zakon o vlasništvu i drugim stvarnim pravima (ZV)**:
+   - **Broj članaka**: **399 članaka** (od Članka 1. do Članka 396., uključujući umetnute članke poput 390.a).
+   - **Izvor**: Službeni pročišćeni tekst Hrvatskoga sabora (NN 81/15) + službeni Ispravak pročišćenog teksta (NN 94/17 za članke 71. i 73. o etažiranju i potvrdama/uporabnim dozvolama).
+   - **Struktura i naslovi**: Svih 399 članaka nosi punu hijerarhijsku stazu (*Dio*, *Glava*, *Poglavlje*, *Odjeljak*) i 384/399 nosi službeni naslov/podnaslov članka (npr. *Stjecanje prava vlasništva*, *Zaštita posjeda*, *Susjedska prava*, *Uspostava etažnog vlasništva*).
+   - **Baza & Vektori**: Uspješno generirani vektorski embeddingzi (`gemini-embedding-001`, 3072 dimenzije) i spremljeni u Supabase tablicu `zakoni`.
+
+2. **Pravilnik o jednostavnim i drugim građevinama i radovima (P-JEDNOSTAVNE)**:
+   - **Broj članaka**: **12 važećih članaka** (temeljni članci 1.–10. te umetnuti članci 3.a i 5.a).
+   - **Konsolidacija**: Temeljni akt NN 112/17 pročišćen kroz svih 6 izmjena i dopuna (NN 34/18, NN 36/19, NN 98/19, NN 31/20, NN 74/22, NN 155/23).
+   - **Ključni sadržaj**: Detaljan popis radova i pomoćnih građevina koje se grade bez građevinske dozvole i bez glavnog projekta (čl. 2 i 3), te s glavnim projektom (čl. 4 i 5).
+   - **Baza & Vektori**: Uspješno sinkronizirano u Supabase tablicu `zakoni`.
+
+3. **Zemljišnoknjižni poslovnik (ZKP-POSLOVNIK)**:
+   - **Broj članaka**: **163 važeća članka**.
+   - **Konsolidacija**: Temeljni tekst NN 81/97 integriran s izmjenama NN 109/02 (dodavanje Dijela četvrtog: EOP-zemljišna knjiga, članci 115.–135., te renumeracija završnih odredaba u čl. 136.–163.), NN 123/02 (čl. 43 i pomoćni popisi 68.a–68.e), NN 153/02, NN 14/05 i NN 60/10 (otvaranje i preoblikovanje u BZP, čl. 159.).
+   - **Baza & Vektori**: Uspješno sinkronizirano u Supabase tablicu `zakoni`.
+
+4. **Kataloška struktura (`src/data/propisi-structure.json`)**:
+   - Povećano na **17 ključnih propisa** i **preko 2.300 strukturiranih članaka** s naslovima, razdjelnicima i breadcrumb stazama.
+   - Svi propisi registrirani u `src/lib/propisi-config.ts` po pravnim područjima.
+
+---
+
+## 📌 5. Sljedeći koraci & Backlog
+
+1. **Povezivanje baze prakse i novih stvarnopravnih propisa u AI asistentu**:
+   - Usklađivanje sistemskih uputa asistenta za automatsko citiranje ZV-a (npr. susjedska prava, etažiranje, nužni prolazi) i Pravilnika o jednostavnim građevinama (čl. 2. i 4.) pri obradi građevinskih i stvarnopravnih upita.
+2. **Kalkulator komunalnog i vodnog doprinosa / Naknada za uređenje voda**:
+   - Izrada interaktivnog kalkulatora na temelju Pravilnika o obračunu površine (P-POVRŠINA) i Uredbe o visini NUV-a.
+3. **Izvoz predmeta i rješenja u službene Word / PDF predloške**:
+   - Standardizirani memorandumi upravnih tijela s automatskim zaglavljem, uvodom, izrekom, obrazloženjem i uputom o pravnom lijeku.

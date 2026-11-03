@@ -184,6 +184,15 @@ export const PROPISI_LIST: PropisDef[] = [
     izvor: 'lokalno',
     opis: 'Način izračuna građevinske (bruto) površine, korisne površine i obujma zgrada te koeficijenti za prostore (čl. 9.a).'
   },
+  {
+    naziv: 'Pravilnik o jednostavnim i drugim građevinama i radovima',
+    kratica: 'P-JEDNOSTAVNE',
+    podrucje: 'Gradnja, prostor i ozakonjenje',
+    tip: 'Pravilnik',
+    nn: 'NN 112/17, 34/18, 36/19, 98/19, 31/20, 74/22, 155/23',
+    izvor: 'lokalno',
+    opis: 'Jednostavne i druge građevine i radovi koji se mogu graditi odnosno izvoditi bez građevinske dozvole i/ili bez glavnog projekta.'
+  },
 
   // 4. POREZI I PRISTOJBE
   {
@@ -199,6 +208,15 @@ export const PROPISI_LIST: PropisDef[] = [
 
   // 5. GRAĐANSKO, STVARNO I ZEMLJIŠNOKNJIŽNO PRAVO
   {
+    naziv: 'Zakon o vlasništvu i drugim stvarnim pravima',
+    kratica: 'ZV',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Zakon',
+    nn: 'NN 91/96, 68/98, 137/99, 22/00, 73/00, 129/00, 114/01, 79/06, 141/06, 146/08, 38/09, 153/09, 143/12, 152/14, 81/15, 94/17',
+    izvor: 'lokalno',
+    opis: 'Temeljni zakon stvarnog prava: stjecanje i zaštita vlasništva, susjedska prava, etažiranje, služnosti, založno pravo i posjed.'
+  },
+  {
     naziv: 'Zakon o zemljišnim knjigama',
     kratica: 'ZZK',
     podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
@@ -206,6 +224,15 @@ export const PROPISI_LIST: PropisDef[] = [
     nn: 'NN 63/19, 128/22',
     izvor: 'lokalno',
     opis: 'Uređenje, vođenje i osnivanje zemljišnih knjiga, upisi, tabularne isprave i elektroničko poslovanje.'
+  },
+  {
+    naziv: 'Zemljišnoknjižni poslovnik',
+    kratica: 'ZKP-POSLOVNIK',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Pravilnik',
+    nn: 'NN 81/97, 109/02, 123/02, 153/02, 14/05, 60/10',
+    izvor: 'lokalno',
+    opis: 'Pravilnik o unutarnjem ustroju, vođenju zemljišnih knjiga i obavljanju drugih poslova u zemljišnoknjižnim odjelima sudova.'
   }
 ];
 
