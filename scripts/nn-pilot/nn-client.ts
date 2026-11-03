@@ -143,6 +143,22 @@ export interface BaseArticle {
 
 const ARTICLE_RE = /^Članak\s+(\d+)\.?\s*([a-zA-Zčćžšđ]{0,3})\.?$/i;
 
+const DIO_COMPACT_MAP: Record<string, string> = {
+  DIOPRVI: 'DIO PRVI',
+  DIODRUGI: 'DIO DRUGI',
+  DIOTREĆI: 'DIO TREĆI',
+  DIOTRECI: 'DIO TREĆI',
+  DIOČETVRTI: 'DIO ČETVRTI',
+  DIOCETVRTI: 'DIO ČETVRTI',
+  DIOPETI: 'DIO PETI',
+  DIOŠESTI: 'DIO ŠESTI',
+  DIOSESTI: 'DIO ŠESTI',
+  DIOSEDMI: 'DIO SEDMI',
+  DIOOSMI: 'DIO OSMI',
+  DIODEVETI: 'DIO DEVETI',
+  DIODESETI: 'DIO DESETI',
+};
+
 function cleanStructureText(s: string): string {
   return s.replace(/[ \t\u00a0]+/g, ' ').replace(/\n+/g, ' – ').trim();
 }
@@ -210,8 +226,12 @@ export function parseBaseArticles(html: string): BaseArticle[] {
       continue;
     }
 
+    const compactUpper = trimmed.replace(/\s+/g, '').toUpperCase();
+    const compactDio = DIO_COMPACT_MAP[compactUpper];
+
     if (!inLawBody) {
       if (
+        compactDio ||
         /^(?:DIO\s+[A-ZČĆŽŠĐa-zčćžšđ]+|PRVI\s+DIO|GLAVA\s+[IVXLCDM\d]+|\d+\.\s+[A-ZČĆŽŠĐ\s]{4,})/i.test(trimmed)
       ) {
         inLawBody = true;
@@ -220,17 +240,19 @@ export function parseBaseArticles(html: string): BaseArticle[] {
       }
     }
 
-    // DIO (npr. "DIO PRVI", "DIO DRUGI OPĆE ODREDBE", "PRVI DIO", "1. OPĆE ODREDBE")
+    // DIO (npr. "DIO PRVI", "DIO DRUGI OPĆE ODREDBE", "PRVI DIO", "1. OPĆE ODREDBE", "D I O P R V I")
     if (
+      compactDio ||
       /^(?:DIO\s+[A-ZČĆŽŠĐa-zčćžšđ]+|PRVI\s+DIO|DRUGI\s+DIO|TREĆI\s+DIO|ČETVRTI\s+DIO|PETI\s+DIO|ŠESTI\s+DIO|SEDMI\s+DIO|OSMI\s+DIO|DEVETI\s+DIO|DESETI\s+DIO)\b/i.test(trimmed) ||
       (/^[IVXLCDM\d]+\.\s+[A-ZČĆŽŠĐ\s]{4,}$/.test(trimmed) && !trimmed.includes('('))
     ) {
+      const dioLabel = compactDio || cleanStructureText(trimmed);
       const nextP = paras[i + 1]?.text.trim() || '';
       if (nextP && nextP === nextP.toUpperCase() && !nextP.startsWith('ČLANAK') && nextP.length < 120) {
-        currentDio = `${cleanStructureText(trimmed)} – ${cleanStructureText(nextP)}`;
+        currentDio = `${dioLabel} – ${cleanStructureText(nextP)}`;
         i++;
       } else {
-        currentDio = cleanStructureText(trimmed);
+        currentDio = dioLabel;
       }
       currentGlava = '';
       currentPoglavlje = '';

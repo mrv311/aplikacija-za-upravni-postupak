@@ -208,6 +208,15 @@ export const PROPISI_LIST: PropisDef[] = [
 
   // 5. GRAĐANSKO, STVARNO I ZEMLJIŠNOKNJIŽNO PRAVO
   {
+    naziv: 'Zakon o obveznim odnosima',
+    kratica: 'ZOO',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Zakon',
+    nn: 'NN 35/05, 41/08, 125/11, 78/15, 29/18, 126/21, 114/22, 156/22, 155/23',
+    izvor: 'lokalno',
+    opis: 'Temeljni zakon ugovornog i izvanugovornog obveznog prava: ugovori, naknada štete, zatezne kamate i zastara tražbina.'
+  },
+  {
     naziv: 'Zakon o vlasništvu i drugim stvarnim pravima',
     kratica: 'ZV',
     podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
@@ -215,6 +224,24 @@ export const PROPISI_LIST: PropisDef[] = [
     nn: 'NN 91/96, 68/98, 137/99, 22/00, 73/00, 129/00, 114/01, 79/06, 141/06, 146/08, 38/09, 153/09, 143/12, 152/14, 81/15, 94/17',
     izvor: 'lokalno',
     opis: 'Temeljni zakon stvarnog prava: stjecanje i zaštita vlasništva, susjedska prava, etažiranje, služnosti, založno pravo i posjed.'
+  },
+  {
+    naziv: 'Ovršni zakon',
+    kratica: 'OZ',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Zakon',
+    nn: 'NN 112/12, 25/13, 93/14, 55/16, 73/17, 131/20, 114/22, 6/24',
+    izvor: 'lokalno',
+    opis: 'Prisilno ostvarenje tražbina na temelju ovršnih i vjerodostojnih isprava, pljenidba, blokada i osiguranje.'
+  },
+  {
+    naziv: 'Zakon o nasljeđivanju',
+    kratica: 'ZN',
+    podrucje: 'Građansko, stvarno i zemljišnoknjižno pravo',
+    tip: 'Zakon',
+    nn: 'NN 48/03, 163/03, 35/05, 127/13, 33/15, 14/19',
+    izvor: 'lokalno',
+    opis: 'Zakonsko i oporučno nasljeđivanje, ostavinski postupak, pravno sljedništvo i odgovornost nasljednika za dugove ostavitelja (čl. 139).'
   },
   {
     naziv: 'Zakon o zemljišnim knjigama',

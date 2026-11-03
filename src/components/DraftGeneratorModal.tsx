@@ -7,6 +7,7 @@ import {
   Loader2,
   Check,
   Copy,
+  Download,
   Save,
   Scale,
   FileText,
@@ -132,6 +133,7 @@ export function DraftGeneratorModal({
   // Rezultat
   const [draftText, setDraftText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [customRefineInput, setCustomRefineInput] = useState('');
   const [showCustomRefine, setShowCustomRefine] = useState(false);
@@ -325,6 +327,52 @@ export function DraftGeneratorModal({
       document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!draftText.trim() || downloadingDocx) return;
+    setDownloadingDocx(true);
+    try {
+      const cleanText = cleanDraftActFormatting(draftText);
+      const res = await fetch('/api/alati/export-docx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vrsta: 'rjesenje',
+          nazivTijela: 'MINISTARSTVO ZAŠTITE OKOLIŠA I ZELENE TRANZICIJE',
+          klasa: klasa || 'UP/II-325-01/26-01/01',
+          urbroj: '517-02-26-1',
+          mjesto: 'Zagreb',
+          datum: new Date().toLocaleDateString('hr-HR'),
+          stranka: stranka || 'Žalitelj',
+          predmet: 'Rješavanje po žalbi',
+          pravniOsnov: 'članka 116. Zakona o općem upravnom postupku',
+          izreka: 'Žalba se odbija kao neosnovana.',
+          obrazlozenje: cleanText,
+          uputaOPravnomLijeku:
+            'Protiv ovog rješenja žalba nije dopuštena, ali se može pokrenuti upravni spor pred nadležnim upravnim sudom u roku od 30 dana od dana dostave rješenja.',
+          sluzbenaOsoba: 'Ovlaštena službena osoba',
+          funkcijaOsobe: 'Viši upravni savjetnik',
+          dostaviti: [stranka || 'Žalitelj', 'Hrvatske vode, VGO'],
+        }),
+      });
+
+      if (!res.ok) throw new Error('Greška pri generiranju Word dokumenta');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `RJESENJE_${(klasa || 'nacrt').replace(/[/\\?%*:|"<>]/g, '_')}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(`Greška: ${err.message}`);
+    } finally {
+      setDownloadingDocx(false);
     }
   };
 
@@ -1197,6 +1245,15 @@ export function DraftGeneratorModal({
               >
                 <Copy className="w-3.5 h-3.5" />
                 {copied ? 'Kopirano!' : 'Kopiraj tekst'}
+              </button>
+              <button
+                type="button"
+                disabled={downloadingDocx}
+                onClick={handleDownloadDocx}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {downloadingDocx ? 'Izvoz u Word...' : 'Preuzmi Word (.docx)'}
               </button>
             </div>
           </div>

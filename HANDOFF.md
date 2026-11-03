@@ -105,11 +105,53 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 5. Sljedeći koraci & Backlog
+## 📌 5. Proširenje građanskog, obveznog i ovršnog prava (ZOO, OZ, ZN)
 
-1. **Povezivanje baze prakse i novih stvarnopravnih propisa u AI asistentu**:
-   - Usklađivanje sistemskih uputa asistenta za automatsko citiranje ZV-a (npr. susjedska prava, etažiranje, nužni prolazi) i Pravilnika o jednostavnim građevinama (čl. 2. i 4.) pri obradi građevinskih i stvarnopravnih upita.
-2. **Kalkulator komunalnog i vodnog doprinosa / Naknada za uređenje voda**:
-   - Izrada interaktivnog kalkulatora na temelju Pravilnika o obračunu površine (P-POVRŠINA) i Uredbe o visini NUV-a.
-3. **Izvoz predmeta i rješenja u službene Word / PDF predloške**:
-   - Standardizirani memorandumi upravnih tijela s automatskim zaglavljem, uvodom, izrekom, obrazloženjem i uputom o pravnom lijeku.
+1. **Zakon o obveznim odnosima (ZOO)**:
+   - **Broj članaka**: **1.165 važećih članaka** (od Članka 1. do Članka 1165.).
+   - **Struktura i naslovi**: Svih 1.165 članaka s punom hijerarhijom (*Dio*, *Glava*, *Poglavlje*, *Odjeljak*) i 1.137 naslova članaka (ugovori, naknada štete, stjecanje bez osnove, zastara, zatezne kamate).
+   - **Vektori & Baza**: Sinkronizirano u Supabase tablicu `zakoni` uz brzi `batchEmbedContents` (25 članaka po seriji).
+
+2. **Ovršni zakon (OZ)**:
+   - **Broj članaka**: **371 važeći članak** (od Članka 1. do Članka 371.).
+   - **Struktura i naslovi**: 371/371 sa strukturom i 366/371 s naslovima (ovršne isprave, rješenje o ovrsi, pljenidba novčanih sredstava, pravni lijekovi).
+   - **Vektori & Baza**: Sinkronizirano u Supabase tablicu `zakoni`.
+
+3. **Zakon o nasljeđivanju (ZN)**:
+   - **Broj članaka**: **260 važećih članaka** (od Članka 1. do Članka 260.).
+   - **Struktura i naslovi**: 260/260 sa strukturom i 220/260 s naslovima (pravno sljedništvo, odgovornost nasljednika za dugove ostavitelja po čl. 139. ZN, prekid postupka po čl. 55. ZUP).
+   - **Vektori & Baza**: Sinkronizirano u Supabase tablicu `zakoni`.
+
+4. **Kataloška struktura (`src/data/propisi-structure.json`)**:
+   - Povećano na **20 ključnih propisa** i **preko 4.100 strukturiranih članaka**.
+
+---
+
+## 📌 6. Pravni kalkulatori i izvoz službenih pismena u Word (.docx)
+
+1. **Kalkulator ZUP rokova (`/kalkulatori`)**:
+   - **Usklađenost**: Članci 80., 81. i 82. Zakona o općem upravnom postupku.
+   - **Početak roka**: Automatski počinje teći prvog idućeg dana nakon dostave (čl. 81. st. 1.).
+   - **Kalendar blagdana RH**: Integriran službeni kalendar fiksnih i pomičnih blagdana (Uskrs, Uskrsni ponedjeljak, Tijelovo prema Meeus/Jones/Butcher algoritmu za svaku godinu).
+   - **Automatski pomak**: Ako nominalni dan roka pada na subotu, nedjelju ili državni praznik, rok se automatski pomiče na prvi idući radni dan (čl. 81. st. 3. ZUP-a) uz detaljno obrazloženje i službenu zabilješku spremnu za kopiranje.
+
+2. **Kalkulator zastare tražbina (`/kalkulatori`)**:
+   - Izračun zastare za upravne/porezne naknade (OPZ čl. 108. – relativna 3 god., apsolutna 6 god.).
+   - Povremena davanja / komunalne naknade (ZOO čl. 226. – 3 god.).
+   - Naknada štete (ZOO čl. 230. – 3 god. subjektivni / 5 god. objektivni rok).
+   - Opći zastarni rok (ZOO čl. 225. – 5 god.).
+
+3. **Generator i izvoz službenih pismena u Word (.docx)**:
+   - **Stvarni `.docx` izvoz**: Generira formalni dokument pomoću biblioteke `docx` s potpunim memorandumom Republike Hrvatske, Klasifikacijskim oznakama, Uvodom, Dispozitivom/Izrekom, Obrazloženjem, Uputom o pravnom lijeku, potpisnim blokom i dostavnom naredbom.
+   - **Dostupnost**:
+     - Samostalni alat na ruti `/kalkulatori` s predlošcima (Rješenje o doprinosu, Zaključak o prekidu zbog smrti, Poziv na dopunu).
+     - Izravno unutar radnog prostora predmeta (`DraftGeneratorModal.tsx`): gumb **"Preuzmi Word (.docx)"** omogućava službenicima trenutačno preuzimanje bilo kojeg AI-generiranog nacrta u čist `.docx`.
+
+---
+
+## 📌 7. Sljedeći koraci & Backlog
+
+1. **Kalkulator vodnog i komunalnog doprinosa**:
+   - Povezivanje unosa tlocrtne površine/obujma (P-POVRŠINA) s jediničnim tarifama jedinica lokalne samouprave i zonama vodnog doprinosa.
+2. **Automatsko slanje i urudžbiranje pismena**:
+   - Povezivanje generiranih `.docx` rješenja s arhivom predmeta i generiranjem barkodova/QR kodova prema Uredbi o uredskom poslovanju.

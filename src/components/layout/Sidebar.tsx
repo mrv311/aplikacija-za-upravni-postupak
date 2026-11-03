@@ -9,6 +9,7 @@ import {
   BarChart3,
   BookOpen,
   Scale,
+  Calculator,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
@@ -81,6 +82,12 @@ export function Sidebar() {
       href: '/propisi',
       label: 'Baza propisa',
       icon: Scale,
+      exact: false,
+    },
+    {
+      href: '/kalkulatori',
+      label: 'Kalkulatori i Akti',
+      icon: Calculator,
       exact: false,
     },
   ];

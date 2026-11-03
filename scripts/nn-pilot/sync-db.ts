@@ -21,23 +21,24 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
 const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-async function getEmbedding768(text: string, retries = 3): Promise<number[]> {
+async function getBatchEmbeddings768(texts: string[], retries = 3): Promise<number[][]> {
   const aiModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
   try {
-    const result = await aiModel.embedContent({
-      content: { role: 'user', parts: [{ text }] },
-      // @ts-ignore
-      outputDimensionality: 768,
-    } as any);
-    return result.embedding.values;
+    const res = await aiModel.batchEmbedContents({
+      requests: texts.map((t) => ({
+        content: { role: 'user', parts: [{ text: t }] },
+        // @ts-ignore
+        outputDimensionality: 768,
+      } as any)),
+    });
+    return res.embeddings.map((e) => e.values);
   } catch (err: any) {
-    if (retries > 0 && err.message?.includes('429')) {
-      console.warn(`   ⏳ Rate limit (429), čekam 2.5s i pokušavam ponovno...`);
-      await delay(2500);
-      return getEmbedding768(text, retries - 1);
+    if (retries > 0 && (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED'))) {
+      console.warn(`   ⏳ Rate limit (429), čekam 3s i pokušavam ponovno...`);
+      await delay(3000);
+      return getBatchEmbeddings768(texts, retries - 1);
     }
     throw err;
   }
@@ -67,75 +68,74 @@ export async function syncLawToDatabase(kratica: string) {
 
   // Provjeri podržava li baza nove stupce strukture
   let supportsStructureColumns = true;
-
-  // 2. Unesi nove pročišćene članke s embeddingom
   let successCount = 0;
-  for (let i = 0; i < law.articles.length; i++) {
-    const art = law.articles[i];
-    const fullTextForEmbedding = `${law.naziv}, ${art.clanak_broj}${art.naslov ? ` (${art.naslov})` : ''}\n${
-      art.struktura ? `[${art.struktura}]\n` : ''
-    }${art.tekst}`;
+  const BATCH_SIZE = 25;
+
+  for (let b = 0; b < law.articles.length; b += BATCH_SIZE) {
+    const batch = law.articles.slice(b, b + BATCH_SIZE);
+    const textsForEmbedding = batch.map((art) => {
+      return `${law.naziv}, ${art.clanak_broj}${art.naslov ? ` (${art.naslov})` : ''}\n${
+        art.struktura ? `[${art.struktura}]\n` : ''
+      }${art.tekst}`;
+    });
 
     try {
-      const emb = await getEmbedding768(fullTextForEmbedding);
+      const embeddings = await getBatchEmbeddings768(textsForEmbedding);
+
+      const payloadsWithStructure = batch.map((art, idx) => {
+        const p: Record<string, any> = {
+          naziv_zakona: law.naziv,
+          clanak_broj: art.clanak_broj,
+          tekst: art.tekst,
+          embedding: embeddings[idx],
+        };
+        if (art.naslov) p.naslov = art.naslov;
+        if (art.struktura) p.struktura = art.struktura;
+        if (art.dio) p.dio = art.dio;
+        if (art.glava) p.glava = art.glava;
+        if (art.poglavlje) p.poglavlje = art.poglavlje;
+        if (art.odjeljak) p.odjeljak = art.odjeljak;
+        return p;
+      });
+
+      const payloadsStandard = batch.map((art, idx) => ({
+        naziv_zakona: law.naziv,
+        clanak_broj: art.clanak_broj,
+        tekst: art.tekst,
+        embedding: embeddings[idx],
+      }));
 
       let insError: any = null;
 
       if (supportsStructureColumns) {
-        const payload: Record<string, any> = {
-          naziv_zakona: law.naziv,
-          clanak_broj: art.clanak_broj,
-          tekst: art.tekst,
-          embedding: emb,
-        };
-        if (art.naslov) payload.naslov = art.naslov;
-        if (art.struktura) payload.struktura = art.struktura;
-        if (art.dio) payload.dio = art.dio;
-        if (art.glava) payload.glava = art.glava;
-        if (art.poglavlje) payload.poglavlje = art.poglavlje;
-        if (art.odjeljak) payload.odjeljak = art.odjeljak;
-
-        const res = await supabase.from('zakoni').insert(payload);
+        const res = await supabase.from('zakoni').insert(payloadsWithStructure);
         insError = res.error;
-
         if (insError && (insError.message?.includes('column') || insError.message?.includes('does not exist'))) {
-          // Baza još nema nove stupce - prebaci se na standardni payload
           supportsStructureColumns = false;
-          const fallbackRes = await supabase.from('zakoni').insert({
-            naziv_zakona: law.naziv,
-            clanak_broj: art.clanak_broj,
-            tekst: art.tekst,
-            embedding: emb,
-          });
-          insError = fallbackRes.error;
+          const fallback = await supabase.from('zakoni').insert(payloadsStandard);
+          insError = fallback.error;
         }
       } else {
-        const fallbackRes = await supabase.from('zakoni').insert({
-          naziv_zakona: law.naziv,
-          clanak_broj: art.clanak_broj,
-          tekst: art.tekst,
-          embedding: emb,
-        });
-        insError = fallbackRes.error;
+        const fallback = await supabase.from('zakoni').insert(payloadsStandard);
+        insError = fallback.error;
       }
 
       if (insError) {
-        console.error(`❌ Greška pri unosu ${art.clanak_broj}:`, insError.message);
+        console.error(`❌ Greška pri unosu serije ${b + 1} - ${b + batch.length}:`, insError.message);
       } else {
-        successCount++;
-        if (successCount % 10 === 0 || successCount === law.articles.length) {
-          console.log(`   💾 Spremljeno: ${successCount}/${law.articles.length} članaka...`);
-        }
+        successCount += batch.length;
+        console.log(`   💾 Spremljeno: ${successCount}/${law.articles.length} članaka...`);
       }
     } catch (err: any) {
-      console.error(`❌ Greška za ${art.clanak_broj}:`, err.message);
+      console.error(`❌ Greška pri obradi serije ${b + 1} - ${b + batch.length}:`, err.message);
     }
 
-    // Pauza od 150ms za stabilnost rate limita
-    await delay(150);
+    await delay(200);
   }
 
-  console.log(`\n✅ USPJEH! U bazu 'zakoni' spremljeno je ${successCount}/${law.articles.length} važećih članaka za ${law.naziv}.`);
+  console.log(
+    `\n✅ USPJEH! U bazu 'zakoni' spremljeno je ${successCount}/${law.articles.length} važećih članaka za ${law.naziv}.`
+  );
 }
 
 async function main() {
