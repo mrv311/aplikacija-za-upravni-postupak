@@ -50,14 +50,16 @@ export default function KalkulatoriPage() {
 
   const handleCopyZup = () => {
     if (!zupResult) return;
-    const naslovZabiljeske =
-      selectedPresetId === 'clanak_121_zalba'
-        ? 'SLUŽBENA ZABILJEŠKA O ROKU ZA DONOŠENJE RJEŠENJA O ŽALBI (čl. 121. st. 1. ZUP-a)'
-        : `SLUŽBENA ZABILJEŠKA O ROKU (${zupResult.presetClanak || 'čl. 80.–82. ZUP-a'})`;
+    let naslovZabiljeske = `SLUŽBENA ZABILJEŠKA O ROKU (${zupResult.presetClanak || 'čl. 80.–82. ZUP-a'})`;
+    if (selectedPresetId === 'clanak_121_zalba') {
+      naslovZabiljeske = 'SLUŽBENA ZABILJEŠKA O ROKU ZA DONOŠENJE RJEŠENJA O ŽALBI (čl. 121. st. 1. ZUP-a)';
+    } else if (selectedPresetId === 'zus_odgovor_tuzba_30' || selectedPresetId === 'zus_odgovor_tuzba_60') {
+      naslovZabiljeske = `SLUŽBENA ZABILJEŠKA O ROKU ZA ODGOVOR NA TUŽBU UPRAVNOM SUDU (${zupResult.brojDana} DANA — čl. 48. st. 2. ZUS-a)`;
+    }
 
     const text = `${naslovZabiljeske}:
 Datum predaje/primitka: ${zupResult.datumDostave}
-Početak tijeka roka (čl. 81. st. 1. ZUP-a): ${zupResult.pocetakTijekaRoka}
+Početak tijeka roka: ${zupResult.pocetakTijekaRoka}
 Duljina roka: ${zupResult.brojDana} dana
 Nominalni istek: ${zupResult.nominalniIstekRoka} (${zupResult.nominalniDanNaziv})
 KONAČNI ZAKONSKI ISTEK ROKA: ${zupResult.konacniIstekRoka} (${zupResult.konacniDanNaziv})
@@ -252,11 +254,18 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                   <span>
                     {selectedPresetId === 'clanak_121_zalba'
                       ? 'Datum predaje / zaprimanja uredne žalbe:'
+                      : selectedPresetId === 'zus_odgovor_tuzba_30' || selectedPresetId === 'zus_odgovor_tuzba_60'
+                      ? 'Datum zaprimanja rješenja/zaključka suda s tužbom:'
                       : 'Datum primitka / dostave pismena stranci:'}
                   </span>
                   {selectedPresetId === 'clanak_121_zalba' && (
                     <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded">
                       čl. 121. ZUP
+                    </span>
+                  )}
+                  {(selectedPresetId === 'zus_odgovor_tuzba_30' || selectedPresetId === 'zus_odgovor_tuzba_60') && (
+                    <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded">
+                      čl. 48. ZUS
                     </span>
                   )}
                 </label>
@@ -290,12 +299,14 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {selectedPresetId === 'clanak_121_zalba'
                       ? 'dana od predaje uredne žalbe'
+                      : selectedPresetId === 'zus_odgovor_tuzba_30' || selectedPresetId === 'zus_odgovor_tuzba_60'
+                      ? 'dana od zaprimanja zaključka/tužbe suda'
                       : 'dana od dana dostave'}
                   </span>
                 </div>
               </div>
 
-              {/* Istaknuti zakonski rok za drugostupanjski postupak (čl. 121. st. 1. ZUP) */}
+              {/* 1. Istaknuti zakonski rok za drugostupanjski postupak (čl. 121. st. 1. ZUP) */}
               {(() => {
                 const p121 = ZUP_ROK_PRESETS.find((p) => p.id === 'clanak_121_zalba');
                 if (!p121) return null;
@@ -305,7 +316,7 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <Scale className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                        Ključni drugostupanjski rok:
+                        Drugostupanjski žalbeni postupak:
                       </span>
                       <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
                         Žalbeni postupak
@@ -349,13 +360,67 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                 );
               })()}
 
-              {/* Ostali zakonski rokovi */}
+              {/* 2. Istaknuti sudski rok za odgovor na tužbu pred Upravnim sudom (čl. 48. st. 2. ZUS) */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    Upravni spor — Odgovor na tužbu:
+                  </span>
+                  <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+                    čl. 48. st. 2. ZUS
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-2.5">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                    Rok koji sud određuje rješenjem/zaključkom uz dostavu tužbe (odgovor + dostava cjelokupnog spisa predmeta):
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPreset('zus_odgovor_tuzba_30', 30)}
+                      className={`p-2.5 rounded-lg text-left border text-xs transition-all cursor-pointer ${
+                        selectedPresetId === 'zus_odgovor_tuzba_30' && daysCount === 30
+                          ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-xs'
+                          : 'border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold">30 dana</span>
+                        <span className="text-[10px] opacity-80 uppercase tracking-wide">Redovni</span>
+                      </div>
+                      <div className="text-[10px] opacity-85 mt-0.5">Tipičan sudski rok</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPreset('zus_odgovor_tuzba_60', 60)}
+                      className={`p-2.5 rounded-lg text-left border text-xs transition-all cursor-pointer ${
+                        selectedPresetId === 'zus_odgovor_tuzba_60' && daysCount === 60
+                          ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-xs'
+                          : 'border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold">60 dana</span>
+                        <span className="text-[10px] opacity-80 uppercase tracking-wide">Složeni</span>
+                      </div>
+                      <div className="text-[10px] opacity-85 mt-0.5">Opsežni spisi / max.</div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Ostali zakonski rokovi */}
               <div className="space-y-2">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
                   Ostali upravni i sudski rokovi:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {ZUP_ROK_PRESETS.filter((p) => p.id !== 'clanak_121_zalba').map((p) => {
+                  {ZUP_ROK_PRESETS.filter(
+                    (p) => !['clanak_121_zalba', 'zus_odgovor_tuzba_30', 'zus_odgovor_tuzba_60'].includes(p.id)
+                  ).map((p) => {
                     const isSelected = selectedPresetId === p.id && daysCount === p.dana;
                     return (
                       <button
@@ -462,7 +527,11 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                       <span className="text-slate-500 dark:text-slate-400 block">
-                        {selectedPresetId === 'clanak_121_zalba' ? 'Predano / zaprimljeno:' : 'Dostavljeno:'}
+                        {selectedPresetId === 'clanak_121_zalba'
+                          ? 'Predano / zaprimljeno:'
+                          : selectedPresetId === 'zus_odgovor_tuzba_30' || selectedPresetId === 'zus_odgovor_tuzba_60'
+                          ? 'Zaprimljeno iz suda:'
+                          : 'Dostavljeno:'}
                       </span>
                       <strong className="text-sm text-slate-900 dark:text-white">{zupResult.datumDostave}</strong>
                     </div>
@@ -548,8 +617,8 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                       className="mt-0.5"
                     />
                     <div>
-                      <strong className="block text-slate-900 dark:text-white">Upravna naknada / Porez (OPZ)</strong>
-                      <span className="text-slate-500">Relativna 3 godine, Apsolutna 6 godina od isteka godine dospijeća (čl. 108. OPZ).</span>
+                      <strong className="block text-slate-900 dark:text-white">Porezna i javna davanja (OPZ — važeći zakon)</strong>
+                      <span className="text-slate-500">Jedinstveni rok od 6 godina od isteka godine dospijeća (čl. 108. OPZ — trogodišnja relativna zastara je ukinuta).</span>
                     </div>
                   </label>
 
@@ -613,7 +682,7 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
 
                 <div className="p-5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-800">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
-                    Datum nastupa relativne zastare:
+                    {vrstaZastare === 'opz_upravno' ? 'Datum nastupa jedinstvene zastare (6 godina):' : 'Datum nastupa zastare:'}
                   </span>
                   <div className="text-3xl font-extrabold text-amber-700 dark:text-amber-400">
                     {zastaraResult.datumZastare}
@@ -622,15 +691,15 @@ ${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapom
                     {zastaraResult.opis}
                   </p>
                   {zastaraResult.napomenaApsolutna && (
-                    <div className="mt-3 text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-100/60 dark:bg-rose-950/40 p-2.5 rounded-xl">
-                      ⚠️ {zastaraResult.napomenaApsolutna}
+                    <div className="mt-3 text-xs font-semibold text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-900/40 p-2.5 rounded-xl">
+                      ℹ️ {zastaraResult.napomenaApsolutna}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
                   <div><strong>Mjerodavni propis:</strong> {zastaraResult.pravniTemelj}</div>
-                  <div><strong>Napomena o prekidu zastare:</strong> Zastara se prekida svakom radnjom vjerovnika poduzetom pred sudom ili drugim nadležnim tijelom radi utvrđivanja, osiguranja ili ostvarenja tražbine (čl. 241. ZOO i čl. 110. OPZ). Nakon prekida rok počinje teći iznova!</div>
+                  <div><strong>Napomena o prekidu zastare:</strong> Zastara se prekida svakom službenom radnjom poreznog tijela odnosno vjerovnika poduzetom radi utvrđivanja ili naplate (čl. 110. OPZ i čl. 241. ZOO). Nakon prekida rok počinje teći iznova!</div>
                 </div>
               </div>
             )}

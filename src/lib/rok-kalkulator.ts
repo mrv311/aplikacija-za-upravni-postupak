@@ -93,6 +93,8 @@ export function isNonWorkingDay(date: Date): { isNonWorking: boolean; reason?: s
 
 export type ZupRokTip =
   | 'clanak_121_zalba' // Rok za donošenje rješenja o žalbi (60 dana - čl. 121. st. 1. ZUP)
+  | 'zus_odgovor_tuzba_30' // Odgovor na tužbu pred Upravnim sudom - redovni rok (30 dana - čl. 48. st. 2. ZUS)
+  | 'zus_odgovor_tuzba_60' // Odgovor na tužbu pred Upravnim sudom - složeni spisi (60 dana - čl. 48. st. 2. ZUS)
   | 'clanak_118_zalba_stranka' // Žalba stranke na rješenje (15 dana - čl. 118. ZUP)
   | 'clanak_101_jednostavni' // Donošenje rješenja u jednostavnim stvarima (30 dana - čl. 101. st. 1. ZUP)
   | 'clanak_101_ispitni' // Donošenje rješenja u ispitnom postupku (60 dana - čl. 101. st. 2. ZUP)
@@ -116,6 +118,22 @@ export const ZUP_ROK_PRESETS: ZupRokPreset[] = [
     naziv: 'Rješenje o žalbi (Drugostupanjski postupak)',
     clanak: 'čl. 121. st. 1. ZUP-a',
     opis: 'Najkasnije u roku od 60 dana od dana predaje uredne žalbe. Protekom roka nastupa šutnja drugostupanjskog tijela (čl. 24. st. 3. ZUS-a).',
+    dana: 60,
+    highlight: true,
+  },
+  {
+    id: 'zus_odgovor_tuzba_30',
+    naziv: 'Odgovor na tužbu Upravnom sudu (30 dana)',
+    clanak: 'čl. 48. st. 2. ZUS-a',
+    opis: 'Zakonski rok koji određuje Upravni sud za podnošenje odgovora na tužbu i dostavu kompletnog spisa predmeta (redovni rok 30 dana).',
+    dana: 30,
+    highlight: true,
+  },
+  {
+    id: 'zus_odgovor_tuzba_60',
+    naziv: 'Odgovor na tužbu Upravnom sudu (60 dana)',
+    clanak: 'čl. 48. st. 2. ZUS-a',
+    opis: 'Maksimalni zakonski rok koji upravni sud može odrediti prema okolnostima slučaja (opsežan spis, složena stvar — do 60 dana).',
     dana: 60,
     highlight: true,
   },
@@ -220,6 +238,9 @@ export function calculateZupRok(deliveryDateStr: string, days: number, tipRoka?:
   if (tipRoka === 'clanak_121_zalba') {
     posljedica =
       'Sukladno članku 121. stavku 1. ZUP-a, drugostupanjsko rješenje mora se donijeti i otpremiti/dostaviti stranci najkasnije do ovog datuma. Ako tijelo ne donese rješenje, stranka stječe pravo pokrenuti upravni spor pred Upravnim sudom po članku 24. stavku 3. Zakona o upravnim sporovima (šutnja uprave).';
+  } else if (tipRoka === 'zus_odgovor_tuzba_30' || tipRoka === 'zus_odgovor_tuzba_60') {
+    posljedica =
+      'Sukladno članku 48. stavcima 2., 3. i 4. Zakona o upravnim sporovima (ZUS, NN 36/24), tuženik je dužan u roku koji odredi sud podnijeti odgovor na tužbu i dostaviti sve spise koji se odnose na predmet spora u obliku u kojemu su vođeni. Ako tuženik ne dostavi spise predmeta ili izjavi da ih ne može dostaviti, sud može riješiti spor i bez spisa predmeta.';
   } else if (tipRoka === 'zus_tuzba') {
     posljedica =
       'Propuštanjem roka od 30 dana iz članka 24. stavka 1. ZUS-a tužba se odbacuje kao nepravodobna te rješenje stječe svojstvo pravomoćnosti.';
@@ -269,20 +290,20 @@ export function calculateZastara(
   const year = dospijece.getUTCFullYear();
 
   if (vrsta === 'opz_upravno') {
-    // Čl. 108. OPZ: Zastara počinje teći nakon isteka godine u kojoj je trebalo utvrditi poreznu obvezu.
-    // Relativna 3 godine, Apsolutna 6 godina.
+    // Čl. 108. OPZ (NN 115/16 ... 151/25):
+    // Novi OPZ je ukinuo relativnu zastaru od 3 godine i uveo jedinstveni rok zastare od 6 godina.
+    // Zastara počinje teći istekom godine u kojoj je nastala obveza / postalo izvršno rješenje / dospjela obveza (čl. 108. st. 2. i 4.)
     const startYear = year + 1;
-    const relativna = new Date(Date.UTC(startYear + 3, 0, 1));
-    const apsolutna = new Date(Date.UTC(startYear + 6, 0, 1));
+    const zastara6g = new Date(Date.UTC(startYear + 6, 0, 1));
 
     return {
       datumDospijeca: dospijeceStr,
-      tipZastare: 'Upravna / Porezna naknada (OPZ)',
-      rokGodina: 3,
-      datumZastare: formatDateKey(relativna),
-      pravniTemelj: 'Opći porezni zakon (čl. 108. st. 1. i čl. 109.)',
-      opis: 'Relativna zastara prava na utvrđivanje i naplatu porezne i upravne obveze (3 godine od isteka godine dospijeća).',
-      napomenaApsolutna: `Apsolutna zastara nastupa: ${formatDateKey(apsolutna)} (6 godina od početka tijeka).`,
+      tipZastare: 'Porezna i upravna davanja (čl. 108. OPZ — 6 godina)',
+      rokGodina: 6,
+      datumZastare: formatDateKey(zastara6g),
+      pravniTemelj: 'Opći porezni zakon (čl. 108. st. 1., 2. i 4.)',
+      opis: 'Sukladno važećem Općem poreznom zakonu, napušten je institut trogodišnje relativne zastare te postoji isključivo jedinstveni rok zastare od 6 godina. Zastara počinje teći istekom godine u kojoj je porezna/upravna obveza dospjela ili rješenje postalo izvršno (od 1. siječnja iduće godine).',
+      napomenaApsolutna: 'Novi OPZ poznaje isključivo jedinstveni rok od 6 godina (relativna zastara od 3 god. više ne postoji). Za vrijeme trajanja sudskog spora zastara ne teče (čl. 108. st. 6. OPZ).',
     };
   }
 

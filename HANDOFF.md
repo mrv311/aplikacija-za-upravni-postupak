@@ -135,6 +135,10 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
      - Prikaz mjerodavne pravne posljedice proteka roka: pravo stranke na podnošenje tužbe Upravnom sudu zbog šutnje drugostupanjskog tijela sukladno članku 24. stavku 3. Zakona o upravnim sporovima (ZUS).
      - Dinamička prilagodba oznake datuma: *"Datum predaje / zaprimanja uredne žalbe"* u drugostupanjskom modulu vs. *"Datum primitka / dostave pismena stranci"* za ostale rokove.
      - Prilagođena službena zabilješka za spis drugostupanjskog tijela: `SLUŽBENA ZABILJEŠKA O ROKU ZA DONOŠENJE RJEŠENJA O ŽALBI (čl. 121. st. 1. ZUP-a)` spremna za kopiranje jednim klikom.
+   - **Upravni spor — Odgovor na tužbu (članak 48. stavak 2. ZUS-a)**:
+     - Istaknuta nova sekcija s brzim odabirom za **30 dana (redovni rok)** i **60 dana (složeni/opsežni spisi)** od dana primitka zaključka/rješenja Upravnog suda s tužbom.
+     - Prikaz mjerodavne pravne posljedice (čl. 48. st. 4. ZUS): obveza dostave odgovora na tužbu i svih spisa predmeta u obliku u kojemu su vođeni, uz zakonsko upozorenje da sud može riješiti spor i bez spisa predmeta ako ih tijelo ne dostavi.
+     - Prilagođena službena zabilješka: `SLUŽBENA ZABILJEŠKA O ROKU ZA ODGOVOR NA TUŽBU UPRAVNOM SUDU (30/60 DANA — čl. 48. st. 2. ZUS-a)`.
    - **Katalog ostalih zakonskih rokova**:
      - Žalba stranke na prvostupanjsko rješenje (15 dana, čl. 118. st. 2. ZUP).
      - Tužba Upravnom sudu (30 dana, čl. 24. st. 1. ZUS).
@@ -148,10 +152,14 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
      - Automatski pomak na radni dan: ako zadnji dan roka pada u subotu, nedjelju ili blagdan, rok istječe protekom prvog idućeg radnog dana (čl. 81. st. 3. ZUP-a).
 
 2. **Kalkulator zastare tražbina (`/kalkulatori`)**:
-   - Izračun zastare za upravne/porezne naknade (OPZ čl. 108. – relativna 3 god., apsolutna 6 god.).
-   - Povremena davanja / komunalne naknade (ZOO čl. 226. – 3 god.).
-   - Naknada štete (ZOO čl. 230. – 3 god. subjektivni / 5 god. objektivni rok).
-   - Opći zastarni rok (ZOO čl. 225. – 5 god.).
+   - **Usklađenje s važećim Općim poreznim zakonom (čl. 108. OPZ)**:
+     - Ispravljen izračun: napušten je zastarjeli institut trogodišnje relativne zastare te je implementiran isključivo **jedinstveni rok zastare od 6 godina**.
+     - Početak tijeka: 1. siječnja godine koja slijedi nakon godine dospijeća obveze ili izvršnosti rješenja (čl. 108. st. 2. i 4. OPZ).
+     - Pravno upozorenje o mirovanju zastare za vrijeme trajanja sudskog spora (čl. 108. st. 6. OPZ).
+   - **Ostali zastarni rokovi (ZOO)**:
+     - Povremena davanja / komunalne naknade (ZOO čl. 226. – 3 god.).
+     - Naknada štete (ZOO čl. 230. – 3 god. subjektivni / 5 god. objektivni rok).
+     - Opći zastarni rok (ZOO čl. 225. – 5 god.).
 
 3. **Generator i izvoz službenih pismena u Word (.docx)**:
    - **Stvarni `.docx` izvoz**: Generira formalni dokument pomoću biblioteke `docx` s potpunim memorandumom Republike Hrvatske, Klasifikacijskim oznakama, Uvodom, Dispozitivom/Izrekom, Obrazloženjem, Uputom o pravnom lijeku, potpisnim blokom i dostavnom naredbom.
