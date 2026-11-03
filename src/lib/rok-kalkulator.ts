@@ -91,10 +91,85 @@ export function isNonWorkingDay(date: Date): { isNonWorking: boolean; reason?: s
   return { isNonWorking: false };
 }
 
+export type ZupRokTip =
+  | 'clanak_121_zalba' // Rok za donošenje rješenja o žalbi (60 dana - čl. 121. st. 1. ZUP)
+  | 'clanak_118_zalba_stranka' // Žalba stranke na rješenje (15 dana - čl. 118. ZUP)
+  | 'clanak_101_jednostavni' // Donošenje rješenja u jednostavnim stvarima (30 dana - čl. 101. st. 1. ZUP)
+  | 'clanak_101_ispitni' // Donošenje rješenja u ispitnom postupku (60 dana - čl. 101. st. 2. ZUP)
+  | 'clanak_113_dostava_spisa' // Dostava žalbe i spisa drugostupanjskom tijelu (8 dana - čl. 113. st. 2. ZUP)
+  | 'clanak_122_prigovor' // Prigovor / dopuna (8 dana - čl. 122. i 73. ZUP)
+  | 'zus_tuzba' // Tužba Upravnom sudu (30 dana - čl. 24. st. 1. ZUS)
+  | 'korisnicki'; // Proizvoljan broj dana
+
+export interface ZupRokPreset {
+  id: ZupRokTip;
+  naziv: string;
+  clanak: string;
+  opis: string;
+  dana: number;
+  highlight?: boolean;
+}
+
+export const ZUP_ROK_PRESETS: ZupRokPreset[] = [
+  {
+    id: 'clanak_121_zalba',
+    naziv: 'Rješenje o žalbi (Drugostupanjski postupak)',
+    clanak: 'čl. 121. st. 1. ZUP-a',
+    opis: 'Najkasnije u roku od 60 dana od dana predaje uredne žalbe. Protekom roka nastupa šutnja drugostupanjskog tijela (čl. 24. st. 3. ZUS-a).',
+    dana: 60,
+    highlight: true,
+  },
+  {
+    id: 'clanak_118_zalba_stranka',
+    naziv: 'Žalba stranke na prvostupanjsko rješenje',
+    clanak: 'čl. 118. st. 2. ZUP-a',
+    opis: '15 dana od dana dostave rješenja stranci, ako zakonom nije propisan dulji rok.',
+    dana: 15,
+  },
+  {
+    id: 'zus_tuzba',
+    naziv: 'Tužba Upravnom sudu (ZUS)',
+    clanak: 'čl. 24. st. 1. ZUS-a',
+    opis: '30 dana od dana dostave drugostupanjskog rješenja stranci.',
+    dana: 30,
+  },
+  {
+    id: 'clanak_101_jednostavni',
+    naziv: 'Prvostupanjsko rješenje (neposredno rješavanje)',
+    clanak: 'čl. 101. st. 1. ZUP-a',
+    opis: '30 dana od dana podnošenja urednog zahtjeva.',
+    dana: 30,
+  },
+  {
+    id: 'clanak_101_ispitni',
+    naziv: 'Prvostupanjsko rješenje (ispitni postupak)',
+    clanak: 'čl. 101. st. 2. ZUP-a',
+    opis: '60 dana od dana podnošenja urednog zahtjeva.',
+    dana: 60,
+  },
+  {
+    id: 'clanak_113_dostava_spisa',
+    naziv: 'Dostava spisa drugostupanjskom tijelu',
+    clanak: 'čl. 113. st. 2. ZUP-a',
+    opis: '8 dana od dana primitka žalbe u prvostupanjskom tijelu za prosljeđivanje žalbe sa spisom.',
+    dana: 8,
+  },
+  {
+    id: 'clanak_122_prigovor',
+    naziv: 'Prigovor / Otklanjanje nedostataka',
+    clanak: 'čl. 122. / čl. 73. ZUP-a',
+    opis: '8 dana od dana obavijesti / dostave zaključka o dopuni.',
+    dana: 8,
+  },
+];
+
 export interface ZupRokResult {
   datumDostave: string; // YYYY-MM-DD
   pocetakTijekaRoka: string; // YYYY-MM-DD (čl. 81. st. 1. ZUP)
   brojDana: number;
+  tipRoka?: ZupRokTip;
+  presetNaziv?: string;
+  presetClanak?: string;
   nominalniIstekRoka: string; // YYYY-MM-DD
   nominalniDanNaziv: string; // npr. Nedjelja
   pomaknutZbogNeradnogDana: boolean;
@@ -102,6 +177,7 @@ export interface ZupRokResult {
   konacniIstekRoka: string; // YYYY-MM-DD (čl. 81. st. 3. ZUP)
   konacniDanNaziv: string;
   propisNapomena: string;
+  posljedicaNapomena?: string;
 }
 
 const HR_DANI = ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'];
@@ -109,7 +185,7 @@ const HR_DANI = ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'P
 /**
  * Računa istek roka po Zakonu o općem upravnom postupku (čl. 80., 81. i 82.).
  */
-export function calculateZupRok(deliveryDateStr: string, days: number): ZupRokResult {
+export function calculateZupRok(deliveryDateStr: string, days: number, tipRoka?: ZupRokTip): ZupRokResult {
   const delivery = new Date(`${deliveryDateStr}T00:00:00Z`);
 
   // Članak 81. stavak 1. ZUP:
@@ -138,10 +214,27 @@ export function calculateZupRok(deliveryDateStr: string, days: number): ZupRokRe
     finalDate = new Date(finalDate.getTime() + 1 * 24 * 60 * 60 * 1000);
   }
 
+  const preset = ZUP_ROK_PRESETS.find((p) => p.id === tipRoka);
+
+  let posljedica: string | undefined = undefined;
+  if (tipRoka === 'clanak_121_zalba') {
+    posljedica =
+      'Sukladno članku 121. stavku 1. ZUP-a, drugostupanjsko rješenje mora se donijeti i otpremiti/dostaviti stranci najkasnije do ovog datuma. Ako tijelo ne donese rješenje, stranka stječe pravo pokrenuti upravni spor pred Upravnim sudom po članku 24. stavku 3. Zakona o upravnim sporovima (šutnja uprave).';
+  } else if (tipRoka === 'zus_tuzba') {
+    posljedica =
+      'Propuštanjem roka od 30 dana iz članka 24. stavka 1. ZUS-a tužba se odbacuje kao nepravodobna te rješenje stječe svojstvo pravomoćnosti.';
+  } else if (tipRoka === 'clanak_118_zalba_stranka') {
+    posljedica =
+      'Propuštanjem roka od 15 dana iz članka 118. stavka 2. ZUP-a žalba se odbacuje rješenjem kao nepravodobna po članku 114. stavku 1. ZUP-a.';
+  }
+
   return {
     datumDostave: formatDateKey(delivery),
     pocetakTijekaRoka: formatDateKey(firstDay),
     brojDana: days,
+    tipRoka,
+    presetNaziv: preset?.naziv,
+    presetClanak: preset?.clanak,
     nominalniIstekRoka: formatDateKey(nominal),
     nominalniDanNaziv: HR_DANI[nominal.getUTCDay()],
     pomaknutZbogNeradnogDana: shifted,
@@ -151,6 +244,7 @@ export function calculateZupRok(deliveryDateStr: string, days: number): ZupRokRe
     propisNapomena: shifted
       ? `Sukladno članku 81. stavku 3. ZUP-a, budući da je nominalni istek padao na ${shiftReason?.toLowerCase()}, rok istječe protekom prvog idućeg radnog dana.`
       : `Zadnji dan roka pada na redovni radni dan (${HR_DANI[nominal.getUTCDay()]}) sukladno čl. 81. ZUP-a.`,
+    posljedicaNapomena: posljedica,
   };
 }
 

@@ -17,7 +17,7 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
-import { calculateZupRok, calculateZastara, getCroatianHolidays } from '@/lib/rok-kalkulator';
+import { calculateZupRok, calculateZastara, getCroatianHolidays, ZUP_ROK_PRESETS, ZupRokTip } from '@/lib/rok-kalkulator';
 import { SlužbeniAktData } from '@/lib/docx-generator';
 
 export default function KalkulatoriPage() {
@@ -26,31 +26,44 @@ export default function KalkulatoriPage() {
   // --- 1. STANJE ZA KALKULATOR ROKOVA (ZUP) ---
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const [deliveryDate, setDeliveryDate] = useState<string>(todayStr);
-  const [daysCount, setDaysCount] = useState<number>(15);
+  const [daysCount, setDaysCount] = useState<number>(60);
+  const [selectedPresetId, setSelectedPresetId] = useState<ZupRokTip>('clanak_121_zalba');
   const [copiedZup, setCopiedZup] = useState(false);
 
   const zupResult = useMemo(() => {
     try {
-      return calculateZupRok(deliveryDate, daysCount);
+      return calculateZupRok(deliveryDate, daysCount, selectedPresetId);
     } catch {
       return null;
     }
-  }, [deliveryDate, daysCount]);
+  }, [deliveryDate, daysCount, selectedPresetId]);
 
   const holidaysThisYear = useMemo(() => {
     const year = parseInt(deliveryDate.split('-')[0], 10) || new Date().getFullYear();
     return getCroatianHolidays(year);
   }, [deliveryDate]);
 
+  const handleSelectPreset = (presetId: ZupRokTip, dana: number) => {
+    setSelectedPresetId(presetId);
+    setDaysCount(dana);
+  };
+
   const handleCopyZup = () => {
     if (!zupResult) return;
-    const text = `SLUŽBENA ZABILJEŠKA O ROKU (čl. 80.–82. ZUP-a):
-Datum dostave/primitka: ${zupResult.datumDostave}
-Početak tijeka roka (čl. 81. st. 1.): ${zupResult.pocetakTijekaRoka}
+    const naslovZabiljeske =
+      selectedPresetId === 'clanak_121_zalba'
+        ? 'SLUŽBENA ZABILJEŠKA O ROKU ZA DONOŠENJE RJEŠENJA O ŽALBI (čl. 121. st. 1. ZUP-a)'
+        : `SLUŽBENA ZABILJEŠKA O ROKU (${zupResult.presetClanak || 'čl. 80.–82. ZUP-a'})`;
+
+    const text = `${naslovZabiljeske}:
+Datum predaje/primitka: ${zupResult.datumDostave}
+Početak tijeka roka (čl. 81. st. 1. ZUP-a): ${zupResult.pocetakTijekaRoka}
 Duljina roka: ${zupResult.brojDana} dana
 Nominalni istek: ${zupResult.nominalniIstekRoka} (${zupResult.nominalniDanNaziv})
-KONAČNI ISTEK ROKA: ${zupResult.konacniIstekRoka} (${zupResult.konacniDanNaziv})
-${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` : 'Rok istječe redovnim radnim danom.'}`;
+KONAČNI ZAKONSKI ISTEK ROKA: ${zupResult.konacniIstekRoka} (${zupResult.konacniDanNaziv})
+${zupResult.pomaknutZbogNeradnogDana ? `Napomena o pomaku: ${zupResult.propisNapomena}` : 'Rok istječe redovnim radnim danom.'}
+${zupResult.posljedicaNapomena ? `Pravna posljedica: ${zupResult.posljedicaNapomena}` : ''}`.trim();
+
     navigator.clipboard.writeText(text);
     setCopiedZup(true);
     setTimeout(() => setCopiedZup(false), 2000);
@@ -233,10 +246,19 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
                 Parametri roka (čl. 80.–82. ZUP)
               </h2>
 
-              {/* Datum dostave */}
+              {/* Datum dostave / primitka */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Datum primitka / dostave pismena stranci:
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>
+                    {selectedPresetId === 'clanak_121_zalba'
+                      ? 'Datum predaje / zaprimanja uredne žalbe:'
+                      : 'Datum primitka / dostave pismena stranci:'}
+                  </span>
+                  {selectedPresetId === 'clanak_121_zalba' && (
+                    <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded">
+                      čl. 121. ZUP
+                    </span>
+                  )}
                 </label>
                 <input
                   type="date"
@@ -248,7 +270,7 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
 
               {/* Broj dana */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Trajanje roka u danima:
                 </label>
                 <div className="flex items-center gap-2">
@@ -257,70 +279,103 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
                     min="1"
                     max="365"
                     value={daysCount}
-                    onChange={(e) => setDaysCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    onChange={(e) => {
+                      const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                      setDaysCount(val);
+                      const matched = ZUP_ROK_PRESETS.find((p) => p.dana === val);
+                      setSelectedPresetId(matched ? matched.id : 'korisnicki');
+                    }}
                     className="w-28 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-base font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">dana od dana dostave</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {selectedPresetId === 'clanak_121_zalba'
+                      ? 'dana od predaje uredne žalbe'
+                      : 'dana od dana dostave'}
+                  </span>
                 </div>
               </div>
 
-              {/* Brzi preset gumbi */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-2">
-                  Najčešći zakonski rokovi:
+              {/* Istaknuti zakonski rok za drugostupanjski postupak (čl. 121. st. 1. ZUP) */}
+              {(() => {
+                const p121 = ZUP_ROK_PRESETS.find((p) => p.id === 'clanak_121_zalba');
+                if (!p121) return null;
+                const isSelected = selectedPresetId === 'clanak_121_zalba' && daysCount === p121.dana;
+                return (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Scale className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        Ključni drugostupanjski rok:
+                      </span>
+                      <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
+                        Žalbeni postupak
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPreset(p121.id, p121.dana)}
+                      className={`w-full p-3.5 rounded-xl text-left border transition-all cursor-pointer relative ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 text-slate-900 dark:text-white shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                              {p121.clanak}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+                              Drugostupanjsko rješenje
+                            </span>
+                          </div>
+                          <div className="font-semibold text-xs text-slate-900 dark:text-white mt-1">
+                            {p121.naziv}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs">
+                            {p121.dana} dana
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                        {p121.opis}
+                      </div>
+                    </button>
+                  </div>
+                );
+              })()}
+
+              {/* Ostali zakonski rokovi */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
+                  Ostali upravni i sudski rokovi:
                 </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDaysCount(15)}
-                    className={`p-2 rounded-xl text-left border text-xs transition-colors cursor-pointer ${
-                      daysCount === 15
-                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">Žalba na rješenje</div>
-                    <div className="text-[11px] text-slate-500">15 dana (čl. 118. ZUP)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDaysCount(30)}
-                    className={`p-2 rounded-xl text-left border text-xs transition-colors cursor-pointer ${
-                      daysCount === 30
-                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">Donošenje rješenja</div>
-                    <div className="text-[11px] text-slate-500">30 dana (čl. 101. ZUP)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDaysCount(60)}
-                    className={`p-2 rounded-xl text-left border text-xs transition-colors cursor-pointer ${
-                      daysCount === 60
-                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">Ispitni postupak</div>
-                    <div className="text-[11px] text-slate-500">60 dana (čl. 101. ZUP)</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDaysCount(8)}
-                    className={`p-2 rounded-xl text-left border text-xs transition-colors cursor-pointer ${
-                      daysCount === 8
-                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">Prigovor / Dopuna</div>
-                    <div className="text-[11px] text-slate-500">8 dana (čl. 122. ZUP)</div>
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {ZUP_ROK_PRESETS.filter((p) => p.id !== 'clanak_121_zalba').map((p) => {
+                    const isSelected = selectedPresetId === p.id && daysCount === p.dana;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectPreset(p.id, p.dana)}
+                        className={`p-2.5 rounded-xl text-left border text-xs transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold ring-1 ring-blue-500'
+                            : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-semibold truncate">{p.naziv}</span>
+                          <span className="text-[11px] font-bold text-slate-500 shrink-0">{p.dana} d</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{p.clanak}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -352,6 +407,11 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
                     <span className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                       Zakoniti izračun roka (ZUP RH)
                     </span>
+                    {zupResult.presetClanak && (
+                      <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+                        {zupResult.presetClanak}
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -401,7 +461,9 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 block">Dostavljeno:</span>
+                      <span className="text-slate-500 dark:text-slate-400 block">
+                        {selectedPresetId === 'clanak_121_zalba' ? 'Predano / zaprimljeno:' : 'Dostavljeno:'}
+                      </span>
                       <strong className="text-sm text-slate-900 dark:text-white">{zupResult.datumDostave}</strong>
                     </div>
 
@@ -418,6 +480,19 @@ ${zupResult.pomaknutZbogNeradnogDana ? `Napomena: ${zupResult.propisNapomena}` :
                     </div>
                   </div>
                 </div>
+
+                {/* Pravna posljedica isteka roka (čl. 121. ZUP / ZUS itd.) */}
+                {zupResult.posljedicaNapomena && (
+                  <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-950 dark:text-blue-200 space-y-1.5">
+                    <div className="font-bold flex items-center gap-1.5 text-blue-900 dark:text-blue-100">
+                      <Scale className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      Pravna posljedica isteka roka ({zupResult.presetClanak || 'Zakon'}):
+                    </div>
+                    <p className="leading-relaxed text-blue-900/90 dark:text-blue-200/90">
+                      {zupResult.posljedicaNapomena}
+                    </p>
+                  </div>
+                )}
 
                 {/* Službena pravna napomena */}
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">

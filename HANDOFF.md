@@ -130,10 +130,22 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 ## 📌 6. Pravni kalkulatori i izvoz službenih pismena u Word (.docx)
 
 1. **Kalkulator ZUP rokova (`/kalkulatori`)**:
-   - **Usklađenost**: Članci 80., 81. i 82. Zakona o općem upravnom postupku.
-   - **Početak roka**: Automatski počinje teći prvog idućeg dana nakon dostave (čl. 81. st. 1.).
-   - **Kalendar blagdana RH**: Integriran službeni kalendar fiksnih i pomičnih blagdana (Uskrs, Uskrsni ponedjeljak, Tijelovo prema Meeus/Jones/Butcher algoritmu za svaku godinu).
-   - **Automatski pomak**: Ako nominalni dan roka pada na subotu, nedjelju ili državni praznik, rok se automatski pomiče na prvi idući radni dan (čl. 81. st. 3. ZUP-a) uz detaljno obrazloženje i službenu zabilješku spremnu za kopiranje.
+   - **Ključni drugostupanjski rok — članak 121. stavak 1. ZUP-a**:
+     - Istaknut na vrhu kao primarni, najvažniji rok za žalbeni postupak (rok od 60 dana za donošenje i dostavu drugostupanjskog rješenja od dana predaje uredne žalbe).
+     - Prikaz mjerodavne pravne posljedice proteka roka: pravo stranke na podnošenje tužbe Upravnom sudu zbog šutnje drugostupanjskog tijela sukladno članku 24. stavku 3. Zakona o upravnim sporovima (ZUS).
+     - Dinamička prilagodba oznake datuma: *"Datum predaje / zaprimanja uredne žalbe"* u drugostupanjskom modulu vs. *"Datum primitka / dostave pismena stranci"* za ostale rokove.
+     - Prilagođena službena zabilješka za spis drugostupanjskog tijela: `SLUŽBENA ZABILJEŠKA O ROKU ZA DONOŠENJE RJEŠENJA O ŽALBI (čl. 121. st. 1. ZUP-a)` spremna za kopiranje jednim klikom.
+   - **Katalog ostalih zakonskih rokova**:
+     - Žalba stranke na prvostupanjsko rješenje (15 dana, čl. 118. st. 2. ZUP).
+     - Tužba Upravnom sudu (30 dana, čl. 24. st. 1. ZUS).
+     - Donošenje prvostupanjskog rješenja — neposredno rješavanje (30 dana, čl. 101. st. 1. ZUP).
+     - Donošenje prvostupanjskog rješenja — ispitni postupak (60 dana, čl. 101. st. 2. ZUP).
+     - Dostava spisa drugostupanjskom tijelu (8 dana, čl. 113. st. 2. ZUP).
+     - Prigovor i otklanjanje nedostataka (8 dana, čl. 122. i čl. 73. ZUP).
+   - **Pravila računanja (čl. 80.–82. ZUP)**:
+     - Početak roka: automatski počinje teći prvog idućeg dana nakon dostave/predaje (čl. 81. st. 1.).
+     - Kalendar neradnih dana RH: fiksni državni praznici i Meeus/Jones/Butcher algoritam za pomične blagdane (Uskrs, Uskrsni ponedjeljak, Tijelovo) za bilo koju godinu.
+     - Automatski pomak na radni dan: ako zadnji dan roka pada u subotu, nedjelju ili blagdan, rok istječe protekom prvog idućeg radnog dana (čl. 81. st. 3. ZUP-a).
 
 2. **Kalkulator zastare tražbina (`/kalkulatori`)**:
    - Izračun zastare za upravne/porezne naknade (OPZ čl. 108. – relativna 3 god., apsolutna 6 god.).
