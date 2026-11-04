@@ -19,6 +19,10 @@ import {
   X,
   Landmark,
   AlertTriangle,
+  Users,
+  UserCheck,
+  Stamp,
+  Plus,
 } from 'lucide-react';
 import {
   archivePredmet,
@@ -27,18 +31,24 @@ import {
   updatePredmetFaza,
   deletePredmet,
   deleteMultiplePredmeti,
+  getSluzbeniciAction,
 } from '@/app/actions/predmetActions';
 import {
   type EnrichedPredmet,
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
+  type Sluzbenik,
   PREDMET_PODRUCJA,
   PREDMET_FAZE,
   PREDMET_ISHODI,
+  PARAF_STATUSI,
   calculateZupDeadline,
+  getInitials,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from './StatusBadge';
+import { SluzbeniciModal } from './SluzbeniciModal';
+import { ParafiranjeModal } from './ParafiranjeModal';
 
 export { getStatusBadge };
 export type Predmet = EnrichedPredmet;
@@ -54,8 +64,15 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [search, setSearch] = useState('');
   const [filterPodrucje, setFilterPodrucje] = useState<string>('sve');
   const [filterSecondary, setFilterSecondary] = useState<string>('sve'); // faza u aktivnima ili ishod u arhivi
+  const [filterSluzbenik, setFilterSluzbenik] = useState<string>('sve');
   const [onlyUrgent, setOnlyUrgent] = useState(false);
   const [sortBy, setSortBy] = useState<'datum' | 'hitnost' | 'stranka'>('datum');
+
+  // Službenici & Parafiranje modali
+  const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
+  const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
+  const [parafModalItem, setParafModalItem] = useState<EnrichedPredmet | null>(null);
+  const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -74,6 +91,17 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [archiveIshod, setArchiveIshod] = useState<PredmetIshod>('Odbijena žalba');
   const [archiveNapomena, setArchiveNapomena] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    getSluzbeniciAction().then(setSluzbenici);
+    const handleSluzbeniciUpdated = (e: Event) => {
+      const custom = e as CustomEvent<Sluzbenik[]>;
+      if (custom.detail) setSluzbenici(custom.detail);
+      else getSluzbeniciAction().then(setSluzbenici);
+    };
+    window.addEventListener('sluzbenici-updated', handleSluzbeniciUpdated);
+    return () => window.removeEventListener('sluzbenici-updated', handleSluzbeniciUpdated);
+  }, []);
 
   // Prečac na tipkovnici: Ctrl+K ili / za fokus tražilice
   useEffect(() => {
@@ -151,11 +179,24 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           p.klasa.toLowerCase().includes(q) ||
           p.urbroj.toLowerCase().includes(q) ||
           p.stranka.toLowerCase().includes(q) ||
-          (p.napomena || '').toLowerCase().includes(q);
+          (p.napomena || '').toLowerCase().includes(q) ||
+          (p.sluzbenik_ime || '').toLowerCase().includes(q) ||
+          (p.uputa_voditelja || '').toLowerCase().includes(q);
         if (!matchesSearch) return false;
       }
 
       if (filterPodrucje !== 'sve' && p.podrucje !== filterPodrucje) return false;
+
+      if (filterSluzbenik !== 'sve') {
+        if (filterSluzbenik === '__nerasporedjeno__') {
+          if (p.sluzbenik_ime) return false;
+        } else {
+          const matchesSluzbenik =
+            p.sluzbenik_id === filterSluzbenik ||
+            p.sluzbenik_ime === filterSluzbenik;
+          if (!matchesSluzbenik) return false;
+        }
+      }
 
       if (type === 'aktivni') {
         if (filterSecondary !== 'sve' && p.faza !== filterSecondary) return false;
@@ -184,7 +225,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
     });
 
     return list;
-  }, [items, search, filterPodrucje, filterSecondary, onlyUrgent, sortBy, type]);
+  }, [items, search, filterPodrucje, filterSecondary, filterSluzbenik, onlyUrgent, sortBy, type]);
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) => {
@@ -285,6 +326,10 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       faza: editingItem.faza,
       ishod: editingItem.ishod,
       napomena: editingItem.napomena,
+      sluzbenik_id: editingItem.sluzbenik_id,
+      sluzbenik_ime: editingItem.sluzbenik_ime,
+      interni_rok: editingItem.interni_rok,
+      uputa_voditelja: editingItem.uputa_voditelja,
     });
 
     setModalLoading(false);
@@ -478,6 +523,31 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Filter po službeniku */}
+          <select
+            value={filterSluzbenik}
+            onChange={(e) => setFilterSluzbenik(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="sve">Svi službenici</option>
+            <option value="__nerasporedjeno__">Neraspoređeno / U mom radu</option>
+            {sluzbenici.map((s) => (
+              <option key={s.id} value={s.imePrezime}>
+                Službenik: {s.imePrezime}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setSluzbeniciModalOpen(true)}
+            title="Uredi popis službenika u odjelu"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Službenici</span>
+          </button>
+
           <select
             value={filterPodrucje}
             onChange={(e) => setFilterPodrucje(e.target.value)}
@@ -580,6 +650,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                 </th>
                 <th className="px-4 py-3.5">KLASA / Područje</th>
                 <th className="px-4 py-3.5">Stranka / Žalitelj</th>
+                <th className="px-4 py-3.5">Obrađivač & Parafi</th>
                 <th className="px-4 py-3.5">Spis</th>
                 {type === 'aktivni' ? (
                   <>
@@ -598,7 +669,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-sm">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
+                  <td colSpan={8} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                       <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
                         {type === 'aktivni' ? (
@@ -608,7 +679,11 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                         )}
                       </div>
                       <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-base mb-1">
-                        {search.trim() || filterPodrucje !== 'sve' || filterSecondary !== 'sve' || onlyUrgent
+                        {search.trim() ||
+                        filterPodrucje !== 'sve' ||
+                        filterSecondary !== 'sve' ||
+                        filterSluzbenik !== 'sve' ||
+                        onlyUrgent
                           ? 'Nema predmeta za odabrani filtar'
                           : type === 'aktivni'
                           ? 'Nema aktivnih predmeta'
@@ -630,6 +705,13 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                   const fazaObj =
                     PREDMET_FAZE.find((f) => f.value === predmet.faza) || PREDMET_FAZE[0];
                   const ishodObj = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
+                  const latestParaf =
+                    Array.isArray(predmet.parafi) && predmet.parafi.length > 0
+                      ? predmet.parafi[0]
+                      : null;
+                  const latestParafStatus = latestParaf
+                    ? PARAF_STATUSI.find((s) => s.value === latestParaf.status) || PARAF_STATUSI[0]
+                    : null;
 
                   return (
                     <tr
@@ -676,10 +758,97 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       <td className="px-4 py-3.5 align-top">
                         <Link
                           href={`/predmeti/${predmet.id}`}
-                          className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 block max-w-60 truncate"
+                          className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 block max-w-52 truncate"
                         >
                           {predmet.stranka || '-'}
                         </Link>
+                      </td>
+
+                      {/* Obrađivač (Delegirani službenik) & Parafiranje */}
+                      <td className="px-4 py-3.5 align-top">
+                        <div className="flex flex-col items-start gap-1.5">
+                          {/* Zaduženi službenik */}
+                          {predmet.sluzbenik_ime ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setParafModalItem(predmet);
+                                setParafModalTab('delegiranje');
+                              }}
+                              title={
+                                predmet.uputa_voditelja
+                                  ? `Uputa: ${predmet.uputa_voditelja}`
+                                  : 'Kliknite za izmjenu zaduženog službenika ili upute'
+                              }
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                                {getInitials(predmet.sluzbenik_ime)}
+                              </span>
+                              <span className="truncate max-w-36">{predmet.sluzbenik_ime}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setParafModalItem(predmet);
+                                setParafModalTab('delegiranje');
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
+                              title="Delegiraj predmet službeniku u rad"
+                            >
+                              <UserCheck className="w-3 h-3" />
+                              <span>Delegiraj u rad</span>
+                            </button>
+                          )}
+
+                          {/* Zadnji paraf ili gumb za parafiranje */}
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {latestParaf && latestParafStatus ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setParafModalItem(predmet);
+                                  setParafModalTab('paraf');
+                                }}
+                                title={`${latestParaf.status}: ${latestParaf.vrsta_akta} (${new Date(
+                                  latestParaf.datum
+                                ).toLocaleDateString('hr-HR')})${
+                                  latestParaf.napomena ? ` — ${latestParaf.napomena}` : ''
+                                }`}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:opacity-85 transition-opacity ${latestParafStatus.badgeClass}`}
+                              >
+                                <Stamp className="w-2.5 h-2.5 shrink-0" />
+                                <span className="truncate max-w-44">
+                                  {latestParaf.status === 'Parafirano'
+                                    ? 'Paraf:'
+                                    : latestParaf.status === 'Parafirano uz izmjene'
+                                    ? 'Paraf (izmj.):'
+                                    : 'Dorada:'}{' '}
+                                  {latestParaf.vrsta_akta}
+                                </span>
+                                {predmet.parafi.length > 1 && (
+                                  <span className="ml-0.5 opacity-80">
+                                    (+{predmet.parafi.length - 1})
+                                  </span>
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setParafModalItem(predmet);
+                                  setParafModalTab('paraf');
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold transition-colors cursor-pointer"
+                                title="Evidentiraj paraf dopisa ili rješenja u ovom predmetu"
+                              >
+                                <Stamp className="w-2.5 h-2.5" />
+                                <span>+ Evidentiraj paraf</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </td>
 
                       {/* Dokumenti u spisu */}
@@ -794,8 +963,20 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
                           <button
                             type="button"
+                            onClick={() => {
+                              setParafModalItem(predmet);
+                              setParafModalTab('paraf');
+                            }}
+                            className="p-1.5 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-lg transition-colors cursor-pointer"
+                            title="Parafiranje dopisa/rješenja i delegiranje službeniku"
+                          >
+                            <Stamp className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => setEditingItem({ ...predmet })}
-                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-lg transition-colors cursor-pointer"
                             title="Uredi podatke predmeta"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -970,6 +1151,32 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                   </select>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Zaduženi službenik (Obrađivač)
+                </label>
+                <select
+                  value={editingItem.sluzbenik_id || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const found = sluzbenici.find((s) => s.id === val);
+                    setEditingItem({
+                      ...editingItem,
+                      sluzbenik_id: val,
+                      sluzbenik_ime: found ? found.imePrezime : '',
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                >
+                  <option value="">— Neraspoređeno / U mom radu —</option>
+                  {sluzbenici.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.imePrezime} {s.radnoMjesto ? `(${s.radnoMjesto})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
@@ -1157,6 +1364,33 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           </div>
         </div>
       )}
+
+      {/* MODAL 4: PARAFIRANJE DOPISA/RJEŠENJA I DELEGIRANJE PREDMETA */}
+      <ParafiranjeModal
+        predmet={parafModalItem}
+        isOpen={Boolean(parafModalItem)}
+        initialTab={parafModalTab}
+        sluzbeniciList={sluzbenici}
+        onClose={() => setParafModalItem(null)}
+        onManageSluzbenici={() => setSluzbeniciModalOpen(true)}
+        onUpdated={(patch) => {
+          if (!parafModalItem) return;
+          const targetId = parafModalItem.id;
+          setItems((prev) =>
+            prev.map((p) => (p.id === targetId ? { ...p, ...patch } : p))
+          );
+          setParafModalItem((prev) => (prev ? { ...prev, ...patch } : null));
+          startTransition(() => router.refresh());
+        }}
+      />
+
+      {/* MODAL 5: UPRAVLJANJE POPISOM SLUŽBENIKA */}
+      <SluzbeniciModal
+        isOpen={sluzbeniciModalOpen}
+        onClose={() => setSluzbeniciModalOpen(false)}
+        predmeti={items}
+        onUpdated={(updated) => setSluzbenici(updated)}
+      />
     </div>
   );
 }

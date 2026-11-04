@@ -20,6 +20,7 @@ import {
   type PredmetIshod,
 } from '@/lib/predmet-meta';
 import { normalizeExtractedLegalText } from '@/lib/text-formatter';
+import { invalidatePraksaCatalog } from '@/lib/rag';
 
 const db = supabaseServer || supabaseClient;
 // @ts-ignore
@@ -563,6 +564,7 @@ export async function confirmPublishToPraksa(params: {
       });
     }
 
+    invalidatePraksaCatalog();
     revalidatePath('/baza-prakse');
     revalidatePath('/savjetnik');
     revalidatePath('/');

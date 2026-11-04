@@ -28,9 +28,199 @@ export interface SlužbeniAktData {
   sluzbenaOsoba: string;
   funkcijaOsobe: string;
   dostaviti: string[];
+  /**
+   * Ako je proslijeđen već potpuno sastavljen autentični tekst akta (Uvod + RJEŠENJE + Obrazloženje + Uputa + Potpis + Dostaviti),
+   * izvozi se izravno s autentičnim poravnanjima bez dodavanja dvostrukog zaglavlja ili generičke izreke.
+   */
+  rawFullActText?: string;
+}
+
+function buildParagraphsFromAuthenticActText(rawText: string): Paragraph[] {
+  const normalized = rawText.replace(/\r\n/g, '\n').trim();
+  const blocks = normalized.split(/\n{2,}/);
+  const paragraphs: Paragraph[] = [];
+  let inDostaviti = false;
+
+  for (const rawBlock of blocks) {
+    const block = rawBlock.trim();
+    if (!block) continue;
+
+    // Provjeri sadrži li blok više zasebnih strukturnih redaka (npr. potpis ili DOSTAVITI)
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+
+    if (
+      lines.length === 1 &&
+      /^R\s*J\s*E\s*Š\s*E\s*N\s*J\s*E$/i.test(lines[0])
+    ) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'R J E Š E N J E', bold: true, size: 28 })],
+          spacing: { before: 280, after: 280 },
+        })
+      );
+      continue;
+    }
+
+    if (
+      lines.length === 1 &&
+      /^O\s*b\s*r\s*a\s*z\s*l\s*o\s*ž\s*e\s*n\s*j\s*e$/i.test(lines[0])
+    ) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'O b r a z l o ž e n j e', bold: false, size: 24 })],
+          spacing: { before: 280, after: 240 },
+        })
+      );
+      continue;
+    }
+
+    // Provjeri potpisni blok (SEKTORSKI SAVJETNIK / Dino Malbaša, dipl. iur.)
+    if (
+      lines.some((l) =>
+        /SEKTORSKI SAVJETNIK|VIŠI UPRAVNI SAVJETNIK|Dino Malbaša|MINISTAR|DRŽAVNI TAJNIK/i.test(l)
+      ) &&
+      lines.length <= 4 &&
+      !inDostaviti
+    ) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: lines.map(
+            (line, idx) =>
+              new TextRun({
+                text: idx < lines.length - 1 ? `${line}\n` : line,
+                bold: idx === 0 && line === line.toUpperCase(),
+              })
+          ),
+          spacing: { before: 360, after: 320 },
+        })
+      );
+      continue;
+    }
+
+    // Provjeri DOSTAVITI blok
+    if (/^DOSTAVITI:?/i.test(lines[0]) || inDostaviti) {
+      inDostaviti = true;
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          children: lines.map((line, idx) => {
+            const isHeader = /^DOSTAVITI:?$/i.test(line);
+            return new TextRun({
+              text: idx < lines.length - 1 ? `${line}\n` : line,
+              bold: isHeader,
+              size: 22,
+            });
+          }),
+          spacing: { before: /^DOSTAVITI:?/i.test(lines[0]) ? 240 : 60, after: 120 },
+        })
+      );
+      continue;
+    }
+
+    // UPUTA O PRAVNOM LIJEKU
+    if (/^UPUTA O PRAVNOM LIJEKU:?/i.test(lines[0])) {
+      if (lines.length > 1 && /^UPUTA O PRAVNOM LIJEKU:?$/i.test(lines[0])) {
+        const rest = lines.slice(1).join(' ');
+        paragraphs.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            children: [
+              new TextRun({ text: `${lines[0]}\n`, bold: true }),
+              new TextRun({ text: rest }),
+            ],
+            spacing: { before: 280, after: 240 },
+          })
+        );
+      } else {
+        const match = block.match(/^(UPUTA O PRAVNOM LIJEKU:?)\s*([\s\S]*)$/i);
+        if (match) {
+          paragraphs.push(
+            new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              children: [
+                new TextRun({ text: `${match[1]} `, bold: true }),
+                new TextRun({ text: match[2].replace(/\n+/g, ' ').trim() }),
+              ],
+              spacing: { before: 280, after: 240 },
+            })
+          );
+        }
+      }
+      continue;
+    }
+
+    // Standardni odlomak (uvod, točke izreke, odlomci obrazloženja)
+    // Ako su u bloku numerirane točke izreke (1. ... \n 2. ...), zadrži prijelome redaka
+    const hasNumberedLines =
+      lines.length > 1 && lines.every((l) => /^\d+\.\s+/.test(l));
+
+    if (hasNumberedLines) {
+      for (const nl of lines) {
+        paragraphs.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            children: [new TextRun({ text: nl })],
+            spacing: { after: 160 },
+          })
+        );
+      }
+    } else {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          children: [new TextRun({ text: lines.join(' ') })],
+          spacing: { after: 180 },
+        })
+      );
+    }
+  }
+
+  return paragraphs;
 }
 
 export async function generateDocxBuffer(data: SlužbeniAktData): Promise<Buffer> {
+  if (data.rawFullActText && data.rawFullActText.trim().length > 0) {
+    const doc = new Document({
+      styles: {
+        default: {
+          document: {
+            run: {
+              font: 'Times New Roman',
+              size: 24, // 12pt
+              color: '000000',
+            },
+            paragraph: {
+              spacing: {
+                line: 276, // 1.15 prored
+                after: 140,
+              },
+            },
+          },
+        },
+      },
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
+            },
+          },
+          children: buildParagraphsFromAuthenticActText(data.rawFullActText),
+        },
+      ],
+    });
+
+    return await Packer.toBuffer(doc);
+  }
+
   const isRjesenje = data.vrsta === 'rjesenje';
   const isZakljucak = data.vrsta === 'zakljucak';
   const naslovDokumenta = isRjesenje ? 'R J E Š E N J E' : isZakljucak ? 'Z A K L J U Č A K' : 'P O Z I V';

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   BarChart3,
@@ -24,8 +24,11 @@ import {
   RefreshCw,
   Layers,
   X,
+  Users,
+  Stamp,
+  UserCheck,
 } from 'lucide-react';
-import type { EnrichedPredmet } from '@/lib/predmet-meta';
+import { getInitials, type EnrichedPredmet, type Sluzbenik } from '@/lib/predmet-meta';
 import {
   type ReportFilters,
   type ReportPeriodPreset,
@@ -36,6 +39,7 @@ import {
   getDateRangeForPreset,
 } from '@/lib/report-utils';
 import { generateAiReportNarrativeAction } from '@/app/actions/reportActions';
+import { getSluzbeniciAction } from '@/app/actions/predmetActions';
 
 interface Props {
   initialPredmeti: EnrichedPredmet[];
@@ -49,7 +53,13 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
   const [podrucje, setPodrucje] = useState<string>('Sva');
   const [status, setStatus] = useState<string>('Svi');
   const [ishod, setIshod] = useState<string>('Svi');
+  const [sluzbenik, setSluzbenik] = useState<string>('Svi');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sluzbeniciList, setSluzbeniciList] = useState<Sluzbenik[]>([]);
+
+  useEffect(() => {
+    getSluzbeniciAction().then(setSluzbeniciList);
+  }, []);
 
   // AI narativno izvješće stanje
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -66,6 +76,18 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
     return Array.from(set);
   }, [initialPredmeti]);
 
+  // Dinamičko pronalaženje svih službenika iz popisa i iz predmeta
+  const availableSluzbenici = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of sluzbeniciList) {
+      if (s.imePrezime) set.add(s.imePrezime);
+    }
+    for (const p of initialPredmeti) {
+      if (p.sluzbenik_ime) set.add(p.sluzbenik_ime);
+    }
+    return Array.from(set);
+  }, [sluzbeniciList, initialPredmeti]);
+
   const filters: ReportFilters = useMemo(
     () => ({
       period,
@@ -74,9 +96,10 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
       podrucje,
       status,
       ishod,
+      sluzbenik,
       query: searchQuery,
     }),
-    [period, customOd, customDo, podrucje, status, ishod, searchQuery]
+    [period, customOd, customDo, podrucje, status, ishod, sluzbenik, searchQuery]
   );
 
   const filteredPredmeti = useMemo(
@@ -302,7 +325,7 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
         )}
 
         {/* Filtri po kategorijama i tražilica */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
           {/* Područje */}
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
@@ -317,6 +340,26 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
               {availablePodrucja.map((p) => (
                 <option key={p} value={p}>
                   {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Službenik (Obrađivač) */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              Zaduženi službenik
+            </label>
+            <select
+              value={sluzbenik}
+              onChange={(e) => setSluzbenik(e.target.value)}
+              className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+            >
+              <option value="Svi">Svi službenici</option>
+              <option value="__nerasporedjeno__">U mom radu / Neraspoređeno</option>
+              {availableSluzbenici.map((s) => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
@@ -764,6 +807,115 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
       </section>
 
       {/* ============================================================ */}
+      {/* EVIDENCIJA RADA PO SLUŽBENICIMA I PARAFIRANIH AKATA            */}
+      {/* ============================================================ */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center shrink-0">
+              <Stamp className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight">
+                Evidencija delegiranih predmeta i parafiranih akata po službenicima
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Pregled zaduženja u radu, riješenih spisa te parafiranih drugostupanjskih rješenja, dopisa i odgovora na tužbu
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold">
+              Ukupno parafa: {metrics.ukupnoParafa}
+            </span>
+            {metrics.ukupnoVracenoNaDoradu > 0 && (
+              <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold">
+                Vraćeno na doradu: {metrics.ukupnoVracenoNaDoradu}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                <th className="py-3 px-4">Službenik / Obrađivač</th>
+                <th className="py-3 px-4 text-center">Ukupno predmeta</th>
+                <th className="py-3 px-4 text-center">Aktivno u radu</th>
+                <th className="py-3 px-4 text-center">Riješeno (A/A)</th>
+                <th className="py-3 px-4 text-center">Parafirano ukupno</th>
+                <th className="py-3 px-4 text-center">Drugostupanjska rješenja</th>
+                <th className="py-3 px-4 text-center">Dopisi (žalbe / dopune)</th>
+                <th className="py-3 px-4 text-center">Odgovori na tužbu</th>
+                <th className="py-3 px-4 text-center">Vraćeno na doradu</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {metrics.sluzbeniciBreakdown.length > 0 ? (
+                metrics.sluzbeniciBreakdown.map((row) => (
+                  <tr
+                    key={row.sluzbenik}
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] flex items-center justify-center shrink-0">
+                          {getInitials(row.sluzbenik)}
+                        </span>
+                        <span>{row.sluzbenik}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-center font-bold text-slate-800 dark:text-slate-200">
+                      {row.ukupnoZaduzeno}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="px-2 py-0.5 rounded-md font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {row.uRadu}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="px-2 py-0.5 rounded-md font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        {row.rijeseno}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center font-bold text-emerald-700 dark:text-emerald-400">
+                      {row.ukupnoParafirano}
+                    </td>
+                    <td className="py-3 px-4 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {row.rjesenjaParaf}
+                    </td>
+                    <td className="py-3 px-4 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {row.dopisiZalbaParaf + row.ostaliParafi}
+                    </td>
+                    <td className="py-3 px-4 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {row.odgovoriNaTuzbuParaf}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {row.vracenoNaDoradu > 0 ? (
+                        <span className="px-2 py-0.5 rounded-md font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          {row.vracenoNaDoradu}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                    Nema podataka za prikaz.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/* DETALJNA TABLICA PREDMETA (S mogućnošću filtriranja i sortiranja) */}
       {/* ============================================================ */}
       <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
@@ -789,6 +941,7 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
                 <th className="py-3 px-4">Klasa / Urbroj</th>
                 <th className="py-3 px-4">Stranka / Žalitelj</th>
                 <th className="py-3 px-4">Područje</th>
+                <th className="py-3 px-4">Obrađivač & Parafi</th>
                 <th className="py-3 px-4">Zaprimljeno</th>
                 <th className="py-3 px-4">Riješeno / Potpis</th>
                 <th className="py-3 px-4">Trajanje</th>
@@ -826,6 +979,24 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
                         <span className="px-2 py-0.5 rounded-md font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {p.podrucje || 'Ostalo'}
                         </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col gap-1">
+                          {p.sluzbenik_ime ? (
+                            <span className="inline-flex items-center gap-1 font-semibold text-indigo-700 dark:text-indigo-300 text-[11px]">
+                              <UserCheck className="w-3 h-3 shrink-0" />
+                              {p.sluzbenik_ime}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">U mom radu</span>
+                          )}
+                          {p.parafi && p.parafi.length > 0 && (
+                            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                              ✓ {p.parafi.length}x parafirano ({p.parafi[0].vrsta_akta})
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
@@ -901,7 +1072,7 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
                     Nema predmeta koji odgovaraju odabranim filtrima.
                   </td>
                 </tr>

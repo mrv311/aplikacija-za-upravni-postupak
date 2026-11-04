@@ -18,10 +18,14 @@ import {
   CheckCheck,
   RotateCcw,
   CheckCircle2,
+  Stamp,
+  UserCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
 import { LegalReviewModal } from '@/components/LegalReviewModal';
+import { ParafiranjeModal } from '@/components/ParafiranjeModal';
+import { SluzbeniciModal } from '@/components/SluzbeniciModal';
 import {
   archivePredmet,
   unarchivePredmet,
@@ -52,6 +56,9 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [faza, setFaza] = useState<PredmetFaza>(predmet.faza);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [parafModalOpen, setParafModalOpen] = useState(false);
+  const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
+  const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -309,6 +316,25 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         )}
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+
+        {/* Delegiranje službeniku & Parafiranje akata */}
+        <button
+          type="button"
+          onClick={() => {
+            setParafModalTab('paraf');
+            setParafModalOpen(true);
+          }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+          title="Evidentiraj paraf dopisa/rješenja ili delegiraj predmet službeniku u rad"
+        >
+          <Stamp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Parafiranje i delegiranje</span>
+          {predmet.parafi && predmet.parafi.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px]">
+              {predmet.parafi.length}
+            </span>
+          )}
+        </button>
 
         {/* VOĐENI TIJEK AKTA (Pametni workflow) */}
         {!isArchived && (
@@ -792,6 +818,25 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         onActSavedToCase={() => {
           startTransition(() => router.refresh());
         }}
+      />
+
+      {/* Modal: Parafiranje akata i delegiranje službeniku u rad */}
+      <ParafiranjeModal
+        predmet={predmet}
+        isOpen={parafModalOpen}
+        initialTab={parafModalTab}
+        onClose={() => setParafModalOpen(false)}
+        onManageSluzbenici={() => setSluzbeniciModalOpen(true)}
+        onUpdated={(patch) => {
+          if (patch.faza) setFaza(patch.faza);
+          startTransition(() => router.refresh());
+        }}
+      />
+
+      {/* Modal: Upravljanje popisom službenika */}
+      <SluzbeniciModal
+        isOpen={sluzbeniciModalOpen}
+        onClose={() => setSluzbeniciModalOpen(false)}
       />
     </>
   );

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import pdfParse from 'pdf-parse';
 import { google } from '@/lib/google';
 import { embed, generateText } from 'ai';
+import { invalidatePraksaCatalog } from '@/lib/rag';
 
 const db = supabaseServer || supabase;
 
@@ -95,6 +96,7 @@ export async function deletePraksaDoc(nazivDatoteke: string) {
       return { error: `Greška u bazi: ${error.message}` };
     }
 
+    invalidatePraksaCatalog();
     revalidatePath('/baza-prakse');
     revalidatePath('/savjetnik');
     return { success: true };
@@ -121,6 +123,7 @@ export async function deletePraksaFolder(naziviDatoteka: string[]) {
       return { error: `Greška u bazi: ${error.message}` };
     }
 
+    invalidatePraksaCatalog();
     revalidatePath('/baza-prakse');
     revalidatePath('/savjetnik');
     return { success: true };

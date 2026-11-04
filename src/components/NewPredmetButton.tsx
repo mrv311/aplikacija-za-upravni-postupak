@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -14,10 +14,13 @@ import {
   AlertCircle,
   Stamp,
   Trash2,
+  UserCheck,
+  Users,
 } from 'lucide-react';
 import {
   createPredmet,
   extractCaseInfoFromScan,
+  getSluzbeniciAction,
 } from '@/app/actions/predmetActions';
 import { uploadAndParseDocument } from '@/app/actions/documentActions';
 import {
@@ -26,7 +29,9 @@ import {
   guessDocRoleFromFilename,
   formatBytes,
   type PredmetPodrucje,
+  type Sluzbenik,
 } from '@/lib/predmet-meta';
+import { SluzbeniciModal } from '@/components/SluzbeniciModal';
 
 interface QueuedCaseFile {
   uid: string;
@@ -52,9 +57,23 @@ export default function NewPredmetButton() {
   const [datumIzvor, setDatumIzvor] = useState<string>('');
   const [napomena, setNapomena] = useState('');
 
+  // Delegiranje predmeta službeniku
+  const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
+  const [sluzbenikId, setSluzbenikId] = useState('');
+  const [sluzbenikIme, setSluzbenikIme] = useState('');
+  const [interniRok, setInterniRok] = useState('');
+  const [uputaVoditelja, setUputaVoditelja] = useState('');
+  const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
+
   const [queuedFiles, setQueuedFiles] = useState<QueuedCaseFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      getSluzbeniciAction().then(setSluzbenici);
+    }
+  }, [isOpen]);
 
   const resetForm = () => {
     setKlasa('');
@@ -63,6 +82,10 @@ export default function NewPredmetButton() {
     setDatumPrimitka(today);
     setDatumIzvor('');
     setNapomena('');
+    setSluzbenikId('');
+    setSluzbenikIme('');
+    setInterniRok('');
+    setUputaVoditelja('');
     setQueuedFiles([]);
     setErrorMsg('');
     setScanSuccessMsg('');
@@ -188,6 +211,10 @@ export default function NewPredmetButton() {
     formData.append('datum_primitka', datumPrimitka);
     formData.append('podrucje', podrucje);
     formData.append('napomena', napomena.trim());
+    formData.append('sluzbenik_id', sluzbenikId);
+    formData.append('sluzbenik_ime', sluzbenikIme);
+    formData.append('interni_rok', interniRok);
+    formData.append('uputa_voditelja', uputaVoditelja.trim());
 
     const result = await createPredmet(formData);
 
@@ -514,6 +541,76 @@ export default function NewPredmetButton() {
                   className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
+              {/* Sekcija za delegiranje predmeta službeniku u rad */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                    Delegiranje predmeta službeniku u rad (opcijski)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSluzbeniciModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
+                  >
+                    <Users className="w-3 h-3" />
+                    Uredi popis službenika
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                      Zaduženi službenik (Obrađivač)
+                    </label>
+                    <select
+                      value={sluzbenikId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSluzbenikId(val);
+                        const found = sluzbenici.find((s) => s.id === val);
+                        setSluzbenikIme(found ? found.imePrezime : '');
+                      }}
+                      className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">— Neraspoređeno / U mom radu —</option>
+                      {sluzbenici.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.imePrezime} {s.radnoMjesto ? `(${s.radnoMjesto})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                      Interni rok za nacrt
+                    </label>
+                    <input
+                      type="date"
+                      value={interniRok}
+                      onChange={(e) => setInterniRok(e.target.value)}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {sluzbenikId && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                      Uputa nadređenog službeniku za rad
+                    </label>
+                    <input
+                      type="text"
+                      value={uputaVoditelja}
+                      onChange={(e) => setUputaVoditelja(e.target.value)}
+                      placeholder="npr. Poslati dopis za slanje žalbe na nadležni postupak / pripremiti nacrt rješenja..."
+                      className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Donje akcije */}
@@ -567,6 +664,12 @@ export default function NewPredmetButton() {
           </div>
         </div>
       )}
+
+      <SluzbeniciModal
+        isOpen={sluzbeniciModalOpen}
+        onClose={() => setSluzbeniciModalOpen(false)}
+        onUpdated={(updated) => setSluzbenici(updated)}
+      />
     </>
   );
 }

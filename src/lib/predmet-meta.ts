@@ -1,7 +1,72 @@
 export const META_DOC_TYPE = '__META__';
 export const CHAT_DOC_TYPE = '__CHAT__';
-export const SYSTEM_DOC_TYPES = [META_DOC_TYPE, CHAT_DOC_TYPE] as const;
+export const SLUZBENICI_DOC_TYPE = '__SLUZBENICI__';
+export const SYSTEM_DOC_TYPES = [META_DOC_TYPE, CHAT_DOC_TYPE, SLUZBENICI_DOC_TYPE] as const;
 export const META_URL_PREFIX = 'meta://';
+
+export interface Sluzbenik {
+  id: string;
+  imePrezime: string;
+  radnoMjesto?: string;
+  inicijali: string;
+  aktivan?: boolean;
+}
+
+export const PARAF_VRSTE_AKATA = [
+  'Drugostupanjsko rješenje',
+  'Dopis — slanje žalbe na nadležni postupak',
+  'Dopis — traženje dopune spisa / očitovanja',
+  'Odgovor na tužbu (Upravni sud)',
+  'Zaključak / Rješenje o obustavi',
+  'Ostali dopisi i akti',
+] as const;
+
+export type ParafVrstaAkta = (typeof PARAF_VRSTE_AKATA)[number] | (string & {});
+
+export type ParafStatus = 'Parafirano' | 'Parafirano uz izmjene' | 'Vraćeno na doradu';
+
+export const PARAF_STATUSI: {
+  value: ParafStatus;
+  label: string;
+  shortLabel: string;
+  badgeClass: string;
+}[] = [
+  {
+    value: 'Parafirano',
+    label: 'Parafirano (odobreno bez izmjena)',
+    shortLabel: 'Parafirano',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+  },
+  {
+    value: 'Parafirano uz izmjene',
+    label: 'Parafirano uz izmjene (korigirano)',
+    shortLabel: 'Paraf uz izmjene',
+    badgeClass: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
+  },
+  {
+    value: 'Vraćeno na doradu',
+    label: 'Vraćeno službeniku na doradu',
+    shortLabel: 'Vraćeno na doradu',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+  },
+];
+
+export interface ParafZapis {
+  id: string;
+  datum: string; // YYYY-MM-DD
+  vrsta_akta: ParafVrstaAkta;
+  status: ParafStatus;
+  sluzbenik_ime?: string;
+  napomena?: string;
+}
+
+export function getInitials(imePrezime: string): string {
+  const cleaned = imePrezime.split(',')[0].trim();
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'SL';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
 export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo' | (string & {});
 
@@ -79,8 +144,10 @@ export const DOKUMENT_VRSTE = [
   'Prvostupanjsko rješenje',
   'Dostavnica',
   'Popratni dopis I. stupnja',
+  'Dopis — slanje žalbe na nadležni postupak',
   'Punomoć',
   'Drugostupanjsko rješenje',
+  'Odgovor na tužbu',
   'Dokaz / Prilog',
   'Kompletni spis',
   'Ostalo',
@@ -198,6 +265,13 @@ export interface PredmetExtendedMeta {
   datum_slanja_na_potpis?: string;
   napomena?: string;
   poslano_u_praksu?: boolean;
+  // Delegiranje službeniku i evidencija parafa
+  sluzbenik_id?: string;
+  sluzbenik_ime?: string;
+  datum_dodjele?: string;
+  interni_rok?: string;
+  uputa_voditelja?: string;
+  parafi?: ParafZapis[];
 }
 
 export function encodePredmetMetaUrl(meta: PredmetExtendedMeta): string {
@@ -229,6 +303,13 @@ export interface EnrichedPredmet {
   poslano_u_praksu?: boolean;
   broj_dokumenata: number;
   vrste_dokumenata: string[];
+  // Delegiranje službeniku i evidencija parafa
+  sluzbenik_id?: string;
+  sluzbenik_ime?: string;
+  datum_dodjele?: string;
+  interni_rok?: string;
+  uputa_voditelja?: string;
+  parafi: ParafZapis[];
 }
 
 export function enrichPredmetRow(row: any): EnrichedPredmet {
@@ -240,7 +321,10 @@ export function enrichPredmetRow(row: any): EnrichedPredmet {
 
   const metaDoc = allDocs.find((d) => d.tip_dokumenta === META_DOC_TYPE);
   const realDocs = allDocs.filter(
-    (d) => d.tip_dokumenta !== META_DOC_TYPE && d.tip_dokumenta !== CHAT_DOC_TYPE
+    (d) =>
+      d.tip_dokumenta !== META_DOC_TYPE &&
+      d.tip_dokumenta !== CHAT_DOC_TYPE &&
+      d.tip_dokumenta !== SLUZBENICI_DOC_TYPE
   );
   const meta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
 
@@ -272,6 +356,12 @@ export function enrichPredmetRow(row: any): EnrichedPredmet {
     poslano_u_praksu: Boolean(meta.poslano_u_praksu),
     broj_dokumenata: realDocs.length,
     vrste_dokumenata: Array.from(vrsteSet),
+    sluzbenik_id: meta.sluzbenik_id || '',
+    sluzbenik_ime: meta.sluzbenik_ime || '',
+    datum_dodjele: meta.datum_dodjele || '',
+    interni_rok: meta.interni_rok || '',
+    uputa_voditelja: meta.uputa_voditelja || '',
+    parafi: Array.isArray(meta.parafi) ? meta.parafi : [],
   };
 }
 

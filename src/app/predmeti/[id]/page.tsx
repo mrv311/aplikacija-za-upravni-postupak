@@ -68,14 +68,44 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
                   </span>
                 </>
               )}
+              {predmet.sluzbenik_ime && (
+                <>
+                  <span>&bull;</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-semibold">
+                    <strong>Obrađivač:</strong> {predmet.sluzbenik_ime}
+                    {predmet.interni_rok && (
+                      <span className="text-[11px] opacity-85">
+                        (rok: {new Date(predmet.interni_rok).toLocaleDateString('hr-HR')})
+                      </span>
+                    )}
+                  </span>
+                </>
+              )}
+              {predmet.parafi && predmet.parafi.length > 0 && (
+                <>
+                  <span>&bull;</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold">
+                    <strong>Zadnji paraf:</strong> {predmet.parafi[0].status} —{' '}
+                    {predmet.parafi[0].vrsta_akta} (
+                    {new Date(predmet.parafi[0].datum).toLocaleDateString('hr-HR')})
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
-          {predmet.napomena && (
-            <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg italic max-w-md">
-              Bilješka: „{predmet.napomena}”
-            </p>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {predmet.uputa_voditelja && (
+              <p className="text-xs text-indigo-800 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg max-w-md">
+                <strong>Uputa službeniku:</strong> „{predmet.uputa_voditelja}”
+              </p>
+            )}
+            {predmet.napomena && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg italic max-w-md">
+                Bilješka: „{predmet.napomena}”
+              </p>
+            )}
+          </div>
         </div>
       </header>
 

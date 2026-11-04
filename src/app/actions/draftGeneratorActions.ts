@@ -4,15 +4,26 @@ import { supabaseServer } from '@/lib/supabase-server';
 import { supabase as supabaseClient } from '@/lib/supabase';
 import { google } from '@/lib/google';
 import { generateText } from 'ai';
-import { searchKnowledge, formatZakoni, stitchChunks } from '@/lib/rag';
+import {
+  searchKnowledge,
+  formatZakoni,
+  stitchChunks,
+  croatianStem,
+  getPraksaCatalog,
+} from '@/lib/rag';
 import { parsePraksaMetadata } from '@/lib/ai-types';
 import {
   META_DOC_TYPE,
   CHAT_DOC_TYPE,
+  SLUZBENICI_DOC_TYPE,
   decodeDocLabel,
   decodePredmetMetaUrl,
   type PredmetIshod,
 } from '@/lib/predmet-meta';
+import {
+  buildAuthenticAdvisorStructurePrompt,
+  detectCompetentAdministrativeCourt,
+} from '@/lib/advisor-blueprint';
 import { saveDraftToSpis } from '@/app/actions/chatActions';
 import { updatePredmetFaza } from '@/app/actions/predmetActions';
 import {
@@ -28,13 +39,14 @@ export interface RecommendedPracticeItem {
   id: number;
   nazivDatoteke: string;
   kratkiNaziv: string;
-  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje';
+  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu';
   podrucje: string;
   godina: string | null;
   ishod: string;
   sadrzajPreview: string;
   puniSadrzaj?: string;
   similarity?: number;
+  matchedKeywords?: string[];
 }
 
 export interface ManualReferenceAct {
@@ -51,81 +63,157 @@ export interface DraftingContextResult {
     datum_zaprimanja: string;
     status: string;
     podrucje: string;
+    napomena?: string;
+    uputa_voditelja?: string;
   } | null;
   docs: Array<{ id: string; tip_dokumenta: string; raw_text: string }>;
   recommendedPractice: RecommendedPracticeItem[];
+  extractedKeywords: string[];
   error?: string;
 }
 
 /**
- * Pretražuje bazu sudske i upravne prakse po ključnim riječima (naziv, stranka, klasa, tema).
- * Vraća grupirane odluke (spojene po nazivu dokumenta).
+ * Pretražuje bazu upravne i sudske prakse po jednoj ili više ključnih riječi
+ * koristeći hrvatske korijene riječi (stemming) i bodovanje preklapanja pojmova.
  */
 export async function searchPraksaForDraft(
   query: string,
-  limit = 12
+  limit = 15
 ): Promise<RecommendedPracticeItem[]> {
   if (!query || !query.trim()) return [];
 
   try {
-    const q = query.trim();
-    // 1. Pretraži po nazivu datoteke
-    const { data: titleMatches, error: tErr } = await db
-      .from('praksa')
-      .select('id, naziv_datoteke, chunk_index, sadrzaj')
-      .ilike('naziv_datoteke', `%${q}%`)
-      .order('chunk_index', { ascending: true })
-      .limit(limit * 3);
+    const rawTokens = query
+      .trim()
+      .split(/[\s,;]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2);
 
-    if (tErr) console.error('searchPraksaForDraft title error:', tErr);
+    if (rawTokens.length === 0) return [];
 
-    const mapByName = new Map<string, RecommendedPracticeItem>();
+    const tokenInfos = rawTokens.slice(0, 6).map((tok) => ({
+      original: tok,
+      stem: tok.length >= 4 ? croatianStem(tok) : tok.toLowerCase(),
+    }));
 
-    for (const row of titleMatches || []) {
-      if (!mapByName.has(row.naziv_datoteke)) {
-        const meta = parsePraksaMetadata(row.naziv_datoteke);
-        const clean = (row.sadrzaj || '').replace(/\s+/g, ' ').trim();
-        mapByName.set(row.naziv_datoteke, {
-          id: row.id,
-          nazivDatoteke: row.naziv_datoteke,
-          kratkiNaziv: meta.kratkiNaziv,
-          vrsta: meta.vrsta,
-          podrucje: meta.podrucje,
-          godina: meta.godina,
-          ishod: meta.ishod,
-          sadrzajPreview: clean.slice(0, 220) + (clean.length > 220 ? '...' : ''),
-        });
+    const catalog = await getPraksaCatalog();
+
+    // 1. Pogoci u naslovu odluke (iz memorijskog kataloga svih 1.600 odluka)
+    const titleMatchedDocs = new Map<string, { score: number; matched: string[] }>();
+    for (const item of catalog) {
+      const lowerTitle = item.naziv_datoteke.toLowerCase();
+      const matched: string[] = [];
+      let score = 0;
+      for (const ti of tokenInfos) {
+        if (lowerTitle.includes(ti.stem) || lowerTitle.includes(ti.original.toLowerCase())) {
+          matched.push(ti.original);
+          score += 3.5;
+        }
+      }
+      if (score > 0) {
+        titleMatchedDocs.set(item.naziv_datoteke, { score, matched });
       }
     }
 
-    // 2. Ako imamo malo rezultata, pretraži i po sadržaju
-    if (mapByName.size < limit) {
-      const { data: contentMatches } = await db
-        .from('praksa')
-        .select('id, naziv_datoteke, chunk_index, sadrzaj')
-        .ilike('sadrzaj', `%${q}%`)
-        .order('chunk_index', { ascending: true })
-        .limit(limit * 2);
+    // 2. Paralelna pretraga sadržaja po korijenima svih unesenih ključnih riječi
+    const [contentResList, titlePreviewRes] = await Promise.all([
+      Promise.all(
+        tokenInfos.map((ti) =>
+          db
+            .from('praksa')
+            .select('id, naziv_datoteke, chunk_index, sadrzaj')
+            .ilike('sadrzaj', `%${ti.stem}%`)
+            .order('id', { ascending: false })
+            .limit(75)
+            .then((r) => ({ ti, rows: r.data || [] }))
+        )
+      ),
+      titleMatchedDocs.size > 0
+        ? db
+            .from('praksa')
+            .select('id, naziv_datoteke, chunk_index, sadrzaj')
+            .in(
+              'naziv_datoteke',
+              [...titleMatchedDocs.entries()]
+                .sort((a, b) => b[1].score - a[1].score)
+                .slice(0, 20)
+                .map((e) => e[0])
+            )
+            .eq('chunk_index', 0)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
-      for (const row of contentMatches || []) {
-        if (!mapByName.has(row.naziv_datoteke)) {
-          const meta = parsePraksaMetadata(row.naziv_datoteke);
-          const clean = (row.sadrzaj || '').replace(/\s+/g, ' ').trim();
-          mapByName.set(row.naziv_datoteke, {
+    const docAgg = new Map<
+      string,
+      {
+        id: number;
+        nazivDatoteke: string;
+        score: number;
+        matchedSet: Set<string>;
+        bestSnippet: string;
+      }
+    >();
+
+    for (const row of titlePreviewRes.data || []) {
+      const tInfo = titleMatchedDocs.get(row.naziv_datoteke);
+      docAgg.set(row.naziv_datoteke, {
+        id: row.id,
+        nazivDatoteke: row.naziv_datoteke,
+        score: tInfo?.score || 3.0,
+        matchedSet: new Set(tInfo?.matched || []),
+        bestSnippet: row.sadrzaj || '',
+      });
+    }
+
+    for (const { ti, rows } of contentResList) {
+      if (rows.length === 0) continue;
+      const rarity = rows.length <= 12 ? 2.5 : rows.length <= 35 ? 1.8 : 1.1;
+      for (const row of rows) {
+        const existing = docAgg.get(row.naziv_datoteke);
+        if (!existing) {
+          docAgg.set(row.naziv_datoteke, {
             id: row.id,
             nazivDatoteke: row.naziv_datoteke,
-            kratkiNaziv: meta.kratkiNaziv,
-            vrsta: meta.vrsta,
-            podrucje: meta.podrucje,
-            godina: meta.godina,
-            ishod: meta.ishod,
-            sadrzajPreview: clean.slice(0, 220) + (clean.length > 220 ? '...' : ''),
+            score: rarity,
+            matchedSet: new Set([ti.original]),
+            bestSnippet: row.sadrzaj || '',
           });
+        } else {
+          if (!existing.matchedSet.has(ti.original)) {
+            existing.matchedSet.add(ti.original);
+            existing.score += rarity * 1.6; // snažan bonus za dokumente koji sadrže SVE tražene riječi
+            existing.bestSnippet = row.sadrzaj || existing.bestSnippet;
+          } else {
+            existing.score += 0.15;
+          }
         }
       }
     }
 
-    return Array.from(mapByName.values()).slice(0, limit);
+    const sorted = Array.from(docAgg.values())
+      .sort((a, b) => {
+        if (b.matchedSet.size !== a.matchedSet.size) {
+          return b.matchedSet.size - a.matchedSet.size;
+        }
+        return b.score - a.score;
+      })
+      .slice(0, limit);
+
+    return sorted.map((d) => {
+      const meta = parsePraksaMetadata(d.nazivDatoteke, d.bestSnippet);
+      const clean = d.bestSnippet.replace(/\s+/g, ' ').trim();
+      return {
+        id: d.id,
+        nazivDatoteke: d.nazivDatoteke,
+        kratkiNaziv: meta.kratkiNaziv,
+        vrsta: meta.vrsta,
+        podrucje: meta.podrucje,
+        godina: meta.godina,
+        ishod: meta.ishod,
+        sadrzajPreview: clean.slice(0, 240) + (clean.length > 240 ? '...' : ''),
+        matchedKeywords: Array.from(d.matchedSet),
+      };
+    });
   } catch (err) {
     console.error('searchPraksaForDraft error:', err);
     return [];
@@ -153,69 +241,122 @@ async function getFullStitchedPracticeText(nazivDatoteke: string): Promise<strin
 }
 
 /**
- * Dohvaća kontekst predmeta, učitane dokumente i pronalazi analognu praksu iz baze
- * kao pripremu za generiranje nacrta akta.
+ * Dohvaća kontekst predmeta, učitane dokumente, izvlači ključne riječi iz spisa i napomene
+ * te pronalazi najsličnija rješenja iz baze prakse.
  */
-export async function getDraftingContext(predmetId: string): Promise<DraftingContextResult> {
+export async function getDraftingContext(
+  predmetId: string,
+  opts?: {
+    customKeywords?: string[];
+    preferredIshod?: NacrtIshodTip;
+  }
+): Promise<DraftingContextResult> {
   if (!predmetId) {
-    return { predmet: null, docs: [], recommendedPractice: [], error: 'ID predmeta je obavezan.' };
+    return {
+      predmet: null,
+      docs: [],
+      recommendedPractice: [],
+      extractedKeywords: [],
+      error: 'ID predmeta je obavezan.',
+    };
   }
 
   try {
-    const [{ data: rawPredmet, error: pError }, { data: rawDocs, error: dError }] =
-      await Promise.all([
-        db.from('predmeti').select('*').eq('id', predmetId).maybeSingle(),
-        db.from('dokumenti').select('id, tip_dokumenta, raw_text').eq('predmet_id', predmetId),
-      ]);
+    const [{ data: rawPredmet, error: pError }, { data: rawDocs }] = await Promise.all([
+      db.from('predmeti').select('*').eq('id', predmetId).maybeSingle(),
+      db
+        .from('dokumenti')
+        .select('id, tip_dokumenta, storage_url, raw_text')
+        .eq('predmet_id', predmetId),
+    ]);
 
     if (pError || !rawPredmet) {
       return {
         predmet: null,
         docs: [],
         recommendedPractice: [],
+        extractedKeywords: [],
         error: 'Predmet nije pronađen u bazi.',
       };
     }
 
+    const metaDoc = (rawDocs || []).find((d: any) => d.tip_dokumenta === META_DOC_TYPE);
+    const meta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+    const casePodrucje = meta.podrucje || 'NUV';
+    const combinedNotes = [meta.napomena, meta.uputa_voditelja].filter(Boolean).join(' | ');
+
     const docs = (rawDocs || []).filter(
-      (d) =>
+      (d: any) =>
         d.tip_dokumenta !== META_DOC_TYPE &&
         d.tip_dokumenta !== CHAT_DOC_TYPE &&
+        d.tip_dokumenta !== SLUZBENICI_DOC_TYPE &&
         d.raw_text &&
         d.raw_text.trim().length > 0
     );
 
-    // Semantička RAG pretraga za analognu praksu na temelju teksta iz spisa (žalba, rješenje)
+    const zalbaDoc = docs.find((d: any) => {
+      const docMeta = decodeDocLabel(d.tip_dokumenta);
+      const v = (docMeta.vrsta || '').toLowerCase();
+      const n = (docMeta.izvorniNaziv || '').toLowerCase();
+      const raw = (d.tip_dokumenta || '').toLowerCase();
+      return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
+    });
+
+    const zalbaText = zalbaDoc?.raw_text || '';
     const combinedSpisText = docs
-      .map((d) => `[${d.tip_dokumenta}]\n${(d.raw_text || '').slice(0, 3000)}`)
+      .map((d: any) => `[${d.tip_dokumenta}]\n${(d.raw_text || '').slice(0, 3500)}`)
       .join('\n\n')
-      .slice(0, 8000);
+      .slice(0, 10000);
+
+    const mappedIshod: 'Odbijena žalba' | 'Poništeno rješenje' | undefined =
+      opts?.preferredIshod === 'ponistavanje_vracanje' || opts?.preferredIshod === 'usvajanje_izmjena'
+        ? 'Poništeno rješenje'
+        : opts?.preferredIshod === 'odbijanje' ||
+          opts?.preferredIshod === 'odbacivanje_nepravodobna' ||
+          opts?.preferredIshod === 'odbacivanje_nedopustena'
+        ? 'Odbijena žalba'
+        : undefined;
+
+    const queryParts = [
+      opts?.customKeywords?.length ? opts.customKeywords.join(' ') : '',
+      combinedNotes,
+      zalbaText ? zalbaText.slice(0, 1500) : combinedSpisText.slice(0, 1500),
+      rawPredmet.stranka || '',
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     const queryForPractice =
-      combinedSpisText.trim().length > 30
-        ? `Upravni postupak žalba ${rawPredmet.stranka || ''} ${combinedSpisText.slice(0, 800)}`
-        : `Upravni postupak rješavanje žalbe ${rawPredmet.klasa || ''}`;
+      queryParts.trim().length > 10
+        ? queryParts
+        : `Upravni postupak rješavanje žalbe ${casePodrucje} ${rawPredmet.klasa || ''}`;
 
-    const { praksa } = await searchKnowledge(queryForPractice, {
+    const { praksa, extractedKeywords } = await searchKnowledge(queryForPractice, {
       filterScope: 'sve',
-      zakoniCount: 4,
-      praksaCount: 8,
+      zakoniCount: 0, // Zakone dohvaćamo kod samog generiranja nacrta radi maksimalne brzine otvaranja modala
+      praksaCount: 10,
       extraTextForRefs: combinedSpisText,
+      explicitKeywords: opts?.customKeywords,
+      napomena: combinedNotes,
+      casePodrucje,
+      zalbaText,
+      preferredIshod: mappedIshod,
+      preferAdvisorDecisions: true,
     });
 
     const recommendedPractice: RecommendedPracticeItem[] = (praksa || []).map((p) => {
-      const parsed = parsePraksaMetadata(p.naziv_datoteke);
       const cleanSnippet = (p.sadrzaj || '').replace(/\s+/g, ' ').trim();
       return {
         id: p.id,
         nazivDatoteke: p.naziv_datoteke,
-        kratkiNaziv: parsed.kratkiNaziv,
-        vrsta: parsed.vrsta,
-        podrucje: parsed.podrucje,
-        godina: parsed.godina,
-        ishod: parsed.ishod,
+        kratkiNaziv: p.kratkiNaziv,
+        vrsta: p.vrsta,
+        podrucje: p.podrucje,
+        godina: p.godina,
+        ishod: p.ishod,
         sadrzajPreview: cleanSnippet.slice(0, 240) + (cleanSnippet.length > 240 ? '...' : ''),
         similarity: p.similarity,
+        matchedKeywords: p.matchedKeywords,
       };
     });
 
@@ -226,10 +367,13 @@ export async function getDraftingContext(predmetId: string): Promise<DraftingCon
         stranka: rawPredmet.stranka || '',
         datum_zaprimanja: rawPredmet.datum_zaprimanja || '',
         status: rawPredmet.status || 'aktivan',
-        podrucje: 'NUV',
+        podrucje: casePodrucje,
+        napomena: meta.napomena,
+        uputa_voditelja: meta.uputa_voditelja,
       },
       docs,
       recommendedPractice,
+      extractedKeywords,
     };
   } catch (err: any) {
     console.error('getDraftingContext Error:', err);
@@ -237,6 +381,7 @@ export async function getDraftingContext(predmetId: string): Promise<DraftingCon
       predmet: null,
       docs: [],
       recommendedPractice: [],
+      extractedKeywords: [],
       error: err.message || 'Greška pri pripremi podataka za nacrt.',
     };
   }
@@ -254,6 +399,7 @@ export interface GenerateDraftPayload {
   ishod: NacrtIshodTip;
   selectedPracticeNames: string[]; // točni nazivi odabranih odluka iz baze
   manualReferenceActs?: ManualReferenceAct[]; // ručno uneseni/zalijepljeni ogledni akti
+  customKeywords?: string[];
   uputeSavjetnika?: string;
   modelPreference?: 'flash' | 'pro';
   citirajCijeluZalbu?: boolean; // po defaultu true: doslovno citira cjelokupnu žalbu u navodnim znakovima
@@ -261,16 +407,16 @@ export interface GenerateDraftPayload {
 
 const ISHOD_OPIS: Record<NacrtIshodTip, { naslov: string; zupClanak: string; uputaZaAi: string }> = {
   odbijanje: {
-    naslov: 'Odbijanje žalbe (čl. 116. ZUP-a)',
-    zupClanak: 'članak 116. ZUP-a',
+    naslov: 'Odbijanje žalbe (čl. 116. st. 1. t. 1. ZUP-a)',
+    zupClanak: 'članak 116. stavak 1. točka 1. ZUP-a',
     uputaZaAi:
       'Žalba se ODBIJA kao neosnovana. Prvostupanjsko rješenje Hrvatskih voda je zakonito i pravilno doneseno, a žalbeni navodi su neutemeljeni i ne dovode u sumnju pravilnost utvrđenog činjeničnog stanja niti zakonitost obračuna.',
   },
   ponistavanje_vracanje: {
-    naslov: 'Poništavanje rješenja i vraćanje na ponovni postupak (čl. 117. st. 2. ZUP-a)',
-    zupClanak: 'članak 117. stavak 2. ZUP-a',
+    naslov: 'Poništavanje rješenja i vraćanje na ponovni postupak (čl. 117. st. 1. t. 1. i st. 2. ZUP-a)',
+    zupClanak: 'članak 117. stavak 1. točka 1. i stavak 2. ZUP-a',
     uputaZaAi:
-      'Pobijano rješenje Hrvatskih voda se PONIŠTAVA i predmet se VRAĆA na ponovni postupak. Obrazloži u čemu je prvostupanjsko tijelo pogriješilo (nepotpuno utvrđeno činjenično stanje, povreda prava stranke na izjašnjenje ili pogrešna primjena materijalnog propisa) i daj jasne upute što prvostupanjsko tijelo u ponovnom postupku mora utvrditi.',
+      'Pobijano rješenje Hrvatskih voda se PONIŠTAVA (točka 1. izreke) i predmet se VRAĆA prvostupanjskom tijelu na ponovni postupak (točka 2. izreke). Obrazloži u čemu je prvostupanjsko tijelo pogriješilo (nepotpuno utvrđeno činjenično stanje po čl. 8. i čl. 49. ZUP-a, povreda prava stranke na izjašnjenje po čl. 51. ZUP-a ili pogrešna primjena materijalnog propisa) i daj jasnu uputu što Hrvatske vode u ponovnom ispitnom postupku moraju utvrditi.',
   },
   odbacivanje_nepravodobna: {
     naslov: 'Odbacivanje žalbe kao nepravodobne (čl. 114. st. 1. ZUP-a)',
@@ -288,7 +434,7 @@ const ISHOD_OPIS: Record<NacrtIshodTip, { naslov: string; zupClanak: string; upu
     naslov: 'Usvajanje žalbe i izmjena rješenja (čl. 117. st. 1. ZUP-a)',
     zupClanak: 'članak 117. stavak 1. ZUP-a',
     uputaZaAi:
-      'Žalba se UVAŽAVA i pobijano rješenje se MJENJA u pobijanom dijelu (npr. ispravak obračunate površine ili koeficijenta) na temelju nespornih isprava u spisu, bez potrebe vraćanja na ponovni postupak.',
+      'Žalba se UVAŽAVA i pobijano rješenje se MIJENJA u pobijanom dijelu (npr. ispravak obračunate površine ili koeficijenta) na temelju nespornih isprava u spisu, bez potrebe vraćanja na ponovni postupak.',
   },
 };
 
@@ -307,6 +453,7 @@ export async function generateLegalDraft(payload: GenerateDraftPayload): Promise
     ishod,
     selectedPracticeNames = [],
     manualReferenceActs = [],
+    customKeywords = [],
     uputeSavjetnika = '',
     modelPreference = 'flash',
     citirajCijeluZalbu = true,
@@ -315,7 +462,10 @@ export async function generateLegalDraft(payload: GenerateDraftPayload): Promise
   if (!predmetId) return { success: false, error: 'ID predmeta je obavezan.' };
 
   try {
-    const { predmet, docs, error } = await getDraftingContext(predmetId);
+    const { predmet, docs, recommendedPractice, error } = await getDraftingContext(predmetId, {
+      customKeywords,
+      preferredIshod: ishod,
+    });
     if (error || !predmet) {
       return { success: false, error: error || 'Predmet nije pronađen.' };
     }
@@ -329,143 +479,148 @@ export async function generateLegalDraft(payload: GenerateDraftPayload): Promise
       return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
     });
 
-    // Puni, nerezani i normalizirani tekst žalbe za doslovno citiranje
     const rawTekstZalbe = zalbaDoc?.raw_text?.trim() || '';
     const puniTekstZalbe = normalizeExtractedLegalText(rawTekstZalbe);
 
-    // Dohvati puni tekst odabranih rješenja iz baze
+    // Ako korisnik nije ručno označio nijedan uzorak, automatski uzmi 2 najsličnija rješenja savjetnika iz baze!
+    let practiceNamesToUse = [...selectedPracticeNames];
+    if (practiceNamesToUse.length === 0 && manualReferenceActs.length === 0 && recommendedPractice.length > 0) {
+      const topAdvisor = recommendedPractice
+        .filter((r) => r.vrsta === 'Drugostupanjsko rješenje')
+        .slice(0, 2)
+        .map((r) => r.nazivDatoteke);
+      const topSudska = recommendedPractice
+        .filter((r) => r.vrsta === 'Sudska presuda')
+        .slice(0, 1)
+        .map((r) => r.nazivDatoteke);
+      practiceNamesToUse = [...topAdvisor, ...topSudska];
+    }
+
+    // Dohvati puni tekst odabranih odluka iz baze
     const stitchedPractices: Array<{ title: string; fullText: string }> = [];
-    for (const name of selectedPracticeNames.slice(0, 3)) {
+    for (const name of practiceNamesToUse.slice(0, 3)) {
       const fullText = await getFullStitchedPracticeText(name);
       if (fullText) {
         stitchedPractices.push({ title: name, fullText });
       }
     }
 
-    // Spoji ostale dokumente iz spisa predmeta (rješenje prvog stupnja, popratni dopis, itd.)
     const ostaliDokumenti = zalbaDoc ? docs.filter((d) => d.id !== zalbaDoc.id) : docs;
     const spisSummary = ostaliDokumenti
-      .map((d) => `[${d.tip_dokumenta}]:\n${normalizeExtractedLegalText(d.raw_text || '').slice(0, 6000)}`)
+      .map((d) => `[${d.tip_dokumenta}]:\n${normalizeExtractedLegalText(d.raw_text || '').slice(0, 7000)}`)
       .join('\n\n')
-      .slice(0, 16000);
+      .slice(0, 18000);
 
     const ishodConfig = ISHOD_OPIS[ishod] || ISHOD_OPIS.odbijanje;
+    const combinedNotes = [predmet.napomena, predmet.uputa_voditelja, uputeSavjetnika]
+      .filter(Boolean)
+      .join('\n');
 
-    // Dohvati i mjerodavne članke zakona
+    // Dohvati mjerodavne članke zakona (uključujući članke citirane u spisu i u odabranim oglednim rješenjima!)
+    const extraRefsCorpus = [
+      puniTekstZalbe,
+      spisSummary,
+      ...stitchedPractices.map((p) => p.fullText.slice(0, 4000)),
+    ].join('\n');
+
     const { zakoni } = await searchKnowledge(
-      `${ishodConfig.zupClanak} žalba ${predmet.stranka} ${(puniTekstZalbe || spisSummary).slice(0, 500)}`,
+      `${ishodConfig.zupClanak} ${combinedNotes} ${predmet.stranka} ${(puniTekstZalbe || spisSummary).slice(0, 600)}`,
       {
         filterScope: 'sve',
-        zakoniCount: 8,
-        praksaCount: 1,
-        extraTextForRefs: puniTekstZalbe || spisSummary,
+        zakoniCount: 10,
+        praksaCount: 0,
+        extraTextForRefs: extraRefsCorpus,
+        explicitKeywords: customKeywords,
+        napomena: combinedNotes,
+        casePodrucje: predmet.podrucje,
       }
     );
 
     const zakoniTekst = formatZakoni(zakoni);
 
-    // Formiraj blok oglednih akata koji služe kao stilska i pravna špranca
+    // Prepoznaj mjesno nadležni Upravni sud prema adresi u spisu
+    const nadlezniSudHint = detectCompetentAdministrativeCourt(
+      `${predmet.stranka}\n${puniTekstZalbe.slice(0, 1200)}\n${spisSummary.slice(0, 1500)}`
+    );
+
     let referenceBlueprints = '';
     if (stitchedPractices.length > 0) {
       referenceBlueprints += stitchedPractices
         .map(
           (p, idx) =>
-            `=== OGLEDNI PRIMJER RJEŠENJA IZ BAZE #${idx + 1}: ${p.title} ===\n${p.fullText.slice(
+            `=== OGLEDNA ODLUKA IZ BAZE PRAKSE #${idx + 1}: ${p.title} ===\n${p.fullText.slice(
               0,
-              6500
+              8000
             )}\n`
         )
         .join('\n\n');
     }
 
     if (manualReferenceActs.length > 0) {
-      referenceBlueprints += '\n\n' + manualReferenceActs
-        .map(
-          (act, idx) =>
-            `=== RUČNO DODANI OGLEDNI AKT #${idx + 1}: ${act.title} ===\n${act.content.slice(
-              0,
-              6500
-            )}\n`
-        )
-        .join('\n\n');
+      referenceBlueprints +=
+        '\n\n' +
+        manualReferenceActs
+          .map(
+            (act, idx) =>
+              `=== RUČNO DODANI OGLEDNI AKT #${idx + 1}: ${act.title} ===\n${act.content.slice(
+                0,
+                8000
+              )}\n`
+          )
+          .join('\n\n');
     }
 
     const chosenModelName =
       modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
 
-    const systemPrompt = `Ti si viši upravni savjetnik u drugostupanjskom tijelu (sektorski savjetnik za vode, naknadu za uređenje voda i vodni doprinos) u Republici Hrvatskoj.
+    const authenticBlueprintBlock = buildAuthenticAdvisorStructurePrompt({
+      citirajCijeluZalbu,
+      nadlezniSudHint,
+      podrucje: predmet.podrucje,
+    });
+
+    const systemPrompt = `Ti si viši upravni savjetnik / sektorski savjetnik u drugostupanjskom tijelu (Ministarstvo zaštite okoliša i zelene tranzicije) u Republici Hrvatskoj.
 Tvoj zadatak je sastaviti NOVO DRUGOSTUPANJSKO RJEŠENJE povodom žalbe.
 
 IZUZETNO VAŽNO PRAVILO:
-Tvoj stil pisanja, struktura rečenica, pravna logika, slijed odlomaka i argumentacija MORAJU DOSLJEDNO PRATITI OGLEDNE PRIMJERE RJEŠENJA OVOG SAVJETNIKA PRILOŽENE U NASTAVKU!
-Nemoj izmišljati proizvoljne naslove poput "I. Prikaz pobijanog rješenja" ili "II. Žalbeni navodi", nego koristi točan prirodni tijek odlomaka kakav ovaj savjetnik koristi u svojim pravomoćnim odlukama.
+Tvoj stil pisanja, struktura rečenica, pravna logika, prijelazi između odlomaka i argumentacija MORAJU DOSLJEDNO PRATITI AUTENTIČNU VIŠEGODIŠNJU STRUKTURU OVOG SAVJETNIKA I PRILOŽENE OGLEDNE ODLUKE IZ BAZE PRAKSE!
 
 FORMAT I IZGLED:
-- KORISNIKOV INTERNI SUSTAV UPRAVLJANJA DOKUMENTIMA VEĆ GENERIRA MEMORANDUM I ADRESE.
-- ZATO ZAPOČNI ODMAH S UVODOM (pravna osnova, stranka, pobijani akt), ZATIM IZREKOM (R J E Š E N J E), OBRAZLOŽENJEM (O b r a z l o ž e n j e) I UPUTOM O PRAVNOM LIJEKU.
-- PIŠI KAO ČISTI TEKST SA STANDARDNIM ODLOMCIMA. BEZ ZVJEZDICA (**) I BEZ OZNAKA (###) U TIJELU TEKSTA, KAKO BI KORISNIK MOGAO ODMAH KOPIRATI I ZALIJEPITI TEKST U INTERNI SUSTAV.
+- Korisnikov uredski sustav sam generira zaglavlje/memorandum na vrhu, pa započni s uvodnim odlomkom ("Ministarstvo zaštite okoliša i zelene tranzicije..."), zatim "R J E Š E N J E", zatim "O b r a z l o ž e n j e", zatim "UPUTA O PRAVNOM LIJEKU:", potpis i "DOSTAVITI:".
+- Piši kao ČISTI TEKST sa standardnim odlomcima — BEZ Markdown zvjezdica (**) i BEZ oznaka naslova (###).
 - KRITIČNO PRAVILO ZA FORMATIRANJE CITIRANE ŽALBE:
-  Citirani tekst žalbe u obrazloženju MORA TEĆI U NORMALNIM, POVEZANIM ODLOMCIMA I REČENICAMA!
-  NITI SLUČAJNO nemoj stavljati svaku pojedinu riječ u zaseban redak (to je tehnička greška PDF/OCR ekstrakcije)!
-  Riječi unutar iste rečenice moraju biti odvojene običnim razmakom u istom retku. Novi red u citatu koristi ISKLJUČIVO na kraju cjelovitog odlomka ili kod novih točaka (npr. I., II., III.).
+  Citirani tekst žalbe u obrazloženju MORA TEĆI U NORMALNIM, POVEZANIM ODLOMCIMA I REČENICAMA! Nikada ne stavljaj svaku pojedinu riječ u zaseban redak.
 
-AUTENTIČNA STRUKTURA I FRAZEOLOGIJA OVOG SAVJETNIKA:
-
-1. UVOD:
-"Ministarstvo zaštite okoliša i zelene tranzicije, na temelju članka 70. stavka 2. Zakona o financiranju vodnoga gospodarstva („Narodne novine“, broj: 153/09, 90/11, 56/13, 119/15, 120/16, 127/17, 66/19 i 36/24) [ili članka 116. Zakona o općem upravnom postupku („Narodne novine“, broj 47/09 i 110/21)], povodom žalbe podnositelja [Naziv/Ime stranke, adresa], izjavljene protiv rješenja Hrvatskih voda [KLASA, URBROJ, datum pobijanog rješenja], u upravnoj stvari obračuna [naknade za uređenje voda / vodnog doprinosa], donosi
-
-R J E Š E N J E
-
-[Izreka prema traženom ishodu, npr.: Odbija se žalba podnositelja [Stranka], izjavljena protiv rješenja Hrvatskih voda KLASA: ..., URBROJ: ... od [datum].]"
-
-2. O b r a z l o ž e n j e:
-- Odlomak 1: "Rješenjem prvog stupnja identificiranim u izreci ovog rješenja, obvezniku [Stranka], utvrđen je [mjesečni iznos naknade za uređenje voda od X EUR / iznos vodnog doprinosa], za [stambeni/poslovni prostor], površine [X m²] (Tarifni razred X, visina naknade X EUR/m2/mj.), na adresi [Adresa], s obvezom plaćanja utvrđenog iznosa od [datum]."
-- Odlomak 2: "Protiv tog rješenja pravodobno je i od ovlaštene osobe izjavljena žalba koja je dopuštena."
-- Odlomak 3: ${
-  citirajCijeluZalbu
-    ? `CITIRANJE ŽALBE (IZRIČITO STALNO PRAVILO OVOG SAVJETNIKA):
-  Ovaj savjetnik u svojim rješenjima PO DEFAULTU UVJEK DOSLOVNO CITIRA CJELOKUPNU ŽALBU u navodnim znakovima („...“) bez ikakvih izmjena, prepričavanja ili kraćenja!
-  Mora glasiti točno ovako:
-
-  U žalbi žalitelj navodi sljedeće:
-
-  „[Ovdje doslovno, u cijelosti i od riječi do riječi prepisati cjelokupni izvorni tekst žalbe žalitelja iz spisa pod navodnim znakovima, ali u NORMALNIM TEČNIM REČENICAMA I ODLOMCIMA, bez rascjepkanih riječi u zasebnim redovima. Ne sažimati, ne parafrazirati i ne mijenjati tekst žalbe!]“`
-    : `"U žalbi žalitelj u bitnome navodi da [detaljno, točno i vjerno prikazati sve žalbene tvrdnje žalitelja iz spisa]. Konačno, žalitelj predlaže usvajanje žalbe i [poništenje pobijanog rješenja / oslobađanje od plaćanja]."`
-}
-- Odlomak 4: "Prvostupanjsko tijelo je, sukladno pravilima o postupanju po žalbi, dopisom [KLASA, URBROJ, datum ako postoji u spisu] dostavilo spis predmeta s izjavljenom žalbom na rješavanje drugostupanjskom tijelu. U svom mišljenju ocijenilo je žalbu dopuštenom i pravodobnom, ali neosnovanom."
-- Odlomak 5: "Ovo drugostupanjsko tijelo ispitalo je zakonitost i ocijenilo svrhovitost pobijanog rješenja u granicama zahtjeva iz žalbe, pazeći po službenoj dužnosti na nadležnost i postojanje razloga za oglašivanje rješenja ništavim, sukladno članku 115. Zakona o općem upravnom postupku („Narodne novine“, broj: 47/09 i 110/21), a nakon detaljnog uvida u cjelokupni spis predmeta utvrđeno je da žalba nije osnovana." [ili je osnovana ako se poništava]
-- Odlomci 6+: "Naime, Zakon o financiranju vodnoga gospodarstva, člankom 13. stavkom 1. propisuje da... a člankom 14. stavkom 1. da je obveznik naknade za uređenje voda vlasnik ili drugi zakoniti posjednik nekretnine... Također, Zakon o financiranju vodnoga gospodarstva u članku 17. stavku 1. propisuje da na nekretnine na koje se obračunava i naplaćuje komunalna naknada... obračunava se prema podacima iz očevidnika za obračun komunalne naknade..."
-  [Ovdje temeljito i argumentirano pobijaj svaki navod iz citirane žalbe točno onim pravnim stilom koji je prikazan u priloženim oglednim primjercima ovog savjetnika. Poveži stanje spisa s mjerodavnim propisima i stavom Visokog upravnog suda RH].
-- Završni odlomak: "Slijedom svega navedenog, kako žalbenim navodima nije dovedena u sumnju zakonitost pobijanog rješenja, to je na temelju članka 116. stavka 1. točke 1. Zakona o općem upravnom postupku, riješeno kao u izreci ovog rješenja."
-
-3. UPUTA O PRAVNOM LIJEKU:
-"UPUTA O PRAVNOM LIJEKU: Protiv ovog rješenja ne može se izjaviti žalba, ali se može pokrenuti upravni spor. Upravni spor pokreće se tužbom u roku od 30 dana od dana dostave rješenja. Tužba se podnosi nadležnom Upravnom sudu neposredno u pisanom obliku, usmeno na zapisnik ili se šalje poštom odnosno dostavlja elektronički."`;
+${authenticBlueprintBlock}`;
 
     const userPrompt = `PODACI O NOVOM PREDMETU:
 Stranka: ${predmet.stranka}
-KLASA: ${predmet.klasa}
+KLASA drugostupanjskog spisa: ${predmet.klasa}
+Upravno područje: ${predmet.podrucje}
+${predmet.napomena ? `Napomena o predmetu: ${predmet.napomena}` : ''}
+${predmet.uputa_voditelja ? `Uputa voditelja: ${predmet.uputa_voditelja}` : ''}
 
 TRAŽENI ISHOD ODLUKE:
 ${ishodConfig.naslov}
 Uputa za odluku: ${ishodConfig.uputaZaAi}
 
-${uputeSavjetnika ? `DODATNE UPUTE I FOKUS SAVJETNIKA:\n${uputeSavjetnika}\n` : ''}
+${uputeSavjetnika ? `DODATNE UPUTE SAVJETNIKA ZA OVAJ NACRT:\n${uputeSavjetnika}\n` : ''}
 
 ${
   puniTekstZalbe
     ? `=== DOKUMENT IZJAVLJENE ŽALBE (IZVORNI TEKST ZA CITIRANJE) ===\n${puniTekstZalbe}\n=============================================================\n`
     : ''
 }
-OSTALI DOKUMENTI IZ NOVOG SPISA (Rješenje Hrvatskih voda I. stupnja, popratni dopis, dostavnica):
+OSTALI DOKUMENTI IZ SPISA (Rješenje Hrvatskih voda I. stupnja, popratni dopis, dostavnica, kompletni spis):
 ${spisSummary || 'Nema ostalih učitanih dokumenata spisa.'}
 
-MJERODAVNI PROPISI IZ BAZE:
+MJERODAVNI ČLANCI ZAKONA I UREDBI IZ BAZE:
 ${zakoniTekst}
 
-OGLEDNI PRIMJERI RJEŠENJA OVOG SAVJETNIKA IZ BAZE (KORISTI KAO DIREKTNI UZOR ZA LOGIKU, STRUKTURU I ARGUMENTACIJU):
-${referenceBlueprints || 'Nema odabranih oglednih rješenja — primijeni gornju autentičnu strukturu savjetnika.'}
+OGLEDNA RJEŠENJA I PRAKSA OVOG SAVJETNIKA IZ BAZE PRAKSE (KORISTI KAO IZRAVNI UZOR ZA STRUKTURU, LOGIKU I PRAVNU ARGUMENTACIJU):
+${referenceBlueprints || 'Primijeni gornju autentičnu višegodišnju strukturu savjetnika.'}
 
-Sastavi cjeloviti tekst novog rješenja koji vjerno preslikava gornju autentičnu logiku i stil savjetnika.`;
+Sastavi cjeloviti tekst novog drugostupanjskog rješenja u točnoj autentičnoj strukturi ovog savjetnika.`;
 
     const { text } = await generateText({
       model: google(chosenModelName),

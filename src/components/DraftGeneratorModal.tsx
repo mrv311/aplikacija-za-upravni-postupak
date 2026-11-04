@@ -27,6 +27,9 @@ import {
   UploadCloud,
   FileUp,
   FileCheck,
+  Tag,
+  Eye,
+  RefreshCw,
 } from 'lucide-react';
 import {
   getDraftingContext,
@@ -110,6 +113,19 @@ export function DraftGeneratorModal({
   const [selectedPracticeNames, setSelectedPracticeNames] = useState<string[]>([]);
   const [manualReferenceActs, setManualReferenceActs] = useState<ManualReferenceAct[]>([]);
 
+  // Ključne riječi spisa i interaktivno osvježavanje slične prakse
+  const [activeKeywords, setActiveKeywords] = useState<string[]>([]);
+  const [newKeywordInput, setNewKeywordInput] = useState('');
+  const [refreshingPractice, setRefreshingPractice] = useState(false);
+
+  // Brzi pregled punog teksta ogledne odluke
+  const [previewPracticeItem, setPreviewPracticeItem] = useState<{
+    item: RecommendedPracticeItem;
+    fullText: string | null;
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
+
   // Pretraga baze prakse
   const [practiceTab, setPracticeTab] = useState<'recommended' | 'search' | 'manual'>('recommended');
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,16 +166,24 @@ export function DraftGeneratorModal({
     setErrorMsg(null);
     setSaveSuccessMsg('');
 
-    getDraftingContext(predmetId).then((res) => {
+    getDraftingContext(predmetId, { preferredIshod: selectedIshod }).then((res) => {
       if (!active) return;
       setLoadingContext(false);
       if (res.error) {
         setErrorMsg(res.error);
       } else {
         setDocsCount(res.docs.length);
+        setActiveKeywords(res.extractedKeywords || []);
         setRecommendedPractice(res.recommendedPractice);
-        // Automatski označi prvu najrelevantniju odluku kao ogledni uzor
-        if (res.recommendedPractice.length > 0) {
+        // Automatski označi do 2 najrelevantnija Vaša drugostupanjska rješenja (za autentičnu strukturu i stil)
+        const advisorTop = res.recommendedPractice
+          .filter((p) => p.vrsta === 'Drugostupanjsko rješenje')
+          .slice(0, 2)
+          .map((p) => p.nazivDatoteke);
+
+        if (advisorTop.length > 0) {
+          setSelectedPracticeNames(advisorTop);
+        } else if (res.recommendedPractice.length > 0) {
           setSelectedPracticeNames([res.recommendedPractice[0].nazivDatoteke]);
         }
       }
@@ -169,6 +193,111 @@ export function DraftGeneratorModal({
       active = false;
     };
   }, [isOpen, predmetId]);
+
+  const refreshRecommendations = async (
+    keywordsToUse: string[],
+    ishodToUse: NacrtIshodTip = selectedIshod
+  ) => {
+    setRefreshingPractice(true);
+    try {
+      const res = await getDraftingContext(predmetId, {
+        customKeywords: keywordsToUse,
+        preferredIshod: ishodToUse,
+      });
+      if (!res.error) {
+        setRecommendedPractice(res.recommendedPractice);
+        if (selectedPracticeNames.length === 0 && res.recommendedPractice.length > 0) {
+          const advisorTop = res.recommendedPractice
+            .filter((p) => p.vrsta === 'Drugostupanjsko rješenje')
+            .slice(0, 2)
+            .map((p) => p.nazivDatoteke);
+          setSelectedPracticeNames(
+            advisorTop.length > 0 ? advisorTop : [res.recommendedPractice[0].nazivDatoteke]
+          );
+        }
+      }
+    } finally {
+      setRefreshingPractice(false);
+    }
+  };
+
+  const handleSelectIshod = (ishod: NacrtIshodTip) => {
+    setSelectedIshod(ishod);
+    refreshRecommendations(activeKeywords, ishod);
+  };
+
+  const handleAddKeyword = () => {
+    const rawParts = newKeywordInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+    if (rawParts.length === 0) return;
+
+    const existingLower = new Set(activeKeywords.map((k) => k.toLowerCase()));
+    const added: string[] = [];
+    for (const part of rawParts) {
+      if (!existingLower.has(part.toLowerCase())) {
+        existingLower.add(part.toLowerCase());
+        added.push(part);
+      }
+    }
+
+    setNewKeywordInput('');
+    if (added.length === 0) return;
+
+    const nextKeywords = [...activeKeywords, ...added];
+    setActiveKeywords(nextKeywords);
+    setPracticeTab('recommended');
+    refreshRecommendations(nextKeywords, selectedIshod);
+  };
+
+  const handleRemoveKeyword = (kwToRemove: string) => {
+    const nextKeywords = activeKeywords.filter((kw) => kw !== kwToRemove);
+    setActiveKeywords(nextKeywords);
+    refreshRecommendations(nextKeywords, selectedIshod);
+  };
+
+  const openPracticePreview = async (e: React.MouseEvent, item: RecommendedPracticeItem) => {
+    e.stopPropagation();
+    setPreviewPracticeItem({
+      item,
+      fullText: null,
+      loading: true,
+      error: null,
+    });
+
+    try {
+      const res = await fetch(
+        `/api/praksa/doc?name=${encodeURIComponent(item.nazivDatoteke)}`
+      );
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setPreviewPracticeItem((prev) =>
+          prev
+            ? {
+                ...prev,
+                loading: false,
+                error: data.error || 'Nije moguće dohvatiti puni tekst odluke.',
+              }
+            : null
+        );
+      } else {
+        setPreviewPracticeItem((prev) =>
+          prev ? { ...prev, loading: false, fullText: data.fullText } : null
+        );
+      }
+    } catch {
+      setPreviewPracticeItem((prev) =>
+        prev
+          ? {
+              ...prev,
+              loading: false,
+              error: 'Greška pri komunikaciji s bazom prakse.',
+            }
+          : null
+      );
+    }
+  };
 
   // Live pretraga baze prakse
   const handleSearchChange = (text: string) => {
@@ -183,10 +312,10 @@ export function DraftGeneratorModal({
 
     setIsSearching(true);
     searchTimerRef.current = setTimeout(async () => {
-      const results = await searchPraksaForDraft(text.trim(), 12);
+      const results = await searchPraksaForDraft(text.trim(), 15);
       setSearchResults(results);
       setIsSearching(false);
-    }, 350);
+    }, 300);
   };
 
   const togglePracticeSelection = (nazivDatoteke: string) => {
@@ -300,6 +429,7 @@ export function DraftGeneratorModal({
       uputeSavjetnika: uputeSavjetnika.trim(),
       modelPreference,
       citirajCijeluZalbu,
+      customKeywords: activeKeywords,
     });
 
     setGenerating(false);
@@ -340,21 +470,20 @@ export function DraftGeneratorModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vrsta: 'rjesenje',
-          nazivTijela: 'MINISTARSTVO ZAŠTITE OKOLIŠA I ZELENE TRANZICIJE',
-          klasa: klasa || 'UP/II-325-01/26-01/01',
-          urbroj: '517-02-26-1',
+          nazivTijela: 'Ministarstvo zaštite okoliša i zelene tranzicije',
+          klasa: klasa || 'UP/II-325-08/26-02/01',
+          urbroj: '517-02-26-2',
           mjesto: 'Zagreb',
           datum: new Date().toLocaleDateString('hr-HR'),
           stranka: stranka || 'Žalitelj',
           predmet: 'Rješavanje po žalbi',
           pravniOsnov: 'članka 116. Zakona o općem upravnom postupku',
-          izreka: 'Žalba se odbija kao neosnovana.',
+          izreka: 'Žalba se odbija.',
           obrazlozenje: cleanText,
-          uputaOPravnomLijeku:
-            'Protiv ovog rješenja žalba nije dopuštena, ali se može pokrenuti upravni spor pred nadležnim upravnim sudom u roku od 30 dana od dana dostave rješenja.',
-          sluzbenaOsoba: 'Ovlaštena službena osoba',
-          funkcijaOsobe: 'Viši upravni savjetnik',
+          sluzbenaOsoba: 'Dino Malbaša, dipl. iur.',
+          funkcijaOsobe: 'SEKTORSKI SAVJETNIK',
           dostaviti: [stranka || 'Žalitelj', 'Hrvatske vode, VGO'],
+          rawFullActText: cleanText,
         }),
       });
 
@@ -425,6 +554,97 @@ export function DraftGeneratorModal({
   if (!isOpen) return null;
 
   const totalSelectedCount = selectedPracticeNames.length + manualReferenceActs.length;
+
+  const renderPracticeCard = (p: RecommendedPracticeItem) => {
+    const isChecked = selectedPracticeNames.includes(p.nazivDatoteke);
+    const pct = p.similarity ? Math.round(p.similarity * 100) : null;
+    const vrstaStyle =
+      p.vrsta === 'Sudska presuda'
+        ? {
+            label: 'Sudska presuda',
+            cls: 'bg-purple-50 text-purple-700 border-purple-200',
+          }
+        : p.vrsta === 'Odgovor na tužbu'
+        ? {
+            label: 'Odgovor na tužbu',
+            cls: 'bg-amber-50 text-amber-700 border-amber-200',
+          }
+        : {
+            label: 'Vaše II. st. rješenje',
+            cls: 'bg-sky-50 text-sky-700 border-sky-200',
+          };
+
+    return (
+      <div
+        key={`${p.id}-${p.nazivDatoteke}`}
+        onClick={() => togglePracticeSelection(p.nazivDatoteke)}
+        className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-start gap-2.5 ${
+          isChecked
+            ? 'border-blue-400 bg-blue-50/50 shadow-2xs'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+        }`}
+      >
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={() => {}}
+          className="mt-0.5 rounded border-slate-300 text-blue-600 cursor-pointer"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+              <span
+                className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${vrstaStyle.cls}`}
+              >
+                {vrstaStyle.label}
+              </span>
+              <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
+                {p.podrucje} {p.godina ? `• ${p.godina}.` : ''}
+              </span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+                {p.ishod}
+              </span>
+              {pct !== null && (
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                  {pct}% sličnost
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => openPracticePreview(e, p)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-[10.5px] font-semibold text-slate-600 hover:text-indigo-700 transition-colors shrink-0 cursor-pointer"
+              title="Pregledaj cijeli tekst ove odluke"
+            >
+              <Eye className="w-3 h-3" />
+              Pregledaj
+            </button>
+          </div>
+
+          <p className="text-xs font-bold text-slate-900 truncate mt-1" title={p.nazivDatoteke}>
+            {p.kratkiNaziv}
+          </p>
+
+          {p.matchedKeywords && p.matchedKeywords.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              <span className="text-[10px] font-semibold text-slate-400">Podudarno:</span>
+              {p.matchedKeywords.slice(0, 6).map((kw) => (
+                <span
+                  key={kw}
+                  className="text-[9.5px] font-semibold px-1.5 py-0.1 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
+                >
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-1">{p.sadrzajPreview}</p>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -529,7 +749,7 @@ export function DraftGeneratorModal({
                     return (
                       <div
                         key={opt.id}
-                        onClick={() => setSelectedIshod(opt.id)}
+                        onClick={() => handleSelectIshod(opt.id)}
                         className={`p-3 rounded-xl border-2 transition-all cursor-pointer relative ${
                           isSelected
                             ? 'border-blue-600 bg-blue-50/50 shadow-xs ring-1 ring-blue-600/20'
@@ -578,13 +798,85 @@ export function DraftGeneratorModal({
                       2. Ogledna rješenja i praksa na kojima će se temeljiti novi nacrt:
                     </label>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      Odaberite rješenja iz baze ili ručno ubacite akt čiju pravnu logiku i argumentaciju AI treba preslikati.
+                      Sustav automatski izdvaja ključne riječi iz žalbe, prvostupanjskog rješenja i napomena te pronalazi Vaša ranija rješenja i sudske presude u bazi od preko 1.600 akata.
                     </p>
                   </div>
 
                   <span className="text-xs px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-200">
                     Aktivno uzoraka: {totalSelectedCount}
                   </span>
+                </div>
+
+                {/* Interaktivna traka ključnih riječi za pretragu baze prakse */}
+                <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-200/80 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-indigo-950">
+                      <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                      Ključne riječi za pronalazak sličnih predmeta u bazi prakse:
+                    </span>
+                    <button
+                      type="button"
+                      disabled={refreshingPractice || loadingContext}
+                      onClick={() => refreshRecommendations(activeKeywords, selectedIshod)}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white hover:bg-indigo-100/70 border border-indigo-200 text-[11px] font-semibold text-indigo-700 transition-colors disabled:opacity-50 cursor-pointer"
+                      title="Ponovno pretraži bazu prakse prema trenutnim ključnim riječima"
+                    >
+                      <RefreshCw
+                        className={`w-3 h-3 ${refreshingPractice ? 'animate-spin' : ''}`}
+                      />
+                      Osvježi preporuke
+                    </button>
+                  </div>
+
+                  {activeKeywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeKeywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-900 text-[11px] font-semibold shadow-2xs"
+                        >
+                          <span>{kw}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveKeyword(kw)}
+                            className="text-indigo-400 hover:text-rose-600 ml-0.5 cursor-pointer"
+                            title="Ukloni ključnu riječ"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-indigo-800/80 italic">
+                      Nema aktivnih ključnih riječi — dodajte pojmove ispod za ciljanu pretragu prakse.
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <input
+                      type="text"
+                      value={newKeywordInput}
+                      onChange={(e) => setNewKeywordInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddKeyword();
+                        }
+                      }}
+                      placeholder="Dodajte ključnu riječ ili institut (npr. zastara, garaža, stambeni prostor, šutnja uprave, suvlasništvo)..."
+                      className="flex-1 px-3 py-1.5 rounded-lg border border-indigo-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={!newKeywordInput.trim() || refreshingPractice}
+                      onClick={handleAddKeyword}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Dodaj pojam
+                    </button>
+                  </div>
                 </div>
 
                 {/* Traka odabranih oglednih akata (bedževi) */}
@@ -605,7 +897,7 @@ export function DraftGeneratorModal({
                         <button
                           type="button"
                           onClick={() => togglePracticeSelection(name)}
-                          className="text-slate-400 hover:text-rose-600 ml-0.5"
+                          className="text-slate-400 hover:text-rose-600 ml-0.5 cursor-pointer"
                           title="Ukloni iz uzorka"
                         >
                           <X className="w-3 h-3" />
@@ -625,7 +917,7 @@ export function DraftGeneratorModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveManualAct(act.id)}
-                          className="text-slate-400 hover:text-rose-600 ml-0.5"
+                          className="text-slate-400 hover:text-rose-600 ml-0.5 cursor-pointer"
                           title="Ukloni ručni akt"
                         >
                           <X className="w-3 h-3" />
@@ -637,11 +929,11 @@ export function DraftGeneratorModal({
 
                 {/* Tabovi: Preporučeno / Pretraži bazu / Ručno unesi */}
                 <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
-                  <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold">
+                  <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold overflow-x-auto">
                     <button
                       type="button"
                       onClick={() => setPracticeTab('recommended')}
-                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 ${
+                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                         practiceTab === 'recommended'
                           ? 'border-blue-600 text-blue-700 bg-white'
                           : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -654,20 +946,20 @@ export function DraftGeneratorModal({
                     <button
                       type="button"
                       onClick={() => setPracticeTab('search')}
-                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 ${
+                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                         practiceTab === 'search'
                           ? 'border-blue-600 text-blue-700 bg-white'
                           : 'border-transparent text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       <Search className="w-3.5 h-3.5" />
-                      Pretraži cijelu bazu odluka
+                      Pretraži cijelu bazu po ključnim riječima
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPracticeTab('manual')}
-                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 ${
+                      className={`px-4 py-2.5 transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                         practiceTab === 'manual'
                           ? 'border-blue-600 text-blue-700 bg-white'
                           : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -687,54 +979,18 @@ export function DraftGeneratorModal({
                     {/* TAB 1: PREPORUČENO IZ SPISA */}
                     {practiceTab === 'recommended' && (
                       <div className="space-y-2">
-                        {loadingContext ? (
+                        {loadingContext || refreshingPractice ? (
                           <div className="p-6 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                            Tražim najsličnija rješenja u bazi...
+                            Pretražujem bazu prakse po ključnim riječima i pravnoj sličnosti...
                           </div>
                         ) : recommendedPractice.length === 0 ? (
                           <p className="text-xs text-slate-500 p-3">
-                            Nema automatski prepoznatih rješenja — koristite tab „Pretraži bazu” ili „Ručno unesi”.
+                            Nema automatski prepoznatih rješenja — dodajte ključnu riječ iznad ili koristite tab „Pretraži cijelu bazu”.
                           </p>
                         ) : (
-                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                            {recommendedPractice.map((p) => {
-                              const isChecked = selectedPracticeNames.includes(p.nazivDatoteke);
-                              return (
-                                <div
-                                  key={p.id}
-                                  onClick={() => togglePracticeSelection(p.nazivDatoteke)}
-                                  className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-start gap-2.5 ${
-                                    isChecked
-                                      ? 'border-blue-400 bg-blue-50/50 shadow-2xs'
-                                      : 'border-slate-200 bg-white hover:border-slate-300'
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => {}}
-                                    className="mt-0.5 rounded border-slate-300 text-blue-600 cursor-pointer"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-xs font-bold text-slate-900 truncate">
-                                        {p.kratkiNaziv}
-                                      </span>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
-                                        {p.vrsta} {p.godina ? `(${p.godina}.)` : ''}
-                                      </span>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800">
-                                        {p.ishod}
-                                      </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-1">
-                                      {p.sadrzajPreview}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                            {recommendedPractice.map((p) => renderPracticeCard(p))}
                           </div>
                         )}
                       </div>
@@ -749,7 +1005,7 @@ export function DraftGeneratorModal({
                             type="text"
                             value={searchQuery}
                             onChange={(e) => handleSearchChange(e.target.value)}
-                            placeholder="Upišite pojam za pretragu odluka (npr. Karlovac, garaža, zastara, promjena posjednika, Državne nekretnine)..."
+                            placeholder="Upišite više ključnih riječi odjednom (npr. odvjetnička djelatnost stambeni prostor, šutnja uprave rok, garaža zastara)..."
                             className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white"
                           />
                         </div>
@@ -757,55 +1013,19 @@ export function DraftGeneratorModal({
                         {isSearching ? (
                           <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                            Pretražujem bazu prakse...
+                            Pretražujem 1.600 odluka u bazi prakse po korijenima riječi...
                           </div>
                         ) : searchResults.length > 0 ? (
-                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                            {searchResults.map((p) => {
-                              const isChecked = selectedPracticeNames.includes(p.nazivDatoteke);
-                              return (
-                                <div
-                                  key={p.id}
-                                  onClick={() => togglePracticeSelection(p.nazivDatoteke)}
-                                  className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-start gap-2.5 ${
-                                    isChecked
-                                      ? 'border-blue-400 bg-blue-50/50 shadow-2xs'
-                                      : 'border-slate-200 bg-white hover:border-slate-300'
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => {}}
-                                    className="mt-0.5 rounded border-slate-300 text-blue-600 cursor-pointer"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-xs font-bold text-slate-900 truncate">
-                                        {p.kratkiNaziv}
-                                      </span>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
-                                        {p.vrsta} {p.godina ? `(${p.godina}.)` : ''}
-                                      </span>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800">
-                                        {p.ishod}
-                                      </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-1">
-                                      {p.sadrzajPreview}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                            {searchResults.map((p) => renderPracticeCard(p))}
                           </div>
                         ) : searchQuery.trim() ? (
                           <p className="text-xs text-slate-500 p-2 text-center">
-                            Nema pronađenih odluka za pojam „{searchQuery}”. Pokušajte s drugim pojmom ili korijenom riječi.
+                            Nema pronađenih odluka za pojam „{searchQuery}”. Pokušajte s drugim pravnim pojmom.
                           </p>
                         ) : (
                           <p className="text-xs text-slate-400 p-2 text-center">
-                            Upišite bilo koju ključnu riječ ili naziv stranke za pretragu preko 500 odluka iz baze.
+                            Upišite jednu ili više ključnih riječi, pravni institut ili naziv stranke za pretragu preko 1.600 odluka u bazi prakse.
                           </p>
                         )}
                       </div>
@@ -1259,6 +1479,104 @@ export function DraftGeneratorModal({
           </div>
         )}
       </div>
+
+      {/* Skočni prozor za puni pregled ogledne odluke iz baze prakse */}
+      {previewPracticeItem && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-[2px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPreviewPracticeItem(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                    {previewPracticeItem.item.vrsta}
+                  </span>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-200/70 text-slate-700">
+                    {previewPracticeItem.item.podrucje}
+                    {previewPracticeItem.item.godina
+                      ? ` • ${previewPracticeItem.item.godina}.`
+                      : ''}
+                  </span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    {previewPracticeItem.item.ishod}
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 break-words">
+                  {previewPracticeItem.item.nazivDatoteke}
+                </h3>
+                {previewPracticeItem.item.matchedKeywords &&
+                  previewPracticeItem.item.matchedKeywords.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        Podudarni pojmovi:
+                      </span>
+                      {previewPracticeItem.item.matchedKeywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="text-[10.5px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => togglePracticeSelection(previewPracticeItem.item.nazivDatoteke)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    selectedPracticeNames.includes(previewPracticeItem.item.nazivDatoteke)
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  {selectedPracticeNames.includes(previewPracticeItem.item.nazivDatoteke)
+                    ? 'Odabrano kao uzorak'
+                    : 'Odaberi kao uzorak'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewPracticeItem(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  title="Zatvori pregled"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
+              {previewPracticeItem.loading ? (
+                <div className="py-16 flex flex-col items-center justify-center text-slate-500 gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  <span className="text-xs font-medium">
+                    Spajam cijeli tekst odluke iz baze prakse...
+                  </span>
+                </div>
+              ) : previewPracticeItem.error ? (
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                  {previewPracticeItem.error}
+                </div>
+              ) : (
+                <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed font-sans">
+                  {previewPracticeItem.fullText}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

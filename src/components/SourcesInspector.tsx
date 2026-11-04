@@ -16,8 +16,35 @@ import {
   BookOpen,
   Loader2,
   Sparkles,
+  Tag,
 } from 'lucide-react';
 import type { RagSourcesPayload, RagPraksaSource, RagZakonSource } from '@/lib/ai-types';
+
+function getVrstaPrakseBadge(vrsta: RagPraksaSource['vrsta']): {
+  label: string;
+  shortLabel: string;
+  badgeClass: string;
+} {
+  if (vrsta === 'Sudska presuda') {
+    return {
+      label: 'Sudska presuda',
+      shortLabel: 'Sudska presuda',
+      badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+    };
+  }
+  if (vrsta === 'Odgovor na tužbu') {
+    return {
+      label: 'Odgovor na tužbu',
+      shortLabel: 'Odgovor na tužbu',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+    };
+  }
+  return {
+    label: 'Vaše drugostupanjsko rješenje',
+    shortLabel: 'Vaše rješenje (II. st.)',
+    badgeClass: 'bg-sky-50 text-sky-700 border-sky-200',
+  };
+}
 
 type ActiveModalItem =
   | { kind: 'praksa'; item: RagPraksaSource }
@@ -244,7 +271,24 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
 
           {/* Lista Prakse */}
           {activeTab === 'praksa' && (
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {sources.extractedKeywords && sources.extractedKeywords.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-2 rounded-lg bg-indigo-50/60 border border-indigo-200/70">
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-800">
+                    <Tag className="w-3 h-3 text-indigo-600" />
+                    Prepoznate ključne riječi spisa:
+                  </span>
+                  {sources.extractedKeywords.map((kw) => (
+                    <span
+                      key={kw}
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white text-indigo-800 border border-indigo-200"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {sources.praksa.length === 0 ? (
                 <p className="text-xs text-slate-500 italic py-2 px-1">
                   Za ovaj upit i aktivni filtar nisu pronađene srodne odluke u bazi prakse.
@@ -252,7 +296,7 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
               ) : (
                 sources.praksa.map((p) => {
                   const pct = p.similarity ? Math.round(p.similarity * 100) : null;
-                  const isSudska = p.vrsta === 'Sudska presuda';
+                  const vrstaBadge = getVrstaPrakseBadge(p.vrsta);
                   return (
                     <button
                       key={`${p.id}-${p.naziv_datoteke}`}
@@ -263,14 +307,10 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
                       <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span
-                            className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                              isSudska
-                                ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                : 'bg-sky-50 text-sky-700 border-sky-200'
-                            }`}
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${vrstaBadge.badgeClass}`}
                           >
                             <Landmark className="w-2.5 h-2.5" />
-                            {isSudska ? 'Sudska presuda' : 'II. stupanj'}
+                            {vrstaBadge.shortLabel}
                           </span>
                           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
                             {p.podrucje}
@@ -300,6 +340,23 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
                       <p className="text-xs font-semibold text-slate-800 group-hover:text-indigo-700 line-clamp-1">
                         {p.kratkiNaziv}
                       </p>
+
+                      {p.matchedKeywords && p.matchedKeywords.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="text-[10px] font-semibold text-slate-400">
+                            Podudarni pojmovi:
+                          </span>
+                          {p.matchedKeywords.slice(0, 6).map((kw) => (
+                            <span
+                              key={kw}
+                              className="text-[9.5px] font-semibold px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-100"
+                            >
+                              {kw}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">
                         {p.sadrzaj.replace(/\s+/g, ' ').slice(0, 200)}...
                       </p>
@@ -368,12 +425,10 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
                     <div className="flex flex-wrap items-center gap-2 mb-1.5">
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded border ${
-                          modalItem.item.vrsta === 'Sudska presuda'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200'
-                            : 'bg-sky-50 text-sky-700 border-sky-200'
+                          getVrstaPrakseBadge(modalItem.item.vrsta).badgeClass
                         }`}
                       >
-                        {modalItem.item.vrsta}
+                        {getVrstaPrakseBadge(modalItem.item.vrsta).label}
                       </span>
                       <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-200/70 text-slate-700">
                         {modalItem.item.podrucje}
@@ -392,6 +447,21 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
                     <h3 className="text-base font-bold text-slate-900 break-words">
                       {modalItem.item.naziv_datoteke}
                     </h3>
+                    {modalItem.item.matchedKeywords && modalItem.item.matchedKeywords.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          Pronađeno po pojmovima:
+                        </span>
+                        {modalItem.item.matchedKeywords.map((kw) => (
+                          <span
+                            key={kw}
+                            className="text-[10.5px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200"
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>

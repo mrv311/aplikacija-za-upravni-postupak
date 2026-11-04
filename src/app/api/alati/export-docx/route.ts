@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const data: SlužbeniAktData = await req.json();
 
-    if (!data.predmet || !data.izreka) {
+    if (!data.rawFullActText && (!data.predmet || !data.izreka)) {
       return NextResponse.json({ error: 'Nedostaju obvezna polja (predmet, izreka)' }, { status: 400 });
     }
 

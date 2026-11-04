@@ -13,8 +13,20 @@ import {
   buildCaseRetrievalQuery,
   formatZakoni,
   formatPraksa,
+  getFullPracticeTextByName,
 } from '@/lib/rag';
 import type { LegalUIMessage, PraksaFilterScope, RagSourcesPayload } from '@/lib/ai-types';
+import {
+  META_DOC_TYPE,
+  CHAT_DOC_TYPE,
+  SLUZBENICI_DOC_TYPE,
+  decodeDocLabel,
+  decodePredmetMetaUrl,
+} from '@/lib/predmet-meta';
+import {
+  buildAuthenticAdvisorStructurePrompt,
+  detectCompetentAdministrativeCourt,
+} from '@/lib/advisor-blueprint';
 
 const VALID_SCOPES = new Set<PraksaFilterScope>(['sve', 'nuv', 'vd', 'sudska', 'upravna']);
 
@@ -43,11 +55,12 @@ export async function POST(req: Request) {
     if (!predmetId) {
       const queryText = buildRetrievalQuery(messages);
 
-      const { zakoni, praksa, dostupniZakoni, dostupnaPraksa } = await searchKnowledge(queryText, {
-        zakoniCount: 8,
-        praksaCount: 6,
-        filterScope,
-      });
+      const { zakoni, praksa, dostupniZakoni, dostupnaPraksa, extractedKeywords } =
+        await searchKnowledge(queryText, {
+          zakoniCount: 8,
+          praksaCount: 6,
+          filterScope,
+        });
 
       let availableKnowledgeText = 'Dostupni propisi u bazi:\n';
       availableKnowledgeText += dostupniZakoni.map((n) => `- ${n}`).join('\n') + '\n';
@@ -90,6 +103,7 @@ ${formatPraksa(praksa)}
         praksa,
         filterScope,
         modelName: aiModelName,
+        extractedKeywords,
       };
 
       const stream = createUIMessageStream<LegalUIMessage>({
@@ -133,22 +147,35 @@ ${formatPraksa(praksa)}
         .maybeSingle(),
       supabase
         .from('dokumenti')
-        .select('tip_dokumenta, raw_text, id')
-        .eq('predmet_id', predmetId)
-        .neq('tip_dokumenta', '__META__'),
+        .select('tip_dokumenta, storage_url, raw_text, id')
+        .eq('predmet_id', predmetId),
     ]);
 
     if (dbError) {
       return Response.json({ error: 'Greška pri dohvaćanju dokumenata spisa.' }, { status: 500 });
     }
 
+    const metaRow = (dokumenti || []).find((d: any) => d.tip_dokumenta === META_DOC_TYPE);
+    const meta = metaRow ? decodePredmetMetaUrl(metaRow.storage_url) : {};
+    const casePodrucje = meta.podrucje || 'NUV';
+    const combinedNotes = [meta.napomena, meta.uputa_voditelja].filter(Boolean).join(' | ');
+
     const validDocs = (dokumenti || []).filter(
       (d: any) =>
-        d.tip_dokumenta !== '__META__' &&
-        d.tip_dokumenta !== '__CHAT__' &&
+        d.tip_dokumenta !== META_DOC_TYPE &&
+        d.tip_dokumenta !== CHAT_DOC_TYPE &&
+        d.tip_dokumenta !== SLUZBENICI_DOC_TYPE &&
         d.raw_text &&
         d.raw_text.trim().length > 0
     );
+
+    const zalbaDoc = validDocs.find((d: any) => {
+      const docMeta = decodeDocLabel(d.tip_dokumenta);
+      const v = (docMeta.vrsta || '').toLowerCase();
+      const n = (docMeta.izvorniNaziv || '').toLowerCase();
+      const raw = (d.tip_dokumenta || '').toLowerCase();
+      return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
+    });
 
     let documentsContext = '';
     if (validDocs.length > 0) {
@@ -160,32 +187,60 @@ ${formatPraksa(praksa)}
     }
 
     const predmetMetaText = predmet
-      ? `KLASA: ${predmet.klasa || 'Nije upisana'} | URBROJ: ${predmet.urbroj || 'Nije upisan'} | STRANKA: ${predmet.stranka || 'Nije upisana'} | STATUS: ${predmet.status || '-'}`
+      ? `KLASA: ${predmet.klasa || 'Nije upisana'} | URBROJ: ${predmet.urbroj || 'Nije upisan'} | STRANKA: ${predmet.stranka || 'Nije upisana'} | PODRUČJE: ${casePodrucje} | STATUS: ${predmet.status || '-'}${
+          combinedNotes ? `\nNAPOMENA / UPUTA O PREDMETU: ${combinedNotes}` : ''
+        }`
       : `Predmet ID: ${predmetId}`;
 
     const queryText = buildRetrievalQuery(messages);
     let zakoni: RagSourcesPayload['zakoni'] = [];
     let praksa: RagSourcesPayload['praksa'] = [];
+    let extractedKeywords: string[] = [];
+    let fullAdvisorBlueprintText = '';
+    let fullAdvisorBlueprintTitle = '';
 
     try {
-      const semanticQuery = buildCaseRetrievalQuery(queryText, validDocs);
+      const semanticQuery = buildCaseRetrievalQuery(queryText, validDocs, combinedNotes);
       const ragRes = await searchKnowledge(semanticQuery, {
         zakoniCount: 9,
-        praksaCount: 6,
+        praksaCount: 8,
         extraTextForRefs: documentsContext.slice(0, 35000),
         filterScope,
+        napomena: combinedNotes,
+        casePodrucje,
+        zalbaText: zalbaDoc?.raw_text || '',
+        preferAdvisorDecisions: true,
       });
       zakoni = ragRes.zakoni;
       praksa = ragRes.praksa;
+      extractedKeywords = ragRes.extractedKeywords;
+
+      // Za potrebe izrade nacrta rješenja ili duboke usporedbe, dohvati CJELOVITI tekst
+      // najsličnijeg drugostupanjskog rješenja savjetnika iz Baze prakse!
+      const topAdvisorDecision = praksa.find((p) => p.vrsta === 'Drugostupanjsko rješenje');
+      if (topAdvisorDecision) {
+        fullAdvisorBlueprintTitle = topAdvisorDecision.naziv_datoteke;
+        fullAdvisorBlueprintText = await getFullPracticeTextByName(topAdvisorDecision.naziv_datoteke);
+      }
     } catch (ragError) {
       console.error('RAG Error u predmetu:', ragError);
     }
 
-    const systemPrompt = `Ti si iskusni viši upravni savjetnik za drugostupanjski upravni postupak u Republici Hrvatskoj.
-Pomažeš službi za drugostupanjski postupak pri analizi spisa, ocjeni žalbenih navoda i izradi nacrta drugostupanjskih akata.
+    const nadlezniSudHint = detectCompetentAdministrativeCourt(
+      `${predmet?.stranka || ''}\n${documentsContext.slice(0, 2500)}`
+    );
+    const authenticStructurePrompt = buildAuthenticAdvisorStructurePrompt({
+      citirajCijeluZalbu: true,
+      nadlezniSudHint,
+      podrucje: casePodrucje,
+    });
+
+    const systemPrompt = `Ti si iskusni viši upravni savjetnik / sektorski savjetnik za drugostupanjski upravni postupak u Republici Hrvatskoj (Ministarstvo zaštite okoliša i zelene tranzicije).
+Pomažeš pri analizi spisa, usporedbi sa sličnim predmetima iz Baze prakse, ocjeni žalbenih navoda i izradi nacrta drugostupanjskih rješenja.
 
 PODACI O PREDMETU:
 ${predmetMetaText}
+${extractedKeywords.length > 0 ? `PREPOZNATE KLJUČNE RIJEČI PREDMETA: ${extractedKeywords.join(', ')}` : ''}
 
 DOKUMENTI U SPISU:
 <spis>
@@ -197,25 +252,35 @@ MJERODAVNI ČLANCI ZAKONA I PODZAKONSKIH PROPISA IZ BAZE:
 ${formatZakoni(zakoni)}
 </zakoni>
 
-RELEVANTNA UPRAVNA I SUDSKA PRAKSA IZ BAZE (filtar: ${filterScope}):
+PRONAĐENI SLIČNI PREDMETI I PRESUDE IZ BAZE PRAKSE (filtar: ${filterScope}):
 <praksa>
 ${formatPraksa(praksa)}
 </praksa>
+${
+  fullAdvisorBlueprintText
+    ? `\nCJELOVITI OGLEDNI PRIMJER RJEŠENJA OVOG SAVJETNIKA IZ BAZE PRAKSE (${fullAdvisorBlueprintTitle}):\n<ogledno_rjesenje>\n${fullAdvisorBlueprintText.slice(
+        0,
+        7500
+      )}\n</ogledno_rjesenje>\n`
+    : ''
+}
 
-PRAVILA RADA I HRVATSKOG UPRAVNOG STILA:
-1. ČINJENIČNA TOČNOST: Utvrđuj činjenice isključivo iz <spis>. Ako neki bitan podatak (npr. datum dostave prvostupanjskog rješenja u dostavnici, potpis punomoćnika ili točan KLASA/URBROJ) nije vidljiv u učitanom tekstu, izričito upozori službenu osobu što treba provjeriti u spisu i na tom mjestu u nacrtu stavi oznaku u uglatim zagradama npr. \`[provjeriti datum dostave]\`.
-2. STROGA ZUP TERMINOLOGIJA:
-   - Upravno tijelo donosi **rješenje** ili **zaključak** (nikada "presudu"). Pojam **presuda** rabi samo za odluke upravnih sudova / Visokog upravnog suda RH.
-   - Razlikuj: *odbacivanje žalbe* (čl. 114. ZUP-a – nepravodobna, nedopuštena ili izjavljena od neovlaštene osobe), *odbijanje žalbe* (čl. 116. ZUP-a – kad je rješenje zakonito i pravilno), *poništavanje/izmjenu prvostupanjskog rješenja* (čl. 117. ZUP-a).
-3. SADRŽAJ OBRAZLOŽENJA (čl. 98. st. 5. i čl. 115.–117. ZUP-a): Drugostupanjsko tijelo u obrazloženju rješenja mora ocijeniti **sve žalbene navode stranke**. Pri izradi analize ili nacrta rješenja obradi svaki žalbeni prigovor pojedinačno i poveži ga s odredbom zakona iz <zakoni> te ranijim odlukama iz <praksa>.
-4. CITIRANJE: Uvijek točno citiraj članak i naziv propisa te puni naziv korištene odluke iz <praksa> (razlikujući drugostupanjsko rješenje od sudske presude).
-5. UREĐIVANJE TEKSTA: Koristi uredan Markdown (\`###\` podnaslove, podebljani tekst, numerirane ili grafičke točke i \`>\` za bitne citate) kako bi se tekst jednim klikom mogao prenijeti u Microsoft Word. Ne spominji XML oznake (\`<spis>\`, \`<zakoni>\`, \`<praksa>\`).`;
+PRAVILA RADA I UPRAVNOG STILA:
+1. AKTIVNO KORIŠTENJE BAZE PRAKSE: U <praksa> (i <ogledno_rjesenje>) nalaze se stvarna ranija drugostupanjska rješenja ovog savjetnika i presude upravnih sudova pronađene prema ključnim riječima ovog predmeta. Uvijek se osloni na njihovu pravnu argumentaciju i izričito navedi konkretne srodne odluke iz <praksa> pri analizi spisa!
+2. ČINJENIČNA TOČNOST: Utvrđuj činjenice isključivo iz <spis>. Ako neki podatak nedostaje u tekstu spisa, označi ga uglatim zagradama npr. \`[provjeriti datum dostave]\`.
+3. STROGA ZUP TERMINOLOGIJA: Upravno tijelo donosi **rješenje** ili **zaključak** (nikada "presudu"). Pojam **presuda** rabi isključivo za odluke upravnih sudova / VUSRH.
+4. KADA KORISNIK TRAŽI ANALIZU ILI USPOREDBU S PRAKSOM: Piši pregledno koristeći Markdown podnaslove (\`###\`) i grafičke točke te za svaki žalbeni navod poveži odredbu iz <zakoni> i konkretno rješenje/presudu iz <praksa>.
+5. KADA KORISNIK TRAŽI NACRT RJEŠENJA (ILI KLIKNE "PRIPREMI NACRT RJEŠENJA"):
+   STROGO I BEZ IZNIMKE piši rješenje u višegodišnjoj autentičnoj strukturi ovog savjetnika navedenoj ispod i prema uzoru iz <ogledno_rjesenje> — kao ČISTI TEKST bez Markdown zvjezdica (**) i bez naslova s ljestvama (###), s doslovnim citatom žalbe u navodnim znakovima! Ne spominji interne XML oznake (\`<spis>\`, \`<zakoni>\`, \`<praksa>\`, \`<ogledno_rjesenje>\`).
+
+${authenticStructurePrompt}`;
 
     const sourcesPayload: RagSourcesPayload = {
       zakoni,
       praksa,
       filterScope,
       modelName: aiModelName,
+      extractedKeywords,
     };
 
     const stream = createUIMessageStream<LegalUIMessage>({

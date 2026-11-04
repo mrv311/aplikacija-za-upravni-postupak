@@ -15,7 +15,21 @@ export interface ReportFilters {
   podrucje?: string; // 'Sva' | 'NUV' | 'VD' ...
   status?: string; // 'Svi' | 'aktivan' | 'arhiviran' | 'na_potpisu'
   ishod?: string; // 'Svi' | 'Odbijena žalba' ...
+  sluzbenik?: string; // 'Svi' | '__nerasporedjeno__' | ime službenika
   query?: string;
+}
+
+export interface SluzbenikReportRow {
+  sluzbenik: string;
+  ukupnoZaduzeno: number;
+  uRadu: number;
+  rijeseno: number;
+  ukupnoParafirano: number;
+  rjesenjaParaf: number;
+  dopisiZalbaParaf: number;
+  odgovoriNaTuzbuParaf: number;
+  ostaliParafi: number;
+  vracenoNaDoradu: number;
 }
 
 export interface ReportMetrics {
@@ -30,6 +44,8 @@ export interface ReportMetrics {
   postotakURoku: number; // postotak npr. 92.3
   prosjecnoTrajanjeRjesavanjaDana: number;
   prosjecnoTrajanjeAktivnihDana: number;
+  ukupnoParafa: number;
+  ukupnoVracenoNaDoradu: number;
   ishodiBreakdown: Array<{
     ishod: string;
     label: string;
@@ -44,6 +60,7 @@ export interface ReportMetrics {
     rijeseno: number;
     uRadu: number;
   }>;
+  sluzbeniciBreakdown: SluzbenikReportRow[];
   mjesecniTrend: Array<{
     key: string;
     mjesecNaziv: string;
@@ -207,14 +224,29 @@ export function filterPredmeti(
       }
     }
 
-    // 5. Pretraga (klasa, urbroj, stranka, napomena)
+    // 4b. Službenik (Obrađivač)
+    if (filters.sluzbenik && filters.sluzbenik !== 'Svi') {
+      if (filters.sluzbenik === '__nerasporedjeno__') {
+        if (p.sluzbenik_ime) return false;
+      } else {
+        const sLower = filters.sluzbenik.toLowerCase().trim();
+        const assignedMatch = (p.sluzbenik_ime || '').toLowerCase().trim() === sLower;
+        const parafMatch =
+          Array.isArray(p.parafi) &&
+          p.parafi.some((pf) => (pf.sluzbenik_ime || '').toLowerCase().trim() === sLower);
+        if (!assignedMatch && !parafMatch) return false;
+      }
+    }
+
+    // 5. Pretraga (klasa, urbroj, stranka, napomena, službenik)
     if (filters.query && filters.query.trim()) {
       const q = filters.query.toLowerCase().trim();
       const match =
         (p.klasa || '').toLowerCase().includes(q) ||
         (p.urbroj || '').toLowerCase().includes(q) ||
         (p.stranka || '').toLowerCase().includes(q) ||
-        (p.napomena || '').toLowerCase().includes(q);
+        (p.napomena || '').toLowerCase().includes(q) ||
+        (p.sluzbenik_ime || '').toLowerCase().includes(q);
       if (!match) return false;
     }
 
@@ -237,10 +269,32 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
   let brojPredmetaSaDanima = 0;
   let zbrojDanaAktivnih = 0;
   let brojAktivnihSaDanima = 0;
+  let ukupnoParafa = 0;
+  let ukupnoVracenoNaDoradu = 0;
 
   const ishodiMap = new Map<string, number>();
   const podrucjaMap = new Map<string, { count: number; rijeseno: number; uRadu: number }>();
+  const sluzbeniciMap = new Map<string, SluzbenikReportRow>();
   const rizicniPredmeti: EnrichedPredmet[] = [];
+
+  const getOrCreateSluzbenikRow = (ime: string): SluzbenikReportRow => {
+    const key = ime.trim() || 'Neraspoređeno / U mom radu';
+    if (!sluzbeniciMap.has(key)) {
+      sluzbeniciMap.set(key, {
+        sluzbenik: key,
+        ukupnoZaduzeno: 0,
+        uRadu: 0,
+        rijeseno: 0,
+        ukupnoParafirano: 0,
+        rjesenjaParaf: 0,
+        dopisiZalbaParaf: 0,
+        odgovoriNaTuzbuParaf: 0,
+        ostaliParafi: 0,
+        vracenoNaDoradu: 0,
+      });
+    }
+    return sluzbeniciMap.get(key)!;
+  };
 
   // Mjesečni trend (zadnjih 12 mjeseci ili mjeseci tekuće godine)
   const now = new Date();
@@ -301,6 +355,39 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
     if (isResolved) podrucjeData.rijeseno++;
     else podrucjeData.uRadu++;
     podrucjaMap.set(podrucjeKey, podrucjeData);
+
+    // Službenici (zaduženje predmeta)
+    const assignedSluzbenik = (p.sluzbenik_ime || '').trim() || 'Neraspoređeno / U mom radu';
+    const sluzbRow = getOrCreateSluzbenikRow(assignedSluzbenik);
+    sluzbRow.ukupnoZaduzeno++;
+    if (isResolved) sluzbRow.rijeseno++;
+    else sluzbRow.uRadu++;
+
+    // Evidencija parafa u predmetu
+    if (Array.isArray(p.parafi)) {
+      for (const pf of p.parafi) {
+        const pfOwner = (pf.sluzbenik_ime || p.sluzbenik_ime || '').trim() || 'Neraspoređeno / U mom radu';
+        const pfRow = getOrCreateSluzbenikRow(pfOwner);
+
+        if (pf.status === 'Vraćeno na doradu') {
+          ukupnoVracenoNaDoradu++;
+          pfRow.vracenoNaDoradu++;
+        } else {
+          ukupnoParafa++;
+          pfRow.ukupnoParafirano++;
+          const vrstaLower = (pf.vrsta_akta || '').toLowerCase();
+          if (vrstaLower.includes('drugostupanjsko') || vrstaLower.includes('rješenje')) {
+            pfRow.rjesenjaParaf++;
+          } else if (vrstaLower.includes('dopis')) {
+            pfRow.dopisiZalbaParaf++;
+          } else if (vrstaLower.includes('tužb')) {
+            pfRow.odgovoriNaTuzbuParaf++;
+          } else {
+            pfRow.ostaliParafi++;
+          }
+        }
+      }
+    }
 
     // Mjesečna dinamika
     if (p.datum_zaprimanja) {
@@ -378,6 +465,12 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
     };
   });
 
+  const sluzbeniciBreakdown = Array.from(sluzbeniciMap.values()).sort((a, b) => {
+    if (a.sluzbenik === 'Neraspoređeno / U mom radu') return 1;
+    if (b.sluzbenik === 'Neraspoređeno / U mom radu') return -1;
+    return b.ukupnoZaduzeno + b.ukupnoParafirano - (a.ukupnoZaduzeno + a.ukupnoParafirano);
+  });
+
   // Sortiraj rizične po prekoračenju / hitnosti
   rizicniPredmeti.sort((a, b) => {
     const da = getPredmetDurationInfo(a).days;
@@ -397,8 +490,11 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
     postotakURoku,
     prosjecnoTrajanjeRjesavanjaDana,
     prosjecnoTrajanjeAktivnihDana,
+    ukupnoParafa,
+    ukupnoVracenoNaDoradu,
     ishodiBreakdown,
     podrucjaBreakdown,
+    sluzbeniciBreakdown,
     mjesecniTrend,
     rizicniPredmeti,
   };
@@ -414,6 +510,8 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
     'Urbroj',
     'Stranka / Žalitelj',
     'Upravno područje',
+    'Zaduženi službenik',
+    'Datum dodjele',
     'Status spisa',
     'Faza postupka',
     'Datum zaprimanja',
@@ -421,6 +519,8 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
     'Utrošeno dana',
     'Status ZUP roka (60 d.)',
     'Ishod rješenja',
+    'Broj parafa',
+    'Evidentirani parafi',
     'Pohranjeno u praksu',
     'Napomena',
   ];
@@ -430,11 +530,23 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
     const datumZaprimanjaStr = p.datum_zaprimanja
       ? new Date(p.datum_zaprimanja).toLocaleDateString('hr-HR')
       : '';
+    const datumDodjeleStr = p.datum_dodjele
+      ? new Date(p.datum_dodjele).toLocaleDateString('hr-HR')
+      : '';
     const datumRjesavanjaStr = p.datum_rjesavanja || p.datum_slanja_na_potpis
       ? new Date((p.datum_rjesavanja || p.datum_slanja_na_potpis)!).toLocaleDateString('hr-HR')
       : '';
     const zupRokStatus = duration.isOverdue ? 'Prekoračen rok' : 'U zakonskom roku';
     const praksaStr = p.poslano_u_praksu ? 'Da' : 'Ne';
+    const parafiList = Array.isArray(p.parafi) ? p.parafi : [];
+    const parafiSummary = parafiList
+      .map(
+        (pf) =>
+          `${pf.status}: ${pf.vrsta_akta} (${
+            pf.datum ? new Date(pf.datum).toLocaleDateString('hr-HR') : ''
+          })`
+      )
+      .join(' | ');
 
     const escapeCsv = (str: string | undefined | null) => {
       const val = str ? String(str).replace(/"/g, '""').replace(/\r?\n/g, ' ') : '';
@@ -446,6 +558,8 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
       escapeCsv(p.urbroj),
       escapeCsv(p.stranka),
       escapeCsv(p.podrucje || 'Ostalo'),
+      escapeCsv(p.sluzbenik_ime || 'Neraspoređeno / U mom radu'),
+      escapeCsv(datumDodjeleStr),
       escapeCsv(p.status === 'arhiviran' ? 'Arhiviran (A/A)' : 'Aktivan u radu'),
       escapeCsv(p.faza || 'Novo'),
       escapeCsv(datumZaprimanjaStr),
@@ -453,6 +567,8 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
       escapeCsv(String(duration.days)),
       escapeCsv(zupRokStatus),
       escapeCsv(p.ishod || 'U radu / bez ishoda'),
+      escapeCsv(String(parafiList.length)),
+      escapeCsv(parafiSummary),
       escapeCsv(praksaStr),
       escapeCsv(p.napomena || ''),
     ].join(';');

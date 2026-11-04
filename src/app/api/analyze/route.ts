@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseServer as supabase } from '@/lib/supabase-server';
 import { google } from '@/lib/google';
-import { generateText, embed } from 'ai';
+import { generateText } from 'ai';
+import { searchKnowledge, formatPraksa, formatZakoni } from '@/lib/rag';
 
 export async function POST(req: Request) {
   try {
@@ -23,55 +24,39 @@ export async function POST(req: Request) {
     }
 
     if (!dokument.raw_text) {
-      return NextResponse.json({ error: 'Dokument ne sadrži tekstualan sadržaj za analizu.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Dokument ne sadrži tekstualan sadržaj za analizu.' },
+        { status: 400 }
+      );
     }
 
-    // 2. Ekstrakcija ključnih riječi / sažetka za vektor pretragu
-    const { text: sazetak } = await generateText({
-      model: google('gemini-3.8-flash'),
-      system: 'Izvuci ključne pravne koncepte i sažetak iz ovog teksta u obliku nekoliko rečenica.',
-      prompt: dokument.raw_text.substring(0, 5000), // Ograničavamo zbog brzine
+    // 2. Hibridna pretraga propisa i baze prakse (ključne riječi + vektorsko rangiranje)
+    const { zakoni, praksa } = await searchKnowledge(dokument.raw_text.substring(0, 6000), {
+      zakoniCount: 8,
+      praksaCount: 6,
+      preferAdvisorDecisions: true,
     });
 
-    // 3. Generiranje embeddinga sažetka
-    const { embedding } = await embed({
-      model: google.textEmbeddingModel('gemini-embedding-001'),
-      value: sazetak || dokument.raw_text.substring(0, 1000),
-    });
+    const praksaKontekst = formatPraksa(praksa);
+    const zakoniKontekst = formatZakoni(zakoni);
 
-    // 4. Pretraživanje vektorske baze (RAG)
-    const { data: praksa, error: rpcError } = await supabase
-      .rpc('match_praksa', {
-        query_embedding: embedding,
-        match_threshold: 0.5,
-        match_count: 3
-      });
-
-    if (rpcError) {
-      console.error('Greška pri match_praksa RPC pozivu:', rpcError);
-      // Nastavljamo bez prakse ako RAG fejla da ne srušimo cijelu analizu
-    }
-
-    let praksaKontekst = '';
-    if (praksa && praksa.length > 0) {
-      praksaKontekst = praksa.map((p: any) => `Kategorija: ${p.kategorija}\nNaslov: ${p.naslov}\nSadržaj: ${p.sadrzaj}\n`).join('\n---\n');
-    } else {
-      praksaKontekst = 'Nema pronađene relevantne prakse za ovaj slučaj.';
-    }
-
-    // 5. Finalna analiza s proširenim kontekstom
+    // 3. Finalna analiza s proširenim kontekstom
     const finalPrompt = `Ti si viši upravni savjetnik. 
-Ovo je tekst nove žalbe:
+Ovo je tekst nove žalbe / akta:
 ${dokument.raw_text}
 
-Prilikom rješavanja, OBAVEZNO uzmi u obzir ovu relevantnu pravnu praksu i zakone:
+Prilikom rješavanja, OBAVEZNO uzmi u obzir ove relevantne propise i pravnu praksu:
+=== PROPISI ===
+${zakoniKontekst}
+
+=== SUDSKA I UPRAVNA PRAKSA ===
 ${praksaKontekst}
 
-Napiši analizu i predloži smjer rješavanja baziran na toj praksi.`;
+Napiši analizu i predloži smjer rješavanja baziran na toj praksi i propisima.`;
 
     const { text: finalAnalysis } = await generateText({
       model: google('gemini-3.8-flash'),
-      prompt: finalPrompt
+      prompt: finalPrompt,
     });
 
     return NextResponse.json({ analysis: finalAnalysis });

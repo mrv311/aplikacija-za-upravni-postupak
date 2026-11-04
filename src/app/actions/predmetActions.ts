@@ -1,5 +1,7 @@
 'use server';
 
+import fs from 'fs';
+import path from 'path';
 import { supabaseServer } from '@/lib/supabase-server';
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
@@ -7,13 +9,17 @@ import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import {
   META_DOC_TYPE,
+  SLUZBENICI_DOC_TYPE,
   encodePredmetMetaUrl,
   decodePredmetMetaUrl,
   guessDocRoleFromFilename,
+  getInitials,
   type PredmetExtendedMeta,
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
+  type Sluzbenik,
+  type ParafZapis,
 } from '@/lib/predmet-meta';
 import {
   parseFileBufferWithOcrFallback,
@@ -23,6 +29,93 @@ import {
 } from '@/app/actions/documentActions';
 
 const db = supabaseServer || supabase;
+const SLUZBENICI_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'sluzbenici.json');
+
+/**
+ * Dohvaća popis službenika iz baze (ili lokalne JSON datoteke).
+ */
+export async function getSluzbeniciAction(): Promise<Sluzbenik[]> {
+  try {
+    const { data: row } = await db
+      .from('dokumenti')
+      .select('raw_text')
+      .is('predmet_id', null)
+      .eq('tip_dokumenta', SLUZBENICI_DOC_TYPE)
+      .maybeSingle();
+
+    if (row?.raw_text) {
+      const parsed = JSON.parse(row.raw_text);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Fallback na lokalnu datoteku
+  }
+
+  try {
+    if (fs.existsSync(SLUZBENICI_FILE_PATH)) {
+      const raw = fs.readFileSync(SLUZBENICI_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+
+  return [];
+}
+
+/**
+ * Sprema ažurirani popis službenika u lokalnu datoteku i u Supabase.
+ */
+export async function saveSluzbeniciAction(sluzbenici: Sluzbenik[]) {
+  const normalized: Sluzbenik[] = (sluzbenici || [])
+    .filter((s) => s && s.imePrezime && s.imePrezime.trim().length > 0)
+    .map((s) => ({
+      id: s.id || `sl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      imePrezime: s.imePrezime.trim(),
+      radnoMjesto: (s.radnoMjesto || '').trim(),
+      inicijali: (s.inicijali || getInitials(s.imePrezime)).trim().toUpperCase(),
+      aktivan: s.aktivan !== false,
+    }));
+
+  try {
+    const dir = path.dirname(SLUZBENICI_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(SLUZBENICI_FILE_PATH, JSON.stringify(normalized, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Upozorenje pri zapisu sluzbenici.json:', err);
+  }
+
+  try {
+    const { data: existing } = await db
+      .from('dokumenti')
+      .select('id')
+      .is('predmet_id', null)
+      .eq('tip_dokumenta', SLUZBENICI_DOC_TYPE)
+      .maybeSingle();
+
+    const jsonStr = JSON.stringify(normalized);
+    if (existing?.id) {
+      await db.from('dokumenti').update({ raw_text: jsonStr }).eq('id', existing.id);
+    } else {
+      await db.from('dokumenti').insert({
+        predmet_id: null,
+        tip_dokumenta: SLUZBENICI_DOC_TYPE,
+        storage_url: 'system://sluzbenici',
+        raw_text: jsonStr,
+      });
+    }
+  } catch (err) {
+    console.warn('Upozorenje pri spremanju službenika u Supabase:', err);
+  }
+
+  revalidatePath('/');
+  revalidatePath('/arhiva');
+  revalidatePath('/izvjestaji');
+  return { success: true, sluzbenici: normalized };
+}
 
 async function upsertPredmetMeta(predmetId: string, patch: Partial<PredmetExtendedMeta>) {
   const { data: existing } = await db
@@ -213,6 +306,10 @@ export async function createPredmet(formData: FormData) {
   const datum = (formData.get('datum_primitka') as string)?.trim();
   const podrucje = ((formData.get('podrucje') as string) || 'NUV') as PredmetPodrucje;
   const napomena = ((formData.get('napomena') as string) || '').trim();
+  const sluzbenik_id = ((formData.get('sluzbenik_id') as string) || '').trim();
+  const sluzbenik_ime = ((formData.get('sluzbenik_ime') as string) || '').trim();
+  const interni_rok = ((formData.get('interni_rok') as string) || '').trim();
+  const uputa_voditelja = ((formData.get('uputa_voditelja') as string) || '').trim();
 
   if (!klasa || !stranka || !datum) {
     return { error: 'KLASA, Stranka i Datum zaprimanja su obavezni.' };
@@ -236,10 +333,16 @@ export async function createPredmet(formData: FormData) {
       return { error: `Greška u bazi: ${error?.message || 'Nepoznata greška'}` };
     }
 
+    const today = new Date().toISOString().split('T')[0];
+
     await upsertPredmetMeta(data.id, {
       podrucje,
-      faza: 'Novo',
+      faza: sluzbenik_ime ? 'U radu' : 'Novo',
       napomena,
+      ...(sluzbenik_id ? { sluzbenik_id } : {}),
+      ...(sluzbenik_ime ? { sluzbenik_ime, datum_dodjele: today } : {}),
+      ...(interni_rok ? { interni_rok } : {}),
+      ...(uputa_voditelja ? { uputa_voditelja } : {}),
     });
 
     // Podrška za jedan ili više inicijalnih dokumenata ako su poslani u istom pozivu
@@ -278,6 +381,7 @@ export async function createPredmet(formData: FormData) {
 
     revalidatePath('/');
     revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
     return {
       success: true,
       data,
@@ -300,6 +404,11 @@ export async function updatePredmet(
     faza?: PredmetFaza;
     ishod?: PredmetIshod;
     napomena?: string;
+    sluzbenik_id?: string;
+    sluzbenik_ime?: string;
+    datum_dodjele?: string;
+    interni_rok?: string;
+    uputa_voditelja?: string;
   }
 ) {
   if (!id) return { error: 'ID predmeta je obavezan.' };
@@ -327,14 +436,159 @@ export async function updatePredmet(
       ...(payload.faza ? { faza: payload.faza } : {}),
       ...(payload.ishod ? { ishod: payload.ishod } : {}),
       napomena: (payload.napomena || '').trim(),
+      ...(payload.sluzbenik_id !== undefined ? { sluzbenik_id: payload.sluzbenik_id } : {}),
+      ...(payload.sluzbenik_ime !== undefined ? { sluzbenik_ime: payload.sluzbenik_ime } : {}),
+      ...(payload.datum_dodjele !== undefined ? { datum_dodjele: payload.datum_dodjele } : {}),
+      ...(payload.interni_rok !== undefined ? { interni_rok: payload.interni_rok } : {}),
+      ...(payload.uputa_voditelja !== undefined
+        ? { uputa_voditelja: payload.uputa_voditelja.trim() }
+        : {}),
     });
 
     revalidatePath('/');
     revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
     revalidatePath(`/predmeti/${id}`);
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Greška pri spremanju izmjena predmeta.' };
+  }
+}
+
+/**
+ * Delegiranje predmeta u rad službeniku uz opcionalni interni rok i uputu voditelja.
+ */
+export async function assignPredmetSluzbenikAction(
+  id: string,
+  payload: {
+    sluzbenik_id: string;
+    sluzbenik_ime: string;
+    datum_dodjele?: string;
+    interni_rok?: string;
+    uputa_voditelja?: string;
+  }
+) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await db
+      .from('dokumenti')
+      .select('storage_url')
+      .eq('predmet_id', id)
+      .eq('tip_dokumenta', META_DOC_TYPE)
+      .maybeSingle();
+
+    const current = existing ? decodePredmetMetaUrl(existing.storage_url) : {};
+    const autoSetURadu =
+      payload.sluzbenik_ime && (!current.faza || current.faza === 'Novo')
+        ? { faza: 'U radu' as PredmetFaza }
+        : {};
+
+    await upsertPredmetMeta(id, {
+      sluzbenik_id: payload.sluzbenik_id,
+      sluzbenik_ime: payload.sluzbenik_ime,
+      datum_dodjele:
+        payload.datum_dodjele !== undefined
+          ? payload.datum_dodjele
+          : payload.sluzbenik_ime
+          ? current.datum_dodjele || today
+          : '',
+      ...(payload.interni_rok !== undefined ? { interni_rok: payload.interni_rok } : {}),
+      ...(payload.uputa_voditelja !== undefined
+        ? { uputa_voditelja: payload.uputa_voditelja.trim() }
+        : {}),
+      ...autoSetURadu,
+    });
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Greška pri delegiranju predmeta službeniku.' };
+  }
+}
+
+/**
+ * Evidentira novi paraf (ili vraćanje nacrta na doradu) na aktivnom predmetu.
+ */
+export async function addPredmetParafAction(
+  id: string,
+  parafInput: Omit<ParafZapis, 'id'>,
+  novaFaza?: PredmetFaza
+) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    const { data: existing } = await db
+      .from('dokumenti')
+      .select('storage_url')
+      .eq('predmet_id', id)
+      .eq('tip_dokumenta', META_DOC_TYPE)
+      .maybeSingle();
+
+    const current = existing ? decodePredmetMetaUrl(existing.storage_url) : {};
+    const currentParafi = Array.isArray(current.parafi) ? current.parafi : [];
+
+    const newParaf: ParafZapis = {
+      id: `pf_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      datum: parafInput.datum || new Date().toISOString().split('T')[0],
+      vrsta_akta: parafInput.vrsta_akta,
+      status: parafInput.status,
+      sluzbenik_ime: (parafInput.sluzbenik_ime || current.sluzbenik_ime || '').trim(),
+      napomena: (parafInput.napomena || '').trim(),
+    };
+
+    const updatedParafi = [newParaf, ...currentParafi];
+    const patch: Partial<PredmetExtendedMeta> = {
+      parafi: updatedParafi,
+    };
+
+    if (novaFaza) {
+      patch.faza = novaFaza;
+      if (novaFaza === 'Na potpisu') {
+        patch.datum_slanja_na_potpis = newParaf.datum;
+      }
+    }
+
+    await upsertPredmetMeta(id, patch);
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true, paraf: newParaf, parafi: updatedParafi };
+  } catch (err: any) {
+    return { error: err.message || 'Greška pri evidentiranju parafa.' };
+  }
+}
+
+/**
+ * Briše zapis o parafu iz predmeta.
+ */
+export async function deletePredmetParafAction(id: string, parafId: string) {
+  if (!id || !parafId) return { error: 'Nedostaju podaci za brisanje parafa.' };
+  try {
+    const { data: existing } = await db
+      .from('dokumenti')
+      .select('storage_url')
+      .eq('predmet_id', id)
+      .eq('tip_dokumenta', META_DOC_TYPE)
+      .maybeSingle();
+
+    const current = existing ? decodePredmetMetaUrl(existing.storage_url) : {};
+    const currentParafi = Array.isArray(current.parafi) ? current.parafi : [];
+    const updatedParafi = currentParafi.filter((p) => p.id !== parafId);
+
+    await upsertPredmetMeta(id, { parafi: updatedParafi });
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true, parafi: updatedParafi };
+  } catch (err: any) {
+    return { error: err.message || 'Greška pri brisanju zapisa parafa.' };
   }
 }
 

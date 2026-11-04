@@ -56,7 +56,7 @@ export interface RagZakonSource {
 export interface ParsedPraksaMeta {
   kratkiNaziv: string;
   podrucje: string;
-  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje';
+  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu';
   godina: string | null;
   ishod: 'Poništeno rješenje' | 'Odbijena žalba' | 'Ostalo';
 }
@@ -67,6 +67,7 @@ export interface RagPraksaSource extends ParsedPraksaMeta {
   sadrzaj: string;
   similarity?: number;
   matchedChunksCount?: number;
+  matchedKeywords?: string[];
 }
 
 export interface RagSourcesPayload {
@@ -74,13 +75,28 @@ export interface RagSourcesPayload {
   praksa: RagPraksaSource[];
   filterScope: PraksaFilterScope;
   modelName: string;
+  extractedKeywords?: string[];
 }
 
 export type LegalUIMessage = UIMessage<unknown, { sources: RagSourcesPayload }>;
 
-export function parsePraksaMetadata(nazivDatoteke: string): ParsedPraksaMeta {
-  const isSudska = /upravnih sudova|upravni spor|presud/i.test(nazivDatoteke);
-  const vrsta: ParsedPraksaMeta['vrsta'] = isSudska ? 'Sudska presuda' : 'Drugostupanjsko rješenje';
+export function parsePraksaMetadata(
+  nazivDatoteke: string,
+  sampleContent?: string
+): ParsedPraksaMeta {
+  const contentHead = (sampleContent || '').slice(0, 900);
+  const isOdgovorNaTuzbu =
+    /O\s*D\s*G\s*O\s*V\s*O\s*R\s+N\s*A\s+T\s*U\s*Ž\s*B\s*U|PREDMET:\s*ODGOVOR NA TUŽBU/i.test(
+      contentHead
+    );
+  const isSudskaNaziv = /upravnih sudova|upravni spor|presud/i.test(nazivDatoteke);
+
+  let vrsta: ParsedPraksaMeta['vrsta'] = 'Drugostupanjsko rješenje';
+  if (isOdgovorNaTuzbu) {
+    vrsta = 'Odgovor na tužbu';
+  } else if (isSudskaNaziv) {
+    vrsta = 'Sudska presuda';
+  }
 
   let podrucje = 'Opći upravni postupak';
   if (/naknada za ure[đd]enje voda|\bnuv\b/i.test(nazivDatoteke)) {
@@ -91,25 +107,49 @@ export function parsePraksaMetadata(nazivDatoteke: string): ParsedPraksaMeta {
     podrucje = 'Naknada za zaštitu voda';
   } else if (/kori[šs]tenje voda|\bnzkv\b/i.test(nazivDatoteke)) {
     podrucje = 'Naknada za korištenje voda';
-  } else if (isSudska) {
+  } else if (/koncesij/i.test(nazivDatoteke)) {
+    podrucje = 'Naknada za koncesiju';
+  } else if (/poni[šs]tavanje i ukidanje/i.test(nazivDatoteke)) {
+    podrucje = 'Poništavanje i ukidanje (ZUP)';
+  } else if (/obnova postupka/i.test(nazivDatoteke)) {
+    podrucje = 'Obnova postupka';
+  } else if (/ni[šs]tav/i.test(nazivDatoteke)) {
+    podrucje = 'Oglašavanje ništavim';
+  } else if (/zakup javnog vodnog dobra/i.test(nazivDatoteke)) {
+    podrucje = 'Zakup javnog vodnog dobra';
+  } else if (/tro[šs]kovi postupka/i.test(nazivDatoteke)) {
+    podrucje = 'Troškovi postupka';
+  } else if (/prigovor/i.test(nazivDatoteke)) {
+    podrucje = 'Rješenja po prigovoru';
+  } else if (/zaklju[čc]ci/i.test(nazivDatoteke)) {
+    podrucje = 'Zaključci (ZUP)';
+  } else if (isSudskaNaziv) {
     podrucje = 'Upravni sporovi';
   }
 
-  const yearMatch = nazivDatoteke.match(/\b(20\d{2}|19\d{2})\b/);
+  const yearMatch = nazivDatoteke.match(/\b(20[0-2]\d|199\d)\b/);
   const godina = yearMatch ? yearMatch[1] : null;
 
   let ishod: ParsedPraksaMeta['ishod'] = 'Ostalo';
   const lower = nazivDatoteke.toLowerCase();
-  if (lower.includes('poništen') || lower.includes('ponisten') || lower.includes('uvažen') || lower.includes('uvazen')) {
+  if (
+    lower.includes('poništen') ||
+    lower.includes('ponisten') ||
+    lower.includes('uvažen') ||
+    lower.includes('uvazen')
+  ) {
     ishod = 'Poništeno rješenje';
-  } else if (lower.includes('odbijen') || lower.includes('odbačen') || lower.includes('odbacen')) {
+  } else if (
+    lower.includes('odbijen') ||
+    lower.includes('odbačen') ||
+    lower.includes('odbacen')
+  ) {
     ishod = 'Odbijena žalba';
   }
 
   // Očisti uglate zagrade na početku radi preglednijeg prikaza naslova
-  const kratkiNaziv = nazivDatoteke
-    .replace(/^\[[^\]]+\]\s*/, '')
-    .trim() || nazivDatoteke;
+  const kratkiNaziv =
+    nazivDatoteke.replace(/^\[[^\]]+\]\s*/, '').trim() || nazivDatoteke;
 
   return {
     kratkiNaziv,
@@ -174,11 +214,16 @@ export const CASE_QUICK_ACTIONS: QuickActionTemplate[] = [
   {
     id: 'nacrt-rjesenja',
     label: 'Pripremi nacrt rješenja',
-    shortDesc: 'Uvod, izreka, obrazloženje i uputa o pravnom lijeku (čl. 98. ZUP)',
+    shortDesc: 'U autentičnoj strukturi savjetnika i uz oslonac na bazu prakse',
     iconName: 'pen',
     recommendedModel: 'pro',
     prompt:
-      'Sastavi cjelovit i formalno pravilan nacrt drugostupanjskog rješenja sukladno čl. 98. i čl. 114.–117. Zakona o općem upravnom postupku (ZUP), spreman za kopiranje u službeni dokument. Nacrt mora sadržavati: 1) UVOD (naziv tijela, propis o nadležnosti, povodom čije žalbe i protiv kojeg prvostupanjskog rješenja se odlučuje), 2) IZREKU / DISPOZITIV (jasna odluka: odbija se žalba / poništava se rješenje / odbacuje se žalba), 3) OBRAZLOŽENJE (kratak sadržaj izreke prvostupanjskog rješenja, bitni žalbeni navodi stranke, utvrđeno činjenično stanje, mjerodavne odredbe materijalnog propisa i ZUP-a, detaljan i argumentiran odgovor na SVAKI žalbeni navod uz oslonac na praksu iz baze), 4) UPUTU O PRAVNOM LIJEKU (protiv drugostupanjskog rješenja žalba nije dopuštena, ali se može pokrenuti upravni spor tužbom nadležnom upravnom sudu u roku od 30 dana od dostave rješenja). Mjesta gdje nedostaju točni brojevi ili datumi označi uglatim zagradama npr. [KLASA/datum].',
+      'Sastavi cjelovit nacrt drugostupanjskog rješenja STROGO U MOJOJ VIŠEGODIŠNJOJ AUTENTIČNOJ STRUKTURI I STILU (bez memoranduma na vrhu, bez Markdown podnaslova ### i bez zvjezdica ** u tekstu akta, kako bih ga mogao izravno prenijeti u uredski sustav).\n\n' +
+      'Strogo slijedi ovaj redoslijed:\n' +
+      '1. UVOD: Ministarstvo zaštite okoliša i zelene tranzicije (OIB: 59951999361), na temelju članka 70. stavka 2. Zakona o financiranju vodnoga gospodarstva..., povodom žalbe podnositelja..., izjavljene protiv rješenja Hrvatskih voda u predmetu obračuna..., donosi\n' +
+      '2. R J E Š E N J E (izreka: jedna točka kod odbijanja žalbe ili točke 1. i 2. kod poništavanja i vraćanja na ponovni postupak)\n' +
+      '3. O b r a z l o ž e n j e (prirodni tijek odlomaka bez numeriranih podnaslova: 1. sadržaj izreke prvostupanjskog rješenja, 2. dopuštenost i pravodobnost žalbe, 3. „U žalbi žalitelj navodi sljedeće:“ uz doslovno citiranje cjelokupne žalbe u navodnim znakovima u tečnim rečenicama, 4. dostava spisa i mišljenje prvostupanjskog tijela, 5. granice ispitivanja po čl. 115. ZUP-a, 6. mjerodavne odredbe zakona/uredbe i detaljan odgovor na SVAKI žalbeni navod koristeći argumentaciju iz pronađenih odluka u Bazi prakse, 7. završni odlomak po čl. 116. st. 1. t. 1. ili čl. 117. st. 1. i 2. ZUP-a)\n' +
+      '4. UPUTA O PRAVNOM LIJEKU (s mjesno nadležnim Upravnim sudom) te potpis SEKTORSKI SAVJETNIK Dino Malbaša, dipl. iur. i blok DOSTAVITI.',
   },
 ];
 
