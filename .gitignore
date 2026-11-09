@@ -42,3 +42,6 @@ next-env.d.ts
 
 # keš dohvaæenih dokumenata iz Narodnih novina
 /.nn-cache/
+
+# Upravni sporovi temp
+data/excel_temp/

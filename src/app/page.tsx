@@ -1,5 +1,6 @@
 import { supabaseServer as supabase } from '@/lib/supabase-server';
 import NewPredmetButton from '@/components/NewPredmetButton';
+import UpravniSporoviButton from '@/components/UpravniSporoviButton';
 import PredmetiTable from '@/components/PredmetiTable';
 import { enrichPredmetRow, type EnrichedPredmet } from '@/lib/predmet-meta';
 import { Inbox, AlertCircle } from 'lucide-react';
@@ -35,7 +36,8 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <UpravniSporoviButton />
           <NewPredmetButton />
         </div>
       </header>
