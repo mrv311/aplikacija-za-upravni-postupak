@@ -21,9 +21,11 @@ import {
   AlertCircle,
   PlusCircle,
   Scale,
+  Globe,
 } from 'lucide-react';
 import { deletePraksaDoc, deletePraksaFolder } from '@/app/actions/praksaActions';
 import { DodajOdlukuModal } from './DodajOdlukuModal';
+import { PretraziPortalModal } from './PretraziPortalModal';
 
 export type PraksaDoc = {
   naziv_datoteke: string;
@@ -148,6 +150,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [, startTransition] = useTransition();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPortalModalOpen, setIsPortalModalOpen] = useState(false);
 
   const handleAddSuccess = (nazivDatoteke: string, chunkCount: number) => {
     setItems((prev) => [
@@ -382,14 +385,24 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             Sustav sadrži preko 1.600 odluka i 10.900 vektorskih chunkova za RAG asistenta. Zaprimljene presude i rješenja suda možete jednostavno uvesti uz automatsku GDPR anonimizaciju.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all shrink-0 cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4 text-white" />
-          <span>Učitaj odluku / presudu suda</span>
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsPortalModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            <Globe className="w-4 h-4 text-white" />
+            <span>Pretraži odluke.sudovi.hr</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4 text-white" />
+            <span>Učitaj pojedinačni akt</span>
+          </button>
+        </div>
       </div>
 
       {/* Kartice sa statistikom */}
@@ -792,6 +805,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleAddSuccess}
+      />
+
+      {/* MODAL ZA PRETRAGU PORTALA odluke.sudovi.hr */}
+      <PretraziPortalModal
+        isOpen={isPortalModalOpen}
+        onClose={() => setIsPortalModalOpen(false)}
       />
     </div>
   );

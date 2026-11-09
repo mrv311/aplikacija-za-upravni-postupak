@@ -10,6 +10,7 @@
     "check-propisi": "npx tsx scripts/check-propisi-updates.ts",
     "sync-propisi": "npx tsx scripts/check-propisi-updates.ts --fix",
     "scrape-odluke": "npx tsx scripts/scrape-sudske-odluke.ts",
+    "sync-practice": "npx tsx scripts/sync-monthly-practice.ts",
     "postinstall": "node patch-pdf-parse.js"
   },
   "dependencies": {

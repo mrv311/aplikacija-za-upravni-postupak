@@ -7,6 +7,12 @@ import { google } from '@/lib/google';
 import { embed, generateText } from 'ai';
 import { invalidatePraksaCatalog } from '@/lib/rag';
 import { parseFileBufferWithOcrFallback } from './documentActions';
+import {
+  searchCourtPortalItems,
+  fetchDocumentDetails,
+  saveDecisionLocally,
+  type PortalSearchSummaryItem,
+} from '@/lib/court-scraper';
 
 const db = supabaseServer || supabase;
 
@@ -373,4 +379,206 @@ export async function deletePraksaFolder(naziviDatoteka: string[]) {
  */
 export async function addPraksa(formData: FormData) {
   return previewSudskaOdlukaAction(formData);
+}
+
+/**
+ * Pretraga javnog portala odluke.sudovi.hr izravno iz korisničkog sučelja
+ */
+export async function searchPortalDecisionsAction(query: string, limit = 12) {
+  try {
+    if (!query || query.trim().length < 2) {
+      return { success: false, error: 'Unesite najmanje 2 znaka za pretragu.' };
+    }
+
+    const items = await searchCourtPortalItems(query.trim(), limit);
+
+    // Provjeri postoji li već u bazi
+    for (const it of items) {
+      const { data: dbCheck } = await db
+        .from('praksa')
+        .select('id')
+        .ilike('naziv_datoteke', `%${it.brojOdluke}%`)
+        .limit(1);
+
+      it.alreadyImported = Boolean(dbCheck && dbCheck.length > 0);
+    }
+
+    return { success: true, items };
+  } catch (err: any) {
+    console.error('searchPortalDecisionsAction error:', err);
+    return { success: false, error: err.message || 'Greška pri pretrazi portala.' };
+  }
+}
+
+/**
+ * Uvoz odabranih odluka s portala u bazu prakse (lokalni disk + Supabase RAG)
+ */
+export async function importSelectedPortalDecisionsAction(docIds: string[], targetCategory?: string) {
+  try {
+    if (!docIds || docIds.length === 0) {
+      return { success: false, error: 'Niste odabrali niti jednu odluku za uvoz.' };
+    }
+
+    let importedCount = 0;
+    let totalChunks = 0;
+    const errors: string[] = [];
+
+    for (const docId of docIds) {
+      try {
+        const doc = await fetchDocumentDetails(docId, '', targetCategory);
+        if (!doc) {
+          errors.push(`Odluka ${docId} se ne može dohvatiti s portala.`);
+          continue;
+        }
+
+        // 1. Spremanje na lokalni disk u strukturu mapa
+        await saveDecisionLocally(doc);
+
+        // 2. Provjera postoji li već u Supabase bazi
+        const standardTitle = `[Praksa upravnih sudova (presude) - ${doc.categoryTag} - ${doc.godina}] ${doc.sudKratki} - ${doc.brojOdluke} - ${doc.ishod}`;
+
+        const { data: dbExisting } = await db
+          .from('praksa')
+          .select('id')
+          .ilike('naziv_datoteke', `%${doc.brojOdluke}%`)
+          .limit(1);
+
+        if (dbExisting && dbExisting.length > 0) {
+          importedCount++;
+          continue;
+        }
+
+        // 3. Dijeljenje na chunkove i vektorsko indeksiranje (3072 dim)
+        const chunks = chunkPraksaText(doc.cleanText);
+        for (let cIdx = 0; cIdx < chunks.length; cIdx++) {
+          const cText = chunks[cIdx];
+          const embRes = await embed({
+            model: google.textEmbeddingModel('gemini-embedding-001'),
+            value: cText,
+          });
+
+          await db.from('praksa').insert({
+            naziv_datoteke: standardTitle,
+            chunk_index: cIdx,
+            sadrzaj: cText,
+            embedding: embRes.embedding,
+            ukupno_chunkova: chunks.length,
+          });
+          totalChunks++;
+          await delay(80);
+        }
+
+        importedCount++;
+      } catch (err: any) {
+        errors.push(`Greška za ${docId}: ${err.message}`);
+      }
+    }
+
+    invalidatePraksaCatalog();
+    revalidatePath('/baza-prakse');
+    revalidatePath('/savjetnik');
+    revalidatePath('/propisi');
+
+    return {
+      success: true,
+      importedCount,
+      totalChunks,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  } catch (err: any) {
+    console.error('importSelectedPortalDecisionsAction error:', err);
+    return { success: false, error: err.message || 'Greška pri uvozu odluka.' };
+  }
+}
+
+export interface ArticlePraksaMatch {
+  id: string;
+  nazivDatoteke: string;
+  sud: string;
+  brojOdluke: string;
+  godina: string;
+  ishod: string;
+  snippet: string;
+}
+
+/**
+ * Dohvat sudske prakse vezane uz konkretni članak zakona
+ */
+export async function getRelatedPraksaForArticleAction(
+  nazivZakona: string,
+  clanakBroj: string
+): Promise<{ success: boolean; matches: ArticlePraksaMatch[]; error?: string }> {
+  try {
+    const cleanNum = clanakBroj.replace(/^(?:članak|clanak)\s+/i, '').replace(/\.$/, '').trim();
+    if (!cleanNum) return { success: true, matches: [] };
+
+    let kratica = 'ZUP';
+    if (/financiranju vodnog/i.test(nazivZakona)) kratica = 'ZFVG';
+    else if (/voda/i.test(nazivZakona) && !/financ/i.test(nazivZakona) && !/uslug/i.test(nazivZakona)) kratica = 'ZOV';
+    else if (/vodnim uslugama/i.test(nazivZakona)) kratica = 'ZVU';
+    else if (/upravnim sporovima/i.test(nazivZakona)) kratica = 'ZUS';
+    else if (/općem upravnom/i.test(nazivZakona)) kratica = 'ZUP';
+    else if (/gradnji/i.test(nazivZakona)) kratica = 'ZG';
+    else if (/nezakonito/i.test(nazivZakona)) kratica = 'ZPNIZ';
+    else if (/porezni/i.test(nazivZakona)) kratica = 'OPZ';
+    else if (/vlasništvu/i.test(nazivZakona)) kratica = 'ZV';
+    else if (/obveznim/i.test(nazivZakona)) kratica = 'ZOO';
+    else if (/ovršni/i.test(nazivZakona)) kratica = 'OZ';
+
+    // Pretraži odlomke u bazi koji navode ovaj članak
+    const pattern1 = `%čl%${cleanNum}%`;
+    const { data: rows, error } = await db
+      .from('praksa')
+      .select('id, naziv_datoteke, sadrzaj')
+      .ilike('sadrzaj', pattern1)
+      .limit(35);
+
+    if (error) {
+      console.error('getRelatedPraksaForArticleAction DB error:', error);
+      return { success: false, matches: [], error: error.message };
+    }
+
+    const scored: { item: any; score: number }[] = [];
+    const lawRegex = new RegExp(`\\b(${kratica}|${nazivZakona.slice(0, 15)})`, 'i');
+    const articleRegex = new RegExp(`(?:čl\\.?|član(?:ak|ka|ku)?)\\s*${cleanNum}\\b`, 'i');
+
+    const seenFiles = new Set<string>();
+
+    for (const r of rows || []) {
+      if (seenFiles.has(r.naziv_datoteke)) continue;
+
+      let score = 0;
+      if (articleRegex.test(r.sadrzaj)) score += 3;
+      if (lawRegex.test(r.sadrzaj)) score += 2;
+      if (r.naziv_datoteke.toLowerCase().includes(kratica.toLowerCase())) score += 1;
+
+      if (score >= 3) {
+        seenFiles.add(r.naziv_datoteke);
+        scored.push({ item: r, score });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, 4);
+
+    const matches: ArticlePraksaMatch[] = top.map(({ item }) => {
+      const parts = item.naziv_datoteke.replace(/^\[.*?\]\s*/, '').split(' - ');
+      const yearMatch = item.naziv_datoteke.match(/-\s*(\d{4})\]/);
+      const snippet = item.sadrzaj.slice(0, 260) + '...';
+      return {
+        id: item.id,
+        nazivDatoteke: item.naziv_datoteke,
+        sud: parts[0] || 'Upravni sud',
+        brojOdluke: parts[1] || item.naziv_datoteke,
+        godina: yearMatch ? yearMatch[1] : '',
+        ishod: parts[2] || 'Meritorna odluka',
+        snippet,
+      };
+    });
+
+    return { success: true, matches };
+  } catch (err: any) {
+    console.error('getRelatedPraksaForArticleAction error:', err);
+    return { success: false, matches: [], error: err.message };
+  }
 }

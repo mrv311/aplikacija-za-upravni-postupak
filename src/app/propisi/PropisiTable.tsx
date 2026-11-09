@@ -18,8 +18,13 @@ import {
   Copy,
   Check,
   Landmark,
+  Loader2,
 } from 'lucide-react';
 import { PROPISI_MAP, PROPISI_LIST, PropisDef } from '@/lib/propisi-config';
+import {
+  getRelatedPraksaForArticleAction,
+  type ArticlePraksaMatch,
+} from '@/app/actions/praksaActions';
 
 export interface ClanakItem {
   id: number;
@@ -83,6 +88,38 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
   const [openPropisi, setOpenPropisi] = useState<Record<string, boolean>>({});
   const [expandedClanci, setExpandedClanci] = useState<Record<number, boolean>>({});
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [praksaForClanak, setPraksaForClanak] = useState<Record<number, ArticlePraksaMatch[]>>({});
+  const [loadingPraksaId, setLoadingPraksaId] = useState<number | null>(null);
+  const [expandedPraksaId, setExpandedPraksaId] = useState<Record<number, boolean>>({});
+
+  const handleTogglePraksa = async (e: React.MouseEvent, clanak: ClanakItem) => {
+    e.stopPropagation();
+    const id = clanak.id;
+    const isCurrentlyOpen = !!expandedPraksaId[id];
+
+    if (isCurrentlyOpen) {
+      setExpandedPraksaId((prev) => ({ ...prev, [id]: false }));
+      return;
+    }
+
+    setExpandedPraksaId((prev) => ({ ...prev, [id]: true }));
+
+    if (!praksaForClanak[id]) {
+      setLoadingPraksaId(id);
+      try {
+        const res = await getRelatedPraksaForArticleAction(clanak.naziv_zakona, clanak.clanak_broj);
+        if (res.success && res.matches) {
+          setPraksaForClanak((prev) => ({ ...prev, [id]: res.matches }));
+        } else {
+          setPraksaForClanak((prev) => ({ ...prev, [id]: [] }));
+        }
+      } catch {
+        setPraksaForClanak((prev) => ({ ...prev, [id]: [] }));
+      } finally {
+        setLoadingPraksaId(null);
+      }
+    }
+  };
 
   const handleCopyClanak = (e: React.MouseEvent, clanak: ClanakItem, propis: GroupedPropis) => {
     e.stopPropagation();
@@ -515,6 +552,20 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
 
                                           <button
                                             type="button"
+                                            onClick={(e) => handleTogglePraksa(e, clanak)}
+                                            className={`p-1 px-2.5 text-[11px] font-medium rounded-lg border transition-all inline-flex items-center gap-1.5 shadow-2xs cursor-pointer select-none ${
+                                              expandedPraksaId[clanak.id]
+                                                ? 'bg-amber-100/90 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800'
+                                                : 'text-slate-600 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-300 bg-slate-50 hover:bg-amber-50/80 dark:bg-slate-800 dark:hover:bg-slate-750 border-slate-200/80 dark:border-slate-700'
+                                            }`}
+                                            title="Prikaži povezanu sudsku praksu iz baze za ovaj članak"
+                                          >
+                                            <Scale className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                            <span>Sudska praksa</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
                                             onClick={() => toggleClanak(clanak.id)}
                                             className="p-1 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer select-none"
                                           >
@@ -538,6 +589,62 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
                                         >
                                           {preview}
                                         </p>
+                                      )}
+
+                                      {/* Prikaz povezane sudske prakse za članak */}
+                                      {expandedPraksaId[clanak.id] && (
+                                        <div
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="mt-3 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 space-y-2.5 animate-in fade-in"
+                                        >
+                                          <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
+                                            <div className="flex items-center gap-1.5">
+                                              <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                              <span>Vezana sudska praksa iz Baze prakse</span>
+                                            </div>
+                                            {praksaForClanak[clanak.id] && praksaForClanak[clanak.id].length > 0 && (
+                                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-200/70 dark:bg-amber-900 text-amber-900 dark:text-amber-200">
+                                                {praksaForClanak[clanak.id].length} pronađene odluke
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          {loadingPraksaId === clanak.id && (
+                                            <div className="py-3 flex items-center justify-center gap-2 text-xs text-amber-800 dark:text-amber-300">
+                                              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                                              <span>Pretražujem bazu presuda i rješenja za ovaj članak...</span>
+                                            </div>
+                                          )}
+
+                                          {loadingPraksaId !== clanak.id && (!praksaForClanak[clanak.id] || praksaForClanak[clanak.id].length === 0) && (
+                                            <p className="text-xs text-amber-800/80 dark:text-amber-300/80 py-1">
+                                              U bazi prakse trenutno nema odluka koje izričito navode ovaj članak. Nove presude možete uvesti u modulu Baza prakse.
+                                            </p>
+                                          )}
+
+                                          {loadingPraksaId !== clanak.id && praksaForClanak[clanak.id] && praksaForClanak[clanak.id].length > 0 && (
+                                            <div className="space-y-2 pt-1">
+                                              {praksaForClanak[clanak.id].map((p) => (
+                                                <div
+                                                  key={p.id}
+                                                  className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-900/40 text-xs space-y-1"
+                                                >
+                                                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                                                    <span className="font-bold text-slate-900 dark:text-white">
+                                                      {p.sud} - {p.brojOdluke}
+                                                    </span>
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                                      {p.ishod}
+                                                    </span>
+                                                  </div>
+                                                  <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                                                    {p.snippet}
+                                                  </p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                   </div>

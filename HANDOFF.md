@@ -45,23 +45,38 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Interaktivni pregled (Korak 2)**: Korisnik može pregledati i po potrebi doraditi službeni naziv datoteke, sažetak merituma i anonimizirani tekst prije trajnog upisa.
    - **Vektorsko indeksiranje**: Automatska podjela u semantičke chunkove (1400 znakova, 200 preklapanja) i generiranje 3072-dimenzionalnih embeddinga (`gemini-embedding-001`) za Supabase tablicu `praksa` uz trenutno osvježavanje RAG kataloga i sučelja.
 
-5. **Automatizirani skreper i uvoznik sudske prakse s portala `odluke.sudovi.hr` (`scripts/scrape-sudske-odluke.ts`)**:
+5. **Automatizirani skreper i uvoznik sudske prakse s portala `odluke.sudovi.hr` (`scripts/scrape-sudske-odluke.ts` & `src/lib/court-scraper.ts`)**:
    - **Izvor**: Službeni portal Ministarstva pravosuđa, uprave i digitalne transformacije RH (`https://odluke.sudovi.hr`) s preko 1,3 milijuna pravomoćnih presuda.
    - **Lokalna pohrana (Hibridni sustav)**: Odluke se trajno spremaju u projekt pod `./data/sudska-praksa/<kategorija>/<godina>/` kao:
      - `.json`: Kompletni strukturirani metapodatci (ECLI, sud, datum, poslovni broj, ishod, zakonsko kazalo).
      - `.txt`: Čisti, formatirani tekst presude s pravnim zaglavljem spreman za čitanje.
-   - **Stanje baze nakon tematskog uvoza (131 presuda / 12.167 vektora)**:
+   - **Stanje baze nakon proširenog uvoza (150 presuda / 12.295 vektora)**:
      - `01_Vodni_doprinos`: **63 sudske odluke** (VUSRH, Upravni sudovi ZG/ST/RI/OS, VSRH)
      - `02_Naknada_za_uredjenje_voda`: **30 sudskih odluka**
      - `03_Naknada_za_zastitu_voda`: **30 sudskih odluka**
      - `04_Sutnja_uprave_i_troskovi`: **8 sudskih odluka** (Visoki upravni sud RH 2025.–2026.)
-     - **Ukupno chunkova u `praksa`**: **12.167 chunkova** (povećanje s 10.887 na 12.167 — uvezeno 1.280 novih 3072-dimenzionalnih vektora)
+     - `05_Obnova_postupka_i_pravni_lijekovi`: **13 sudskih odluka** (poništavanje rješenja, ništavost, obnova, povrat u prijašnje stanje)
+     - `06_Ozakonjenje_i_gradjenje`: **6 sudskih odluka** (ZPNIZ, naknada za zadržavanje, građevinske dozvole)
+     - **Ukupno chunkova u `praksa`**: **12.295 chunkova** (dodano preko 1.400 novih 3072-dimenzionalnih vektora)
    - **Dvostruka deduplikacija**: Automatski preskače spise koji već postoje na disku ili u Supabase bazi po poslovnom broju (npr. `Usž-1743/2025-3`).
    - **Sinkronizacija s RAG bazom**: Automatski dijeli presudu na chunkove od 1400 znakova, računa 3072-dimenzionalne embeddinge (`gemini-embedding-001`) i upisuje u tablicu `praksa` pod standardiziranim naslovom.
    - **Verificiran rad AI Savjetnika (`scripts/verify-rag-court-practice.ts`)**:
      - Pretraživanje zastare povrata vodnog doprinosa pronalazi stvarne presude (npr. *Split Us I-2585/2024-9* s **95.5%** podudarnosti i *VUSRH Usž-1743/2025-3* s **87.1%**).
      - Pretraživanje šutnje uprave i obustave spora s troškovima pronalazi stvarne odluke s preko **85%** sličnosti.
-   - **Jednostavno pokretanje**: Naredba `npm run scrape-odluke -- --all-water --limit 20` ili `--query "pojam" --limit 10`.
+   - **Jednostavno pokretanje**: Naredba `npm run scrape-odluke -- --all-water --limit 20`, `--zup`, `--gradnja` ili `--query "pojam" --limit 10`.
+
+6. **Korisnički UI Pretraživač portala sudskih odluka (`src/app/baza-prakse/PretraziPortalModal.tsx`)**:
+   - U `/baza-prakse` dodan gumb *"Pretraži odluke.sudovi.hr"* uz *"Učitaj pojedinačni akt"*.
+   - Omogućava službenicima izravno pretraživanje javnog portala sudskih odluka iz preglednika po bilo kojem pojmu ili članku zakona uz preporučene tematske prečace.
+   - Prikazuje popis pronađenih odluka sa sažetkom, sudom, datumom i ishodom, bedžom *"Već u bazi"* za deduplikaciju te omogućava uvoz odabranih presuda jednim klikom uz trenutno osvježavanje sučelja i RAG baze.
+
+7. **Dvosmjerna veza sa zakonima: „Sudska praksa uz članak zakona” (`src/app/propisi/PropisiTable.tsx`)**:
+   - Uz svaki članak u `/propisi` dodan je interaktivni gumb *"⚖️ Sudska praksa"*.
+   - Klikom na gumb sustav u stvarnom vremenu (70–250ms preko `getRelatedPraksaForArticleAction`) pretražuje bazu prakse i prikazuje povezane meritorne presude i drugostupanjska rješenja s izrekom, sudom, godinom i ključnim pravnim isječkom.
+
+8. **Automatizirana periodička sinkronizacija sudske prakse (CI/CD & Cron)**:
+   - **GitHub Actions Workflow** (`.github/workflows/sync-sudska-praksa.yml`): Automatski se pokreće svakog 1. u mjesecu u 03:00 UTC (ili ručno putem `workflow_dispatch`).
+   - Pokreće `npm run sync-practice` (`scripts/sync-monthly-practice.ts`) za provjeru novih presuda u svim ključnim kategorijama, a sve novopronađene odluke automatski komita u repozitorij pod `./data/sudska-praksa/` i indeksira u Supabase.
 
 ---
 
