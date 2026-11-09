@@ -19,8 +19,11 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  PlusCircle,
+  Scale,
 } from 'lucide-react';
 import { deletePraksaDoc, deletePraksaFolder } from '@/app/actions/praksaActions';
+import { DodajOdlukuModal } from './DodajOdlukuModal';
 
 export type PraksaDoc = {
   naziv_datoteke: string;
@@ -32,7 +35,7 @@ export interface ParsedPraksaDoc {
   ukupno_chunkova: number;
   podrucje: string;
   godina: string;
-  ishod: 'Poništeno rješenje' | 'Odbijena žalba' | 'Ostalo';
+  ishod: 'Poništeno rješenje' | 'Odbijena žalba' | 'Obustava postupka' | 'Troškovi postupka' | 'Ostalo';
   stranka: string;
   lokacija: string | null;
   tagovi: string[];
@@ -81,7 +84,11 @@ function parseDocument(doc: PraksaDoc): ParsedPraksaDoc {
   const lower = clean.toLowerCase();
 
   let ishod: ParsedPraksaDoc['ishod'] = 'Ostalo';
-  if (lower.includes('poništ') || lower.includes('ponist')) {
+  if (lower.includes('obustav')) {
+    ishod = 'Obustava postupka';
+  } else if (lower.includes('troškov') || lower.includes('troskov')) {
+    ishod = 'Troškovi postupka';
+  } else if (lower.includes('poništ') || lower.includes('ponist')) {
     ishod = 'Poništeno rješenje';
   } else if (lower.includes('odbijen') || lower.includes('odbijena')) {
     ishod = 'Odbijena žalba';
@@ -140,6 +147,24 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [, startTransition] = useTransition();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleAddSuccess = (nazivDatoteke: string, chunkCount: number) => {
+    setItems((prev) => [
+      {
+        naziv_datoteke: nazivDatoteke,
+        ukupno_chunkova: chunkCount,
+      },
+      ...prev,
+    ]);
+    setFeedback({
+      message: `Nova odluka "${nazivDatoteke}" je uspješno spremljena u bazu (${chunkCount} vektorskih odlomaka).`,
+      type: 'success',
+    });
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
   const [openPodrucja, setOpenPodrucja] = useState<Record<string, boolean>>({});
   const [openGodine, setOpenGodine] = useState<Record<string, boolean>>({});
@@ -191,6 +216,8 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
       if (filterIshod !== 'sve') {
         if (filterIshod === 'ponisteno' && doc.ishod !== 'Poništeno rješenje') return false;
         if (filterIshod === 'odbijeno' && doc.ishod !== 'Odbijena žalba') return false;
+        if (filterIshod === 'obustava' && doc.ishod !== 'Obustava postupka') return false;
+        if (filterIshod === 'troskovi' && doc.ishod !== 'Troškovi postupka') return false;
       }
 
       return true;
@@ -344,6 +371,27 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
         </div>
       )}
 
+      {/* Glavni Header Banner s gumbom za unos odluke */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white p-5 rounded-2xl shadow-md border border-blue-900/40">
+        <div>
+          <div className="flex items-center gap-2">
+            <Scale className="w-5 h-5 text-blue-300" />
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">Katalog sudske i upravne prakse RH</h2>
+          </div>
+          <p className="text-xs text-blue-200/80 mt-1 max-w-xl leading-relaxed">
+            Sustav sadrži preko 1.600 odluka i 10.900 vektorskih chunkova za RAG asistenta. Zaprimljene presude i rješenja suda možete jednostavno uvesti uz automatsku GDPR anonimizaciju.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all shrink-0 cursor-pointer"
+        >
+          <PlusCircle className="w-4 h-4 text-white" />
+          <span>Učitaj odluku / presudu suda</span>
+        </button>
+      </div>
+
       {/* Kartice sa statistikom */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
@@ -438,7 +486,9 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             >
               <option value="sve">Svi ishodi</option>
               <option value="ponisteno">Poništena rješenja</option>
-              <option value="odbijeno">Odbijene žalbe</option>
+              <option value="odbijeno">Odbijene žalbe / tužbe</option>
+              <option value="obustava">Obustave postupka</option>
+              <option value="troskovi">Troškovi postupka</option>
             </select>
           </div>
         </div>
@@ -634,6 +684,18 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                     <div className="space-y-1.5 flex-1 min-w-0">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {/* Ishod bedž */}
+                                        {doc.ishod === 'Obustava postupka' && (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/80">
+                                            <Scale className="w-3 h-3 text-purple-600" />
+                                            Obustava postupka
+                                          </span>
+                                        )}
+                                        {doc.ishod === 'Troškovi postupka' && (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                                            <Scale className="w-3 h-3 text-indigo-600" />
+                                            Troškovi postupka
+                                          </span>
+                                        )}
                                         {doc.ishod === 'Poništeno rješenje' && (
                                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
                                             <RotateCcw className="w-3 h-3 text-amber-600" />
@@ -724,6 +786,13 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
           })}
         </div>
       )}
-  </div>
-);
+
+      {/* MODAL ZA UNOS SUDSKE ODLUKE */}
+      <DodajOdlukuModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleAddSuccess}
+      />
+    </div>
+  );
 }

@@ -1,38 +1,29 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { google } from '@/lib/google';
-import { embed } from 'ai';
+import { confirmPublishSudskaOdlukaAction } from '@/app/actions/praksaActions';
 
 export async function POST(req: Request) {
   try {
-    const { naslov, sadrzaj, kategorija } = await req.json();
+    const { naslov, sadrzaj } = await req.json();
 
-    if (!naslov || !sadrzaj || !kategorija) {
-      return NextResponse.json({ error: 'Nedostaju podaci (naslov, sadrzaj, kategorija).' }, { status: 400 });
+    if (!naslov || !sadrzaj) {
+      return NextResponse.json({ error: 'Nedostaju podaci (naslov, sadrzaj).' }, { status: 400 });
     }
 
-    // Generiranje vektora za sadrzaj
-    const { embedding } = await embed({
-      model: google.textEmbeddingModel('gemini-embedding-001'),
-      value: sadrzaj,
+    const res = await confirmPublishSudskaOdlukaAction({
+      nazivDatoteke: naslov,
+      anonymizedText: sadrzaj,
     });
 
-    // Spremanje u Supabase tablicu pravna_praksa
-    const { error: dbError } = await supabase
-      .from('pravna_praksa')
-      .insert([{ 
-        naslov, 
-        sadrzaj, 
-        kategorija, 
-        embedding 
-      }]);
-
-    if (dbError) {
-      console.error('Supabase Error:', dbError);
-      return NextResponse.json({ error: 'Greška pri spremanju u bazu.' }, { status: 500 });
+    if (res.error) {
+      return NextResponse.json({ error: res.error }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, message: 'Uspješno dodano u bazu prakse.' });
+    return NextResponse.json({
+      success: true,
+      message: 'Uspješno dodano u bazu prakse.',
+      chunkCount: res.chunkCount,
+      nazivDatoteke: res.nazivDatoteke,
+    });
   } catch (error: any) {
     console.error('API Praksa Error:', error);
     return NextResponse.json({ error: error.message || 'Greška pri obradi.' }, { status: 500 });

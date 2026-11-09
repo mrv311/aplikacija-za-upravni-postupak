@@ -1,6 +1,6 @@
 # HANDOFF: Stanje projekta i upute za rad
 
-Datum: 03.11.2026. (ažurirano nakon implementacije strukturnih i hijerarhijskih oznaka članaka: Dio, Glava, Poglavlje, Odjeljak, Naslovi)
+Datum: 09.11.2026. (ažurirano nakon implementacije ručnog unosa i AI uvoza sudskih presuda/rješenja u Bazu prakse)
 Grana: `master`
 Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
@@ -38,6 +38,12 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - Skripta `scripts/import-nove-kategorije.ts` automatski prepoznaje parove datoteka (`_boja` i `_pismohrana`).
    - Glavna verzija u boji ima prioritet, a pismohrana se automatski odbacuje kao duplikat.
    - Svi spisi su prošli automatsku GDPR anonimizaciju (`scripts/anonymizer.ts`).
+
+4. **Korisnički UI modul za pojedinačni uvoz novih sudskih odluka (`/baza-prakse` & `DodajOdlukuModal`)**:
+   - **Podrška za nove akte**: Omogućen jednostavan uvoz pojedinačnih zaprimljenih presuda i rješenja sudova (PDF digitalni/sken, Word `.docx`/`.doc`, TXT ili izravno lijepljenje teksta).
+   - **AI analiza i automatska GDPR anonimizacija**: Sustav putem modela `gemini-3.8-flash` identificira sud, poslovni broj, pravno područje (npr. *Troškovi postupka*, *Vodni doprinos*...), vrstu akta i ishod (npr. *Obustava postupka - dosuđeni troškovi*), te automatski zamjenjuje osobne podatke stranaka inicijalima.
+   - **Interaktivni pregled (Korak 2)**: Korisnik može pregledati i po potrebi doraditi službeni naziv datoteke, sažetak merituma i anonimizirani tekst prije trajnog upisa.
+   - **Vektorsko indeksiranje**: Automatska podjela u semantičke chunkove (1400 znakova, 200 preklapanja) i generiranje 3072-dimenzionalnih embeddinga (`gemini-embedding-001`) za Supabase tablicu `praksa` uz trenutno osvježavanje RAG kataloga i sučelja.
 
 ---
 
