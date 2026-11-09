@@ -50,9 +50,18 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Lokalna pohrana (Hibridni sustav)**: Odluke se trajno spremaju u projekt pod `./data/sudska-praksa/<kategorija>/<godina>/` kao:
      - `.json`: Kompletni strukturirani metapodatci (ECLI, sud, datum, poslovni broj, ishod, zakonsko kazalo).
      - `.txt`: Čisti, formatirani tekst presude s pravnim zaglavljem spreman za čitanje.
+   - **Stanje baze nakon tematskog uvoza (131 presuda / 12.167 vektora)**:
+     - `01_Vodni_doprinos`: **63 sudske odluke** (VUSRH, Upravni sudovi ZG/ST/RI/OS, VSRH)
+     - `02_Naknada_za_uredjenje_voda`: **30 sudskih odluka**
+     - `03_Naknada_za_zastitu_voda`: **30 sudskih odluka**
+     - `04_Sutnja_uprave_i_troskovi`: **8 sudskih odluka** (Visoki upravni sud RH 2025.–2026.)
+     - **Ukupno chunkova u `praksa`**: **12.167 chunkova** (povećanje s 10.887 na 12.167 — uvezeno 1.280 novih 3072-dimenzionalnih vektora)
    - **Dvostruka deduplikacija**: Automatski preskače spise koji već postoje na disku ili u Supabase bazi po poslovnom broju (npr. `Usž-1743/2025-3`).
    - **Sinkronizacija s RAG bazom**: Automatski dijeli presudu na chunkove od 1400 znakova, računa 3072-dimenzionalne embeddinge (`gemini-embedding-001`) i upisuje u tablicu `praksa` pod standardiziranim naslovom.
-   - **Jednostavno pokretanje**: Naredba `npm run scrape-odluke -- --query "vodni doprinos" --limit 10` uz podršku za `--dry-run`, `--court vusrh` i `--skip-db`.
+   - **Verificiran rad AI Savjetnika (`scripts/verify-rag-court-practice.ts`)**:
+     - Pretraživanje zastare povrata vodnog doprinosa pronalazi stvarne presude (npr. *Split Us I-2585/2024-9* s **95.5%** podudarnosti i *VUSRH Usž-1743/2025-3* s **87.1%**).
+     - Pretraživanje šutnje uprave i obustave spora s troškovima pronalazi stvarne odluke s preko **85%** sličnosti.
+   - **Jednostavno pokretanje**: Naredba `npm run scrape-odluke -- --all-water --limit 20` ili `--query "pojam" --limit 10`.
 
 ---
 

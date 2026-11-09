@@ -510,7 +510,7 @@ async function main() {
 
   const hasFlag = (flag: string): boolean => args.includes(flag);
 
-  const query = getArg('--query') || 'vodni doprinos';
+  const isAllWater = hasFlag('--all-water') || getArg('--query') === 'all-water';
   const category = getArg('--category');
   const limitStr = getArg('--limit');
   const limit = limitStr ? parseInt(limitStr, 10) : 10;
@@ -521,6 +521,32 @@ async function main() {
 
   const dryRun = hasFlag('--dry-run');
   const skipDb = hasFlag('--skip-db');
+
+  if (isAllWater) {
+    console.log('🌊 POKREĆEM CJELOVITI TEMATSKI UVOZ ZA VODNO GOSPODARSTVO I UPRAVNE SPOROVE 🌊');
+    const topics = [
+      { q: 'vodno gospodarstvo', cat: 'Vodni doprinos', lim: limit },
+      { q: 'vodni doprinos', cat: 'Vodni doprinos', lim: limit },
+      { q: 'naknada za uređenje voda', cat: 'Naknada za uređenje voda', lim: limit },
+      { q: 'naknada za zaštitu voda', cat: 'Naknada za zaštitu voda', lim: limit },
+      { q: 'šutnja uprave troškovi', cat: 'Troškovi postupka', lim: limit },
+    ];
+
+    for (const t of topics) {
+      await scrapeAndIndexDecisions({
+        query: t.q,
+        category: t.cat,
+        limit: t.lim,
+        courtFilter,
+        dryRun,
+        skipDb,
+      });
+      await delay(1000);
+    }
+    return;
+  }
+
+  const query = getArg('--query') || 'vodni doprinos';
 
   await scrapeAndIndexDecisions({
     query,
