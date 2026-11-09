@@ -45,6 +45,15 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
    - **Interaktivni pregled (Korak 2)**: Korisnik može pregledati i po potrebi doraditi službeni naziv datoteke, sažetak merituma i anonimizirani tekst prije trajnog upisa.
    - **Vektorsko indeksiranje**: Automatska podjela u semantičke chunkove (1400 znakova, 200 preklapanja) i generiranje 3072-dimenzionalnih embeddinga (`gemini-embedding-001`) za Supabase tablicu `praksa` uz trenutno osvježavanje RAG kataloga i sučelja.
 
+5. **Automatizirani skreper i uvoznik sudske prakse s portala `odluke.sudovi.hr` (`scripts/scrape-sudske-odluke.ts`)**:
+   - **Izvor**: Službeni portal Ministarstva pravosuđa, uprave i digitalne transformacije RH (`https://odluke.sudovi.hr`) s preko 1,3 milijuna pravomoćnih presuda.
+   - **Lokalna pohrana (Hibridni sustav)**: Odluke se trajno spremaju u projekt pod `./data/sudska-praksa/<kategorija>/<godina>/` kao:
+     - `.json`: Kompletni strukturirani metapodatci (ECLI, sud, datum, poslovni broj, ishod, zakonsko kazalo).
+     - `.txt`: Čisti, formatirani tekst presude s pravnim zaglavljem spreman za čitanje.
+   - **Dvostruka deduplikacija**: Automatski preskače spise koji već postoje na disku ili u Supabase bazi po poslovnom broju (npr. `Usž-1743/2025-3`).
+   - **Sinkronizacija s RAG bazom**: Automatski dijeli presudu na chunkove od 1400 znakova, računa 3072-dimenzionalne embeddinge (`gemini-embedding-001`) i upisuje u tablicu `praksa` pod standardiziranim naslovom.
+   - **Jednostavno pokretanje**: Naredba `npm run scrape-odluke -- --query "vodni doprinos" --limit 10` uz podršku za `--dry-run`, `--court vusrh` i `--skip-db`.
+
 ---
 
 ## 📌 2. Korisničko sučelje & Radni prostor predmeta
