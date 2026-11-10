@@ -8,6 +8,17 @@ export const EXCEL_SPOROVI_PATH =
 export const E_KOMUNIKACIJA_PATH =
   'C:\\Users\\dmalbasa\\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\\P O S A O\\UPRAVNI SPOROVI\\e_komunikacija sa sudovima';
 
+export interface TroskoviInfo {
+  imaTroskova: boolean;
+  iznos?: string;
+  status: 'neplaceno' | 'placeno' | 'poslan_nalog' | 'nema_troskova';
+  rokPlacanja?: string;
+  rokPlacanjaDate?: string;
+  danaDoRoka?: number | null;
+  hitnost: 'isteklo' | 'danas' | 'kriticno' | 'hitno' | 'u_roku' | 'rijeseno' | 'nema';
+  opis: string;
+}
+
 export interface UpravniSpor {
   id: string;
   rbr: number;
@@ -36,6 +47,7 @@ export interface UpravniSpor {
   danaDoRoka?: number | null;
   hitnost: 'isteklo' | 'danas' | 'kriticno' | 'hitno' | 'u_roku' | 'rijeseno' | 'nepoznato';
   fazaOpis: string;
+  troskoviInfo?: TroskoviInfo;
 }
 
 const MONTHS_HR: Record<string, number> = {
@@ -118,6 +130,113 @@ function extractDeadline(text: string): { deadlineDate: Date | null; deadlineStr
   if (anyD) return { deadlineDate: anyD, deadlineStr: text.trim() };
 
   return { deadlineDate: null, deadlineStr: null };
+}
+
+export function parseTroskoviInfo(
+  presuda: string,
+  aktPoPresudi: string,
+  zalba: string,
+  napomena: string,
+  datumZapPresudeStr: string,
+  today: Date
+): TroskoviInfo {
+  const combined = `${presuda} ${aktPoPresudi} ${zalba} ${napomena}`.trim();
+  const lower = combined.toLowerCase();
+
+  if (
+    !lower ||
+    lower.includes('nema troškova') ||
+    lower.includes('nema troskova') ||
+    lower.includes('bez troškova')
+  ) {
+    return {
+      imaTroskova: false,
+      status: 'nema_troskova',
+      hitnost: 'nema',
+      opis: 'Nema dosuđenih troškova spora',
+    };
+  }
+
+  // Look for amount: e.g. "1250 EUR", "1250,00 EUR", "625 eur", "1875 eur", "2500 EUR", "3.125,00 kn", "3125 kn"
+  const iznosMatch =
+    combined.match(/(\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\b\d+)\s*(?:EUR|eur|€)/) ||
+    combined.match(/(\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\b\d+)\s*(?:kn|kuna)/i);
+
+  const iznos = iznosMatch ? iznosMatch[0].trim() : undefined;
+  const isAwarded = !!iznos || lower.includes('trošak') || lower.includes('troškov');
+
+  if (!isAwarded) {
+    return {
+      imaTroskova: false,
+      status: 'nema_troskova',
+      hitnost: 'nema',
+      opis: 'Nema zabilježenih troškova',
+    };
+  }
+
+  const isPaid =
+    lower.includes('plaćeno') ||
+    lower.includes('placeno') ||
+    lower.includes('podmireno') ||
+    lower.includes('isplaćeno');
+  const hasNalog = lower.includes('nalog');
+
+  let status: TroskoviInfo['status'] = 'neplaceno';
+  if (isPaid) status = 'placeno';
+  else if (hasNalog) status = 'poslan_nalog';
+
+  let rokDate: Date | null = null;
+  let rokStr: string | null = null;
+  let opis = iznos ? `Dosuđeni troškovi: ${iznos}` : 'Dosuđeni troškovi spora';
+
+  // Check explicit deadline in text (e.g. "rok 1.12.2026." or "rok 15.10.2026.")
+  const explicitDeadline = extractDeadline(combined);
+  if (explicitDeadline.deadlineDate) {
+    rokDate = explicitDeadline.deadlineDate;
+    rokStr = explicitDeadline.deadlineStr;
+    opis += ` (rok: ${rokStr})`;
+  } else if (datumZapPresudeStr) {
+    // "15 dana od pravomoćnosti"
+    // Presuda prvostupanjskog upravnog suda: 15 dana za žalbu + 15 dana paricijski rok = 30 dana od primitka!
+    const zapDate = parseCroatianDate(datumZapPresudeStr);
+    if (zapDate) {
+      const target = new Date(zapDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      rokDate = target;
+      rokStr = `${rokDate.getDate()}.${rokDate.getMonth() + 1}.${rokDate.getFullYear()}.`;
+      opis += ` (15 d pravomoćnost + 15 d paricijski rok = ${rokStr})`;
+    }
+  }
+
+  let danaDoRoka: number | null = null;
+  let hitnost: TroskoviInfo['hitnost'] = 'nema';
+
+  if (isPaid || hasNalog) {
+    hitnost = 'rijeseno';
+    if (isPaid) opis += ' — PLAĆENO';
+    else if (hasNalog) opis += ' — Nalog poslan računovodstvu';
+  } else if (rokDate) {
+    const target = new Date(rokDate);
+    target.setHours(0, 0, 0, 0);
+    const diffMs = target.getTime() - today.getTime();
+    danaDoRoka = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (danaDoRoka < 0) hitnost = 'isteklo';
+    else if (danaDoRoka === 0) hitnost = 'danas';
+    else if (danaDoRoka <= 5) hitnost = 'kriticno';
+    else if (danaDoRoka <= 15) hitnost = 'hitno';
+    else hitnost = 'u_roku';
+  }
+
+  return {
+    imaTroskova: true,
+    iznos,
+    status,
+    rokPlacanja: rokStr || undefined,
+    rokPlacanjaDate: rokDate ? rokDate.toISOString() : undefined,
+    danaDoRoka,
+    hitnost,
+    opis,
+  };
 }
 
 export function parseExcelSporovi(forceRefresh = false): {
@@ -273,6 +392,15 @@ export function parseExcelSporovi(forceRefresh = false): {
         else hitnost = 'u_roku';
       }
 
+      const troskoviInfo = parseTroskoviInfo(
+        presuda,
+        aktPoPresudi,
+        cells['M'] || '',
+        cells['O'] || '',
+        datumZapPresude,
+        today
+      );
+
       sporovi.push({
         id: `spor-${rowNum}`,
         rbr: rowNum - 4,
@@ -300,6 +428,7 @@ export function parseExcelSporovi(forceRefresh = false): {
         danaDoRoka,
         hitnost,
         fazaOpis,
+        troskoviInfo,
       });
     }
 

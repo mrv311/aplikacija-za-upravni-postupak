@@ -18,6 +18,8 @@ export interface SporoviStats {
   danasIKriticno: number;
   sutnjaUprave: number;
   presudeni: number;
+  troskoviZaPlacanje: number;
+  hitniTroskovi: number;
 }
 
 export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
@@ -40,6 +42,8 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
       danasIKriticno: 0,
       sutnjaUprave: 0,
       presudeni: 0,
+      troskoviZaPlacanje: 0,
+      hitniTroskovi: 0,
     };
 
     for (const s of sporovi) {
@@ -61,6 +65,13 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         stats.hitni++;
       } else if (s.hitnost === 'hitno') {
         stats.hitni++;
+      }
+
+      if (s.troskoviInfo?.status === 'neplaceno') {
+        stats.troskoviZaPlacanje++;
+        if (['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.troskoviInfo.hitnost)) {
+          stats.hitniTroskovi++;
+        }
       }
     }
 
@@ -85,6 +96,8 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         danasIKriticno: 0,
         sutnjaUprave: 0,
         presudeni: 0,
+        troskoviZaPlacanje: 0,
+        hitniTroskovi: 0,
       },
       lastModified: '',
       source: 'cache',
