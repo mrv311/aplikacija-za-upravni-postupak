@@ -5,7 +5,14 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { supabaseServer as dbServer } from '@/lib/supabase-server';
 import { supabase as dbClient } from '@/lib/supabase';
-import { parseExcelSporovi, saveSporOverride, type UpravniSpor, E_KOMUNIKACIJA_PATH } from '@/lib/upravni-sporovi';
+import {
+  parseExcelSporovi,
+  parseExcelSporoviAsync,
+  getSporoviOverridesAsync,
+  saveSporOverrideAsync,
+  type UpravniSpor,
+  E_KOMUNIKACIJA_PATH,
+} from '@/lib/upravni-sporovi';
 import { parseCourtPacket, type ExtractedCourtCase } from '@/lib/court-packet-parser';
 
 const db = dbServer || dbClient;
@@ -37,7 +44,8 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
   error?: string;
 }> {
   try {
-    const result = parseExcelSporovi(forceRefresh);
+    const overrides = await getSporoviOverridesAsync();
+    const result = parseExcelSporovi(forceRefresh, overrides);
     const sporovi = result.sporovi;
 
     const stats: SporoviStats = {
@@ -367,7 +375,7 @@ export async function updateSporManualDetailsAction(payload: {
 }> {
   try {
     const key = payload.poslovniBroj || payload.id;
-    saveSporOverride(key, {
+    const updateData = {
       aktUpIiPoPresudi: payload.aktUpIiPoPresudi,
       odgovorNaTuzbu: payload.odgovorNaTuzbu,
       presudaTroskovi: payload.presudaTroskovi,
@@ -376,9 +384,14 @@ export async function updateSporManualDetailsAction(payload: {
       visokiUpravniSud: payload.visokiUpravniSud,
       rjesavatelj: payload.rjesavatelj,
       vrijednostNapomena: payload.vrijednostNapomena,
-    });
+    };
+    await saveSporOverrideAsync(key, updateData);
+    if (payload.id && payload.poslovniBroj && payload.id !== payload.poslovniBroj) {
+      await saveSporOverrideAsync(payload.id, updateData);
+    }
 
-    const res = parseExcelSporovi(false);
+    const overrides = await getSporoviOverridesAsync();
+    const res = parseExcelSporovi(false, overrides);
     const updated = res.sporovi.find(
       (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
     );
@@ -390,6 +403,7 @@ export async function updateSporManualDetailsAction(payload: {
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
+    console.error('updateSporManualDetailsAction error:', msg);
     return { success: false, error: msg };
   }
 }
@@ -412,12 +426,13 @@ export async function dismissSporAction(payload: {
         ? undefined
         : payload.reason || 'Ručno uklonjeno iz evidencije aktivnih sporova',
     };
-    saveSporOverride(key, overrideData);
+    await saveSporOverrideAsync(key, overrideData);
     if (payload.id && payload.poslovniBroj && payload.id !== payload.poslovniBroj) {
-      saveSporOverride(payload.id, overrideData);
+      await saveSporOverrideAsync(payload.id, overrideData);
     }
 
-    const res = parseExcelSporovi(false);
+    const overrides = await getSporoviOverridesAsync();
+    const res = parseExcelSporovi(false, overrides);
     const updated = res.sporovi.find(
       (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
     );
@@ -429,6 +444,7 @@ export async function dismissSporAction(payload: {
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
+    console.error('dismissSporAction error:', msg);
     return { success: false, error: msg };
   }
 }

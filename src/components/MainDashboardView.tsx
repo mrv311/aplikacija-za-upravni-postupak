@@ -90,10 +90,53 @@ export default function MainDashboardView({
 
   // Uklanjanje / Vraćanje spora
   const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [dismissNotification, setDismissNotification] = useState<{
+    spor: UpravniSpor;
+    isUndo: boolean;
+    text: string;
+  } | null>(null);
   const [dismissSuccessMsg, setDismissSuccessMsg] = useState<string>('');
 
   const handleDismissSpor = async (spor: UpravniSpor, unDismiss = false) => {
+    // 1. Trenutni optimistični update u UI-ju (predmet odmah nestaje iz liste i radara)
+    setSporovi((prev) =>
+      prev.map((s) => {
+        if (s.id === spor.id || (spor.poslovniBroj && s.poslovniBroj === spor.poslovniBroj)) {
+          return {
+            ...s,
+            isDismissed: !unDismiss,
+            dismissedReason: unDismiss ? undefined : 'Ručno uklonjeno iz evidencije aktivnih sporova',
+            hitnost: !unDismiss ? 'rijeseno' : s.hitnost,
+            danaDoRoka: !unDismiss ? null : s.danaDoRoka,
+            rokDatum: !unDismiss ? null : s.rokDatum,
+            rokDatumObj: !unDismiss ? null : s.rokDatumObj,
+            fazaOpis: !unDismiss ? 'Ručno uklonjeno iz aktivnih sporova' : s.fazaOpis,
+            hasManualOverride: true,
+          };
+        }
+        return s;
+      })
+    );
+
+    // Ako je bio otvoren u detaljima, zatvori ga
+    if (selectedSpor?.id === spor.id || (spor.poslovniBroj && selectedSpor?.poslovniBroj === spor.poslovniBroj)) {
+      setSelectedSpor(null);
+    }
+    setEditingSporId(null);
+
+    const msg = unDismiss
+      ? `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} vraćen je u aktivne sporove!`
+      : `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} uklonjen je iz aktivnih sporova!`;
+
+    setDismissNotification({
+      spor,
+      isUndo: unDismiss,
+      text: msg,
+    });
+    setDismissSuccessMsg(msg);
     setDismissingId(spor.id);
+
+    // 2. Trajno spremanje u bazu u pozadini
     try {
       const res = await dismissSporAction({
         id: spor.id,
@@ -102,31 +145,30 @@ export default function MainDashboardView({
         unDismiss,
       });
 
-      if (res.success) {
-        const updated = res.updatedSpor;
-        // Lokalno označi predmet (ne oslanjamo se samo na odgovor servera)
+      if (!res.success) {
+        console.error('Server dismiss error:', res.error);
+        // Vrati stanje natrag ako je server javio grešku
         setSporovi((prev) =>
           prev.map((s) =>
-            s.id === spor.id
-              ? updated && updated.id === spor.id
-                ? { ...updated, isDismissed: !unDismiss }
-                : { ...s, isDismissed: !unDismiss }
+            s.id === spor.id || (spor.poslovniBroj && s.poslovniBroj === spor.poslovniBroj)
+              ? { ...s, isDismissed: unDismiss }
               : s
           )
         );
-        setSelectedSpor(null);
-        setEditingSporId(null);
-        const msg = unDismiss
-          ? `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} vraćen je u aktivne sporove!`
-          : `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} uklonjen je iz aktivnih sporova!`;
-        setDismissSuccessMsg(msg);
-        setTimeout(() => setDismissSuccessMsg(''), 5000);
-      } else {
-        alert(`Predmet nije uklonjen – greška pri spremanju:\n${res.error || 'nepoznata greška'}`);
+        setDismissNotification(null);
+        setDismissSuccessMsg(`⚠️ Došlo je do greške pri spremanju u bazu: ${res.error || 'pokušajte ponovno'}`);
       }
     } catch (err) {
-      alert(`Predmet nije uklonjen – greška: ${err instanceof Error ? err.message : String(err)}`);
       console.error('Greška pri uklanjanju spora:', err);
+      setSporovi((prev) =>
+        prev.map((s) =>
+          s.id === spor.id || (spor.poslovniBroj && s.poslovniBroj === spor.poslovniBroj)
+            ? { ...s, isDismissed: unDismiss }
+            : s
+        )
+      );
+      setDismissNotification(null);
+      setDismissSuccessMsg(`⚠️ Greška pri povezivanju: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDismissingId(null);
     }
@@ -767,11 +809,38 @@ export default function MainDashboardView({
           {/* SUB-TAB 1: TABLICA SVIH SPOROVA */}
           {sporoviSubTab === 'tablica' && (
             <div className="space-y-4">
-              {/* OBAVIJEST O UKLANJANJU */}
-              {dismissSuccessMsg && (
-                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold flex items-center justify-between shadow-lg">
+              {/* OBAVIJEST O UKLANJANJU S GUMBOM ZA PONIŠTENJE */}
+              {dismissNotification && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
+                    <span>{dismissNotification.text}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDismissSpor(dismissNotification.spor, !dismissNotification.isUndo);
+                        setDismissNotification(null);
+                      }}
+                      className="px-2.5 py-1 rounded text-2xs font-bold uppercase tracking-wider bg-white/20 hover:bg-white/30 dark:bg-black/10 dark:hover:bg-black/20 text-white dark:text-slate-900 transition-colors cursor-pointer"
+                    >
+                      {dismissNotification.isUndo ? 'Ponovno ukloni' : '↩️ Poništi (vrati)'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDismissNotification(null)}
+                      className="text-slate-400 hover:text-white dark:hover:text-black p-0.5 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!dismissNotification && dismissSuccessMsg && (
+                <div className="p-3 rounded-xl bg-amber-500 text-white text-xs font-semibold flex items-center justify-between shadow-lg">
                   <span>{dismissSuccessMsg}</span>
-                  <button onClick={() => setDismissSuccessMsg('')} className="text-slate-400 hover:text-white dark:hover:text-black">
+                  <button onClick={() => setDismissSuccessMsg('')} className="text-white hover:opacity-80">
                     ✕
                   </button>
                 </div>
@@ -1089,7 +1158,9 @@ export default function MainDashboardView({
                                         <div className="flex items-center gap-2">
                                           {spor.isDismissed ? (
                                             <button
+                                              type="button"
                                               onClick={(e) => {
+                                                e.preventDefault();
                                                 e.stopPropagation();
                                                 handleDismissSpor(spor, true);
                                               }}
@@ -1101,21 +1172,17 @@ export default function MainDashboardView({
                                             </button>
                                           ) : (
                                             <button
+                                              type="button"
                                               onClick={(e) => {
+                                                e.preventDefault();
                                                 e.stopPropagation();
-                                                if (
-                                                  confirm(
-                                                    `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih sporova?\n\n(Predmet neće više stvarati hitne alarme na radaru rokova, a moći ćete ga pregledati pod filtrom "Uklonjeni predmeti" ili ga vratiti.)`
-                                                  )
-                                                ) {
-                                                  handleDismissSpor(spor, false);
-                                                }
+                                                handleDismissSpor(spor, false);
                                               }}
                                               disabled={dismissingId === spor.id}
-                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer"
                                               title="Ukloni ovaj predmet ako je zastario ili nema evidentiran ishod (npr. istekli rok prije više godina)"
                                             >
-                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                                               <span>🗑️ Ukloni iz aktivnih</span>
                                             </button>
                                           )}
@@ -1450,6 +1517,35 @@ export default function MainDashboardView({
           {/* SUB-TAB 2: RADAR ROKOVA */}
           {sporoviSubTab === 'radar' && (
             <div className="space-y-4">
+              {/* OBAVIJEST O UKLANJANJU S GUMBOM ZA PONIŠTENJE */}
+              {dismissNotification && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
+                    <span>{dismissNotification.text}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDismissSpor(dismissNotification.spor, !dismissNotification.isUndo);
+                        setDismissNotification(null);
+                      }}
+                      className="px-2.5 py-1 rounded text-2xs font-bold uppercase tracking-wider bg-white/20 hover:bg-white/30 dark:bg-black/10 dark:hover:bg-black/20 text-white dark:text-slate-900 transition-colors cursor-pointer"
+                    >
+                      {dismissNotification.isUndo ? 'Ponovno ukloni' : '↩️ Poništi (vrati)'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDismissNotification(null)}
+                      className="text-slate-400 hover:text-white dark:hover:text-black p-0.5 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5 shrink-0" />
                 <div className="text-xs text-rose-900 dark:text-rose-200">
@@ -1530,22 +1626,18 @@ export default function MainDashboardView({
                           Prikaži u tablici →
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
-                            if (
-                              confirm(
-                                `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih rokova?\n\n(Predmet neće više stvarati alarme na radaru rokova, a možete ga pregledati pod filtrom "Uklonjeni predmeti".)`
-                              )
-                            ) {
-                              handleDismissSpor(spor, false);
-                            }
+                            handleDismissSpor(spor, false);
                           }}
                           disabled={dismissingId === spor.id}
-                          className="text-2xs font-medium text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                          className="text-2xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           title="Ukloni ovaj predmet s radara i iz aktivnih sporova"
                         >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Ukloni</span>
+                          <Trash2 className="w-3 h-3 text-rose-600" />
+                          <span>Ukloni s radara</span>
                         </button>
                       </div>
                     </div>

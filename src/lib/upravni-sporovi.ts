@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { supabaseServer as dbServer } from './supabase-server';
+import { supabase as dbClient } from './supabase';
 
 export const EXCEL_SPOROVI_PATH =
   'C:\\Users\\dmalbasa\\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\\P O S A O\\UPRAVNI SPOROVI\\TABLICA - upravni sporovi\\TABLICA - U P R A V N I  S P O R O V I.xlsx';
@@ -72,7 +74,7 @@ export interface SporOverride {
   updatedAt?: string;
 }
 
-export function getSporoviOverrides(): Record<string, SporOverride> {
+export function getSporoviOverridesFromFile(): Record<string, SporOverride> {
   if (fs.existsSync(SPOROVI_OVERRIDES_PATH)) {
     try {
       return JSON.parse(fs.readFileSync(SPOROVI_OVERRIDES_PATH, 'utf8'));
@@ -83,6 +85,102 @@ export function getSporoviOverrides(): Record<string, SporOverride> {
   return {};
 }
 
+let cachedDbOverrides: Record<string, SporOverride> | null = null;
+let lastDbFetchTime = 0;
+
+export async function getSporoviOverridesAsync(): Promise<Record<string, SporOverride>> {
+  const fileOverrides = getSporoviOverridesFromFile();
+  const now = Date.now();
+  if (cachedDbOverrides && now - lastDbFetchTime < 5000) {
+    return { ...fileOverrides, ...cachedDbOverrides };
+  }
+
+  try {
+    const db = dbServer || dbClient;
+    if (db) {
+      const { data, error } = await db
+        .from('pravna_praksa')
+        .select('sadrzaj')
+        .eq('naslov', 'UPRAVNI_SPOROVI_OVERRIDES')
+        .maybeSingle();
+
+      if (!error && data?.sadrzaj) {
+        const dbOverrides = JSON.parse(data.sadrzaj);
+        cachedDbOverrides = dbOverrides;
+        lastDbFetchTime = now;
+        return { ...fileOverrides, ...dbOverrides };
+      }
+    }
+  } catch (err) {
+    console.warn('Greška pri dohvaćanju sporovi overrides iz Supabase:', err);
+  }
+
+  return fileOverrides;
+}
+
+export async function saveSporOverrideAsync(
+  identifier: string,
+  updates: SporOverride
+): Promise<Record<string, SporOverride>> {
+  const current = await getSporoviOverridesAsync();
+  current[identifier] = {
+    ...(current[identifier] || {}),
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // 1. Spremi u Supabase
+  try {
+    const db = dbServer || dbClient;
+    if (db) {
+      const sadrzaj = JSON.stringify(current, null, 2);
+      const { data: existing } = await db
+        .from('pravna_praksa')
+        .select('id')
+        .eq('naslov', 'UPRAVNI_SPOROVI_OVERRIDES')
+        .maybeSingle();
+
+      if (existing?.id) {
+        await db
+          .from('pravna_praksa')
+          .update({ sadrzaj, kategorija: 'SYSTEM_OVERRIDES' })
+          .eq('id', existing.id);
+      } else {
+        await db
+          .from('pravna_praksa')
+          .insert({
+            naslov: 'UPRAVNI_SPOROVI_OVERRIDES',
+            kategorija: 'SYSTEM_OVERRIDES',
+            sadrzaj,
+          });
+      }
+    }
+  } catch (dbErr) {
+    console.error('Greška pri spremanju sporovi overrides u Supabase:', dbErr);
+  }
+
+  // 2. Spremi u lokalnu datoteku (ako je filesystem read-write, npr. lokalni dev)
+  try {
+    const dir = path.dirname(SPOROVI_OVERRIDES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SPOROVI_OVERRIDES_PATH, JSON.stringify(current, null, 2), 'utf8');
+  } catch {
+    // Na Vercelu je filesystem read-only (EROFS), što je normalno i ignoriramo
+  }
+
+  cachedDbOverrides = current;
+  lastDbFetchTime = Date.now();
+  return current;
+}
+
+export function getSporoviOverrides(): Record<string, SporOverride> {
+  const file = getSporoviOverridesFromFile();
+  if (cachedDbOverrides) {
+    return { ...file, ...cachedDbOverrides };
+  }
+  return file;
+}
+
 export function saveSporOverride(identifier: string, updates: SporOverride): void {
   const overrides = getSporoviOverrides();
   overrides[identifier] = {
@@ -90,14 +188,33 @@ export function saveSporOverride(identifier: string, updates: SporOverride): voi
     ...updates,
     updatedAt: new Date().toISOString(),
   };
-  const dir = path.dirname(SPOROVI_OVERRIDES_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(SPOROVI_OVERRIDES_PATH, JSON.stringify(overrides, null, 2), 'utf8');
+  try {
+    const dir = path.dirname(SPOROVI_OVERRIDES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SPOROVI_OVERRIDES_PATH, JSON.stringify(overrides, null, 2), 'utf8');
+  } catch {
+    // Ignore read-only fs error on Vercel
+  }
 }
 
 export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, SporOverride>): UpravniSpor {
   const key = spor.poslovniBroj || spor.id;
-  const ov = overrides[key] || (spor.poslovniBroj ? overrides[spor.poslovniBroj] : undefined) || overrides[spor.id];
+  let ov =
+    overrides[key] ||
+    (spor.poslovniBroj ? overrides[spor.poslovniBroj] : undefined) ||
+    (spor.poslovniBroj ? overrides[spor.poslovniBroj.trim()] : undefined) ||
+    (spor.id ? overrides[spor.id] : undefined);
+
+  if (!ov && spor.poslovniBroj) {
+    const pbLower = spor.poslovniBroj.toLowerCase().trim();
+    for (const [k, v] of Object.entries(overrides)) {
+      if (k.toLowerCase().trim() === pbLower) {
+        ov = v;
+        break;
+      }
+    }
+  }
+
   if (!ov) return spor;
 
   if (ov.isDismissed) {
@@ -430,7 +547,10 @@ export function parseTroskoviInfo(
   };
 }
 
-export function parseExcelSporovi(forceRefresh = false): {
+export function parseExcelSporovi(
+  forceRefresh = false,
+  providedOverrides?: Record<string, SporOverride>
+): {
   sporovi: UpravniSpor[];
   lastModified: string;
   source: 'live' | 'cache';
@@ -453,7 +573,7 @@ export function parseExcelSporovi(forceRefresh = false): {
     canReadLive = false;
   }
 
-  const overrides = getSporoviOverrides();
+  const overrides = providedOverrides || getSporoviOverrides();
 
   // Use cache if alive and not force refresh
   if (!forceRefresh && fs.existsSync(cachePath)) {
@@ -718,4 +838,13 @@ export function parseExcelSporovi(forceRefresh = false): {
     }
     return { sporovi: [], lastModified: '', source: 'cache' };
   }
+}
+
+export async function parseExcelSporoviAsync(forceRefresh = false): Promise<{
+  sporovi: UpravniSpor[];
+  lastModified: string;
+  source: 'live' | 'cache';
+}> {
+  const overrides = await getSporoviOverridesAsync();
+  return parseExcelSporovi(forceRefresh, overrides);
 }

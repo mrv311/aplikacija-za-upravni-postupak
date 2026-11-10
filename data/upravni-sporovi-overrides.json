@@ -8,5 +8,15 @@
     "isDismissed": true,
     "dismissedReason": "Zastario predmet bez evidentiranog ishoda (rok istekao 2018.)",
     "updatedAt": "2026-11-10T10:14:00.000Z"
+  },
+  "9Usl-1289/16": {
+    "isDismissed": true,
+    "dismissedReason": "Ručno uklonjeno iz evidencije aktivnih sporova",
+    "updatedAt": "2026-11-10T10:30:00.000Z"
+  },
+  "spor-36": {
+    "isDismissed": true,
+    "dismissedReason": "Ručno uklonjeno iz evidencije aktivnih sporova",
+    "updatedAt": "2026-11-10T10:30:00.000Z"
   }
 }

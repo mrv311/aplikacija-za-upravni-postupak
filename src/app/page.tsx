@@ -1,6 +1,6 @@
 import { supabaseServer as supabase } from '@/lib/supabase-server';
 import { enrichPredmetRow, type EnrichedPredmet } from '@/lib/predmet-meta';
-import { parseExcelSporovi } from '@/lib/upravni-sporovi';
+import { parseExcelSporoviAsync } from '@/lib/upravni-sporovi';
 import MainDashboardView from '@/components/MainDashboardView';
 
 export const dynamic = 'force-dynamic';
@@ -18,8 +18,8 @@ export default async function Home() {
 
   const aktivniLista: EnrichedPredmet[] = (predmeti || []).map(enrichPredmetRow);
 
-  // Učitavamo sve žive upravne sporove izravno iz Excel evidencije
-  const { sporovi, lastModified, source } = parseExcelSporovi(false);
+  // Učitavamo sve žive upravne sporove izravno iz Excel evidencije uz uvažavanje override-a iz baze
+  const { sporovi, lastModified, source } = await parseExcelSporoviAsync(false);
 
   return (
     <MainDashboardView
