@@ -204,6 +204,7 @@ export function parseExcelSporovi(forceRefresh = false): {
       const sud = cells['C'] || '';
       const poslBroj = cells['D'] || '';
       if (!tuziteljRaw && !poslBroj) continue;
+      if (!poslBroj && /^\d{4}$/.test(tuziteljRaw.trim())) continue;
 
       // Extract OIB
       const oibMatch = tuziteljRaw.match(/OIB:\s*(\d{11})/i);
