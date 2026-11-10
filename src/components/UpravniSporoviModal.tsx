@@ -247,6 +247,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [formRokDospijeca, setFormRokDospijeca] = useState('');
   const [formRjesavatelj, setFormRjesavatelj] = useState('Dino Malbaša');
   const [formSazetak, setFormSazetak] = useState('');
+  const [formPresuda, setFormPresuda] = useState('');
+  const [formDatumZapPresude, setFormDatumZapPresude] = useState('');
+  const [formTroskoviNapomena, setFormTroskoviNapomena] = useState('');
 
   const loadData = async (forceRefresh = false) => {
     setLoading(true);
@@ -301,6 +304,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
     setFormRokDospijeca(data.rokDospijecaFormat);
     setFormRjesavatelj(data.rjesavateljPreporuka || 'Dino Malbaša');
     setFormSazetak(data.sazetak);
+    setFormPresuda('');
+    setFormDatumZapPresude('');
+    setFormTroskoviNapomena('');
     setSaveSuccessMsg('');
     setSaveErrorMsg('');
   };
@@ -383,10 +389,17 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         rjesavatelj: formRjesavatelj,
         tuzbaPreuzeta: formattedPreuzeto,
         odgovorNaTuzbu: odgovorEvidencija,
+        presudaTroskovi: formPresuda,
+        datumZapPresude: formDatumZapPresude,
+        vrijednostNapomena: formTroskoviNapomena,
       });
 
       if (res.success) {
         setSaveSuccessMsg(`Predmet ${formPoslovniBroj} (${formTuzitelj}) uspješno je spremljen u evidenciju sporova!`);
+        if (res.newSpor) {
+          const added = res.newSpor;
+          setSporovi((prev) => [added, ...prev.filter((s) => s.poslovniBroj !== added.poslovniBroj)]);
+        }
         await loadData(false);
       } else {
         setSaveErrorMsg(res.error || 'Greška pri spremanju.');
@@ -1965,6 +1978,52 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                         onChange={(e) => setFormSazetak(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                       />
+                    </div>
+
+                    <div className="md:col-span-2 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <span>⚖️</span> Opcionalno: Podaci o presudi i dosuđenim troškovima
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                            Presuda / Ishod spora:
+                          </label>
+                          <input
+                            type="text"
+                            value={formPresuda}
+                            onChange={(e) => setFormPresuda(e.target.value)}
+                            placeholder="npr. Uvažena tužba, poništeno..."
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                            Datum primitka presude:
+                          </label>
+                          <input
+                            type="text"
+                            value={formDatumZapPresude}
+                            onChange={(e) => setFormDatumZapPresude(e.target.value)}
+                            placeholder="npr. 10.03.2026."
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                            Dosuđeni troškovi & Rok:
+                          </label>
+                          <input
+                            type="text"
+                            value={formTroskoviNapomena}
+                            onChange={(e) => setFormTroskoviNapomena(e.target.value)}
+                            placeholder="npr. 1250 EUR - rok 15 dana..."
+                            className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 text-slate-900 dark:text-slate-100"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 

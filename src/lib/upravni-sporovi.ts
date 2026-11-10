@@ -197,6 +197,118 @@ export function saveSporOverride(identifier: string, updates: SporOverride): voi
   }
 }
 
+export const SPOROVI_CUSTOM_PATH = path.join(process.cwd(), 'data', 'upravni-sporovi-custom.json');
+
+export function getCustomSporoviFromFile(): UpravniSpor[] {
+  if (fs.existsSync(SPOROVI_CUSTOM_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(SPOROVI_CUSTOM_PATH, 'utf8'));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+let cachedCustomSporovi: UpravniSpor[] | null = null;
+let lastCustomFetchTime = 0;
+
+export async function getCustomSporoviAsync(): Promise<UpravniSpor[]> {
+  const fileSporovi = getCustomSporoviFromFile();
+  const now = Date.now();
+  if (cachedCustomSporovi && now - lastCustomFetchTime < 5000) {
+    const map = new Map<string, UpravniSpor>();
+    fileSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+    cachedCustomSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+    return Array.from(map.values());
+  }
+
+  try {
+    const db = dbServer || dbClient;
+    if (db) {
+      const { data, error } = await db
+        .from('pravna_praksa')
+        .select('sadrzaj')
+        .eq('naslov', 'UPRAVNI_SPOROVI_CUSTOM')
+        .maybeSingle();
+
+      if (!error && data?.sadrzaj) {
+        const dbSporovi: UpravniSpor[] = JSON.parse(data.sadrzaj);
+        cachedCustomSporovi = dbSporovi;
+        lastCustomFetchTime = now;
+        const map = new Map<string, UpravniSpor>();
+        fileSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+        dbSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+        return Array.from(map.values());
+      }
+    }
+  } catch (err) {
+    console.warn('Greška pri dohvaćanju custom sporova iz Supabase:', err);
+  }
+
+  return fileSporovi;
+}
+
+export async function saveCustomSporAsync(newOrUpdated: UpravniSpor): Promise<UpravniSpor[]> {
+  const current = await getCustomSporoviAsync();
+  const existingIdx = current.findIndex(
+    (s) =>
+      (newOrUpdated.poslovniBroj && s.poslovniBroj === newOrUpdated.poslovniBroj) ||
+      s.id === newOrUpdated.id
+  );
+
+  let updatedList: UpravniSpor[];
+  if (existingIdx >= 0) {
+    updatedList = [...current];
+    updatedList[existingIdx] = { ...updatedList[existingIdx], ...newOrUpdated };
+  } else {
+    updatedList = [newOrUpdated, ...current];
+  }
+
+  // 1. Spremi u Supabase
+  try {
+    const db = dbServer || dbClient;
+    if (db) {
+      const sadrzaj = JSON.stringify(updatedList, null, 2);
+      const { data: existing } = await db
+        .from('pravna_praksa')
+        .select('id')
+        .eq('naslov', 'UPRAVNI_SPOROVI_CUSTOM')
+        .maybeSingle();
+
+      if (existing?.id) {
+        await db
+          .from('pravna_praksa')
+          .update({ sadrzaj, kategorija: 'SYSTEM_CUSTOM_SPOROVI' })
+          .eq('id', existing.id);
+      } else {
+        await db
+          .from('pravna_praksa')
+          .insert({
+            naslov: 'UPRAVNI_SPOROVI_CUSTOM',
+            kategorija: 'SYSTEM_CUSTOM_SPOROVI',
+            sadrzaj,
+          });
+      }
+    }
+  } catch (dbErr) {
+    console.error('Greška pri spremanju custom sporova u Supabase:', dbErr);
+  }
+
+  // 2. Sigurno spremi lokalno ako filesystem dopušta
+  try {
+    const dir = path.dirname(SPOROVI_CUSTOM_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SPOROVI_CUSTOM_PATH, JSON.stringify(updatedList, null, 2), 'utf8');
+  } catch {
+    // Ignoriraj EROFS na Vercelu
+  }
+
+  cachedCustomSporovi = updatedList;
+  lastCustomFetchTime = Date.now();
+  return updatedList;
+}
+
 export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, SporOverride>): UpravniSpor {
   const key = spor.poslovniBroj || spor.id;
   let ov =
@@ -347,7 +459,7 @@ export function parseCroatianDate(str: string): Date | null {
   return null;
 }
 
-function extractDeadline(text: string): { deadlineDate: Date | null; deadlineStr: string | null } {
+export function extractDeadline(text: string): { deadlineDate: Date | null; deadlineStr: string | null } {
   if (!text) return { deadlineDate: null, deadlineStr: null };
 
   // Look for "rok DD.MM.YYYY" or "do DD.MM.YYYY"
@@ -574,7 +686,8 @@ export function parseTroskoviInfo(
 
 export function parseExcelSporovi(
   forceRefresh = false,
-  providedOverrides?: Record<string, SporOverride>
+  providedOverrides?: Record<string, SporOverride>,
+  providedCustomSporovi?: UpravniSpor[]
 ): {
   sporovi: UpravniSpor[];
   lastModified: string;
@@ -599,6 +712,23 @@ export function parseExcelSporovi(
   }
 
   const overrides = providedOverrides || getSporoviOverrides();
+  const customSporovi = providedCustomSporovi || getCustomSporoviFromFile();
+
+  const mergeWithCustom = (baseList: UpravniSpor[]) => {
+    if (!customSporovi || customSporovi.length === 0) {
+      return baseList.map((s) => applySporOverrides(s, overrides));
+    }
+    const map = new Map<string, UpravniSpor>();
+    // First custom sporovi so they appear first or override base
+    customSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+    baseList.forEach((s) => {
+      const key = s.poslovniBroj || s.id;
+      if (!map.has(key)) {
+        map.set(key, s);
+      }
+    });
+    return Array.from(map.values()).map((s) => applySporOverrides(s, overrides));
+  };
 
   // Use cache if alive and not force refresh
   if (!forceRefresh && fs.existsSync(cachePath)) {
@@ -607,7 +737,7 @@ export function parseExcelSporovi(
       const sample = cached.sporovi?.find((s: UpravniSpor) => s.tuzitelj?.includes('MORAVICE'));
       const hasModernCosts = sample && sample.troskoviInfo?.bojaOznake;
       if (hasModernCosts && (!canReadLive || cached.fileMtime === fileMtime)) {
-        const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+        const merged = mergeWithCustom(cached.sporovi || []);
         return { sporovi: merged, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
       }
     } catch {
@@ -617,12 +747,12 @@ export function parseExcelSporovi(
 
   if (!canReadLive && fs.existsSync(cachePath)) {
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-    const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+    const merged = mergeWithCustom(cached.sporovi || []);
     return { sporovi: merged, lastModified: cached.fileMtime || '', source: 'cache' };
   }
 
   if (!canReadLive) {
-    return { sporovi: [], lastModified: '', source: 'cache' };
+    return { sporovi: mergeWithCustom([]), lastModified: '', source: 'cache' };
   }
 
   try {
@@ -842,26 +972,30 @@ export function parseExcelSporovi(
       });
     }
 
-    const finalSporovi = sporovi.map((s) => applySporOverrides(s, overrides));
+    const finalSporovi = mergeWithCustom(sporovi);
 
-    // Save to cache
-    const cacheData = {
-      fileMtime,
-      savedAt: new Date().toISOString(),
-      count: finalSporovi.length,
-      sporovi: finalSporovi,
-    };
-    fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf8');
+    // Save to cache safely (wrapped in try-catch so it never fails on read-only environments)
+    try {
+      const cacheData = {
+        fileMtime,
+        savedAt: new Date().toISOString(),
+        count: finalSporovi.length,
+        sporovi: finalSporovi,
+      };
+      fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf8');
+    } catch {
+      // Ignoriraj EROFS na poslužitelju
+    }
 
     return { sporovi: finalSporovi, lastModified: fileMtime, source: 'live' };
   } catch (err) {
     console.error('Error parsing live Excel sporovi:', err);
     if (fs.existsSync(cachePath)) {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-      const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+      const merged = mergeWithCustom(cached.sporovi || []);
       return { sporovi: merged, lastModified: cached.fileMtime || '', source: 'cache' };
     }
-    return { sporovi: [], lastModified: '', source: 'cache' };
+    return { sporovi: mergeWithCustom([]), lastModified: '', source: 'cache' };
   }
 }
 
@@ -870,6 +1004,9 @@ export async function parseExcelSporoviAsync(forceRefresh = false): Promise<{
   lastModified: string;
   source: 'live' | 'cache';
 }> {
-  const overrides = await getSporoviOverridesAsync();
-  return parseExcelSporovi(forceRefresh, overrides);
+  const [overrides, customSporovi] = await Promise.all([
+    getSporoviOverridesAsync(),
+    getCustomSporoviAsync(),
+  ]);
+  return parseExcelSporovi(forceRefresh, overrides, customSporovi);
 }

@@ -10,6 +10,10 @@ import {
   parseExcelSporoviAsync,
   getSporoviOverridesAsync,
   saveSporOverrideAsync,
+  getCustomSporoviAsync,
+  saveCustomSporAsync,
+  parseTroskoviInfo,
+  extractDeadline,
   type UpravniSpor,
   E_KOMUNIKACIJA_PATH,
 } from '@/lib/upravni-sporovi';
@@ -273,7 +277,7 @@ export async function analyzeFromOneDriveFolderAction(folderName: string): Promi
 }
 
 /**
- * Sprema novi upravni spor u evidenciju.
+ * Sprema novi upravni spor u evidenciju (u Supabase bazu i lokalni cache).
  */
 export async function saveNewSporAction(payload: {
   sud: string;
@@ -285,31 +289,94 @@ export async function saveNewSporAction(payload: {
   rjesavatelj: string;
   tuzbaPreuzeta: string;
   odgovorNaTuzbu: string;
-}): Promise<{ success: boolean; error?: string }> {
+  presudaTroskovi?: string;
+  datumZapPresude?: string;
+  aktUpIiPoPresudi?: string;
+  zalbaPresuda?: string;
+  visokiUpravniSud?: string;
+  vrijednostNapomena?: string;
+}): Promise<{ success: boolean; newSpor?: UpravniSpor; error?: string }> {
   try {
-    const cachePath = path.join(process.cwd(), 'data', 'upravni-sporovi-cache.json');
-    let sporovi: UpravniSpor[] = [];
-    let fileMtime = new Date().toISOString();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (fs.existsSync(cachePath)) {
-      try {
-        const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-        sporovi = cached.sporovi || [];
-        fileMtime = cached.fileMtime || fileMtime;
-      } catch {}
-    }
-
-    const nextRbr = sporovi.length > 0 ? Math.max(...sporovi.map((s) => s.rbr)) + 1 : 1;
-    const nextRowNum = sporovi.length > 0 ? Math.max(...sporovi.map((s) => s.rowNum)) + 1 : 5;
+    const presuda = (payload.presudaTroskovi || '').trim();
+    const datumZapPresude = (payload.datumZapPresude || '').trim();
+    const aktPoPresudi = (payload.aktUpIiPoPresudi || '').trim();
+    const zalba = (payload.zalbaPresuda || '').trim();
+    const visokiUpravniSud = (payload.visokiUpravniSud || '').trim();
+    const vrijednostNapomena = (payload.vrijednostNapomena || '').trim();
+    const odgovor = (payload.odgovorNaTuzbu || '').trim();
 
     const isSutnja =
       payload.upIiRjesenje.toLowerCase().includes('šutnja') ||
-      payload.predmet.toLowerCase().includes('šutnja');
+      payload.predmet.toLowerCase().includes('šutnja') ||
+      payload.tuzitelj.toLowerCase().includes('šutnja');
+
+    const isPresudeno = !!(presuda || datumZapPresude || aktPoPresudi);
+    const isOdgovoreno =
+      odgovor.toLowerCase().includes('odgovor') ||
+      odgovor.toLowerCase().includes('poslan') ||
+      odgovor.toLowerCase().includes('odg.') ||
+      odgovor.toLowerCase().includes('kp');
+
+    let rokDatumObj: Date | null = null;
+    let rokDatumStr: string | null = null;
+    let fazaOpis = 'Novi spor — čeka se izrada odgovora na tužbu';
+
+    if (isPresudeno) {
+      fazaOpis = presuda ? `Presuda: ${presuda}` : 'Presuđeno';
+      if (aktPoPresudi && aktPoPresudi.toLowerCase().includes('rok')) {
+        const actDeadline = extractDeadline(aktPoPresudi);
+        if (actDeadline.deadlineDate) {
+          rokDatumObj = actDeadline.deadlineDate;
+          rokDatumStr = actDeadline.deadlineStr;
+          fazaOpis = `Donošenje akta po presudi (${aktPoPresudi})`;
+        }
+      }
+    } else if (isOdgovoreno) {
+      fazaOpis = 'Odgovor na tužbu poslan — čeka se odluka suda';
+    } else {
+      const dInfo = extractDeadline(odgovor);
+      rokDatumObj = dInfo.deadlineDate;
+      rokDatumStr = dInfo.deadlineStr;
+    }
+
+    let danaDoRoka: number | null = null;
+    let hitnost: UpravniSpor['hitnost'] = 'nepoznato';
+
+    if (isPresudeno && !rokDatumObj) {
+      hitnost = 'rijeseno';
+    } else if (isOdgovoreno && !rokDatumObj) {
+      hitnost = 'rijeseno';
+    } else if (rokDatumObj) {
+      const target = new Date(rokDatumObj);
+      target.setHours(0, 0, 0, 0);
+      const diffMs = target.getTime() - today.getTime();
+      danaDoRoka = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (danaDoRoka < 0) hitnost = 'isteklo';
+      else if (danaDoRoka === 0) hitnost = 'danas';
+      else if (danaDoRoka <= 3) hitnost = 'kriticno';
+      else if (danaDoRoka <= 10) hitnost = 'hitno';
+      else hitnost = 'u_roku';
+    } else {
+      hitnost = 'kriticno';
+    }
+
+    const troskoviInfo = parseTroskoviInfo(
+      presuda,
+      aktPoPresudi,
+      zalba,
+      vrijednostNapomena,
+      datumZapPresude,
+      today
+    );
 
     const newSpor: UpravniSpor = {
-      id: `spor-${nextRowNum}`,
-      rbr: nextRbr,
-      rowNum: nextRowNum,
+      id: `custom-${Date.now()}`,
+      rbr: 1,
+      rowNum: 9999,
       tuzitelj: payload.tuzitelj,
       oib: payload.oib,
       sud: payload.sud,
@@ -318,42 +385,58 @@ export async function saveNewSporAction(payload: {
       predmet: payload.predmet,
       rjesavatelj: payload.rjesavatelj,
       tuzbaPreuzeta: payload.tuzbaPreuzeta,
-      odgovorNaTuzbu: payload.odgovorNaTuzbu,
-      presudaTroskovi: '',
-      datumZapPresude: '',
-      aktUpIiPoPresudi: '',
-      zalbaPresuda: '',
-      visokiUpravniSud: '',
-      vrijednostNapomena: '',
+      odgovorNaTuzbu: odgovor,
+      presudaTroskovi: presuda,
+      datumZapPresude: datumZapPresude,
+      aktUpIiPoPresudi: aktPoPresudi,
+      zalbaPresuda: zalba,
+      visokiUpravniSud: visokiUpravniSud,
+      vrijednostNapomena: vrijednostNapomena,
+      rokDatum: rokDatumStr || undefined,
+      danaDoRoka: danaDoRoka ?? undefined,
       isSutnjaUprave: isSutnja,
-      isOdgovoreno: false,
-      isPresudeno: false,
-      hitnost: 'kriticno',
-      fazaOpis: 'Novi spor — čeka se izrada odgovora na tužbu',
+      isOdgovoreno,
+      isPresudeno,
+      hitnost,
+      fazaOpis,
+      troskoviInfo,
     };
 
-    // Dodaj na početak liste novih
-    const updated = [...sporovi, newSpor];
+    // 1. Spremi u Supabase bazu podataka
+    await saveCustomSporAsync(newSpor);
 
-    fs.writeFileSync(
-      cachePath,
-      JSON.stringify(
-        {
-          fileMtime,
-          savedAt: new Date().toISOString(),
-          count: updated.length,
-          sporovi: updated,
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
+    // 2. Opcionalno osvježi lokalni cache ako filesystem to dopušta
+    try {
+      const cachePath = path.join(process.cwd(), 'data', 'upravni-sporovi-cache.json');
+      if (fs.existsSync(cachePath)) {
+        const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+        const existingSporovi: UpravniSpor[] = cached.sporovi || [];
+        const filtered = existingSporovi.filter((s) => s.poslovniBroj !== newSpor.poslovniBroj);
+        const updated = [newSpor, ...filtered];
+        fs.writeFileSync(
+          cachePath,
+          JSON.stringify(
+            {
+              fileMtime: cached.fileMtime || new Date().toISOString(),
+              savedAt: new Date().toISOString(),
+              count: updated.length,
+              sporovi: updated,
+            },
+            null,
+            2
+          ),
+          'utf8'
+        );
+      }
+    } catch {
+      // Ignoriraj EROFS na poslužitelju (Vercel)
+    }
 
     revalidatePath('/');
-    return { success: true };
+    return { success: true, newSpor };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
+    console.error('Greška pri saveNewSporAction:', err);
     return { success: false, error: msg };
   }
 }
