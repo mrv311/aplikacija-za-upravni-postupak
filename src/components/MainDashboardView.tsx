@@ -24,6 +24,8 @@ import {
   Link as LinkIcon,
   Plus,
   Pencil,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
 import type { EnrichedPredmet } from '@/lib/predmet-meta';
@@ -37,6 +39,7 @@ import {
   analyzeFromOneDriveFolderAction,
   saveNewSporAction,
   updateSporManualDetailsAction,
+  dismissSporAction,
 } from '@/app/actions/sporoviActions';
 
 interface MainDashboardViewProps {
@@ -66,7 +69,7 @@ export default function MainDashboardView({
   const [searchQuery, setSearchQuery] = useState('');
   const [sudFilter, setSudFilter] = useState('sve');
   const [statusFilter, setStatusFilter] = useState<
-    'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'troskovi_zuto' | 'troskovi_smedje' | 'troskovi_sve' | 'rijeseno'
+    'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'troskovi_zuto' | 'troskovi_smedje' | 'troskovi_rijeseno' | 'troskovi_sve' | 'rijeseno' | 'uklonjeno'
   >('u_radu');
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
   const [sporoviSort, setSporoviSort] = useState<'novi' | 'stari' | 'rok' | 'stranka' | 'sud'>('novi');
@@ -84,6 +87,39 @@ export default function MainDashboardView({
   const [editNapomena, setEditNapomena] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editSuccessMsg, setEditSuccessMsg] = useState('');
+
+  // Uklanjanje / Vraćanje spora
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [dismissSuccessMsg, setDismissSuccessMsg] = useState<string>('');
+
+  const handleDismissSpor = async (spor: UpravniSpor, unDismiss = false) => {
+    setDismissingId(spor.id);
+    try {
+      const res = await dismissSporAction({
+        id: spor.id,
+        poslovniBroj: spor.poslovniBroj,
+        reason: unDismiss ? undefined : 'Ručno uklonjeno iz evidencije aktivnih sporova',
+        unDismiss,
+      });
+
+      if (res.success && res.updatedSpor) {
+        const updated = res.updatedSpor;
+        setSporovi((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+        if (selectedSpor?.id === updated.id) {
+          setSelectedSpor(updated);
+        }
+        const msg = unDismiss
+          ? `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} vraćen je u aktivne sporove!`
+          : `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} uklonjen je iz aktivnih sporova!`;
+        setDismissSuccessMsg(msg);
+        setTimeout(() => setDismissSuccessMsg(''), 5000);
+      }
+    } catch (err) {
+      console.error('Greška pri uklanjanju spora:', err);
+    } finally {
+      setDismissingId(null);
+    }
+  };
 
   const startEditingSpor = (spor: UpravniSpor) => {
     setEditingSporId(spor.id);
@@ -190,10 +226,17 @@ export default function MainDashboardView({
     let troskoviZuto = 0; // Žuto u Excelu - čeka nalog
     let troskoviSmedje = 0; // Smeđe u Excelu - poslan nalog
     let troskoviPlaceno = 0; // Plaćeno
+    let troskoviRijeseno = 0; // Nalog poslan + Plaćeno (zeleno)
     let troskoviUkupno = 0; // Ukupno s troškovima
     let hitniTroskovi = 0;
+    let uklonjeni = 0;
 
     sporovi.forEach((s) => {
+      if (s.isDismissed) {
+        uklonjeni++;
+        return; // Izuzmi uklonjene iz aktivnih brojača
+      }
+
       if (s.isPresudeno) presudeni++;
       else uTijeku++;
 
@@ -207,11 +250,13 @@ export default function MainDashboardView({
         troskoviUkupno++;
         if (s.troskoviInfo.status === 'placeno') {
           troskoviPlaceno++;
+          troskoviRijeseno++;
         } else if (
           s.troskoviInfo.status === 'poslan_nalog' ||
           s.troskoviInfo.bojaOznake === 'smedje'
         ) {
           troskoviSmedje++;
+          troskoviRijeseno++;
         } else {
           troskoviZuto++;
           if (['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.troskoviInfo.hitnost)) {
@@ -230,9 +275,11 @@ export default function MainDashboardView({
       troskoviZuto,
       troskoviSmedje,
       troskoviPlaceno,
+      troskoviRijeseno,
       troskoviUkupno,
       troskoviZaPlacanje: troskoviZuto,
       hitniTroskovi,
+      uklonjeni,
     };
   }, [sporovi]);
 
@@ -286,6 +333,14 @@ export default function MainDashboardView({
       if (sudFilter !== 'sve' && s.sud !== sudFilter) return false;
       if (rjesavateljFilter !== 'sve' && s.rjesavatelj !== rjesavateljFilter) return false;
 
+      // Prikaz samo uklonjenih predmeta
+      if (statusFilter === 'uklonjeno') {
+        return !!s.isDismissed;
+      }
+
+      // U svim ostalim redovnim filtrima skrivamo uklonjene predmete
+      if (s.isDismissed) return false;
+
       if (statusFilter === 'u_radu') {
         if (s.isPresudeno) return false;
       } else if (statusFilter === 'hitno') {
@@ -302,15 +357,14 @@ export default function MainDashboardView({
         ) {
           return false;
         }
-      } else if (statusFilter === 'troskovi_smedje') {
-        // Smeđe u Excelu: nalog poslan računovodstvu
+      } else if (statusFilter === 'troskovi_smedje' || statusFilter === 'troskovi_rijeseno') {
+        // Nalog poslan računovodstvu / Plaćeno (zeleno)
         if (!s.troskoviInfo?.imaTroskova) return false;
-        if (
-          s.troskoviInfo.status !== 'poslan_nalog' &&
-          s.troskoviInfo.bojaOznake !== 'smedje'
-        ) {
-          return false;
-        }
+        const isRijeseno =
+          s.troskoviInfo.status === 'poslan_nalog' ||
+          s.troskoviInfo.status === 'placeno' ||
+          s.troskoviInfo.bojaOznake === 'smedje';
+        if (!isRijeseno) return false;
       } else if (statusFilter === 'troskovi_sve') {
         if (!s.troskoviInfo?.imaTroskova) return false;
       } else if (statusFilter === 'rijeseno') {
@@ -342,10 +396,10 @@ export default function MainDashboardView({
     return list;
   }, [sporovi, searchQuery, sudFilter, statusFilter, rjesavateljFilter, sporoviSort]);
 
-  // Radar disputes
+  // Radar disputes (bez uklonjenih)
   const radarSporovi = useMemo(() => {
     return sporovi
-      .filter((s) => ['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost) && !s.isPresudeno)
+      .filter((s) => !s.isDismissed && ['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost) && !s.isPresudeno)
       .sort((a, b) => (a.danaDoRoka ?? 999) - (b.danaDoRoka ?? 999));
   }, [sporovi]);
 
@@ -593,10 +647,8 @@ export default function MainDashboardView({
                   Čeka nalog (žuto)
                 </span>
               </div>
-              <p className="text-2xs text-amber-700/80 dark:text-amber-400/80 mt-1 flex items-center gap-1.5">
-                <span>🟤 {stats.troskoviSmedje} poslano</span>
-                <span className="text-slate-400">•</span>
-                <span>✓ {stats.troskoviPlaceno} plaćeno</span>
+              <p className="text-2xs text-emerald-700 dark:text-emerald-400 mt-1 flex items-center gap-1.5 font-medium">
+                <span>🟢 {stats.troskoviRijeseno} nalog poslan - plaćeno</span>
               </p>
             </div>
 
@@ -649,7 +701,9 @@ export default function MainDashboardView({
             >
               <p className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Svi sporovi</p>
               <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
-              <p className="text-2xs text-slate-400 mt-0.5">iz Excel evidencije</p>
+              <p className="text-2xs text-slate-400 mt-0.5">
+                {stats.uklonjeni > 0 ? `${stats.uklonjeni} uklonjeno` : 'iz Excel evidencije'}
+              </p>
             </div>
           </div>
 
@@ -700,6 +754,16 @@ export default function MainDashboardView({
           {/* SUB-TAB 1: TABLICA SVIH SPOROVA */}
           {sporoviSubTab === 'tablica' && (
             <div className="space-y-4">
+              {/* OBAVIJEST O UKLANJANJU */}
+              {dismissSuccessMsg && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold flex items-center justify-between shadow-lg">
+                  <span>{dismissSuccessMsg}</span>
+                  <button onClick={() => setDismissSuccessMsg('')} className="text-slate-400 hover:text-white dark:hover:text-black">
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* FILTRI I PRETRAGA */}
               <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
                 <div className="relative flex-1">
@@ -729,12 +793,15 @@ export default function MainDashboardView({
                   >
                     <option value="u_radu">U radu / Bez presude ({stats.uTijeku})</option>
                     <option value="hitno">Hitni rokovi odgovora ({stats.hitni})</option>
-                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Žuto ({stats.troskoviZuto})</option>
-                    <option value="troskovi_smedje">🟤 Nalog poslan računovodstvu / Smeđe ({stats.troskoviSmedje})</option>
+                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Čeka nalog ({stats.troskoviZuto})</option>
+                    <option value="troskovi_rijeseno">🟢 Nalog poslan - plaćeno ({stats.troskoviRijeseno})</option>
                     <option value="troskovi_sve">💰 Svi dosuđeni troškovi ({stats.troskoviUkupno})</option>
                     <option value="sutnja">Šutnja uprave ({stats.sutnjaUprave})</option>
                     <option value="rijeseno">Presuđeno / Završeno ({stats.presudeni})</option>
-                    <option value="sve">Svi sporovi ({sporovi.length})</option>
+                    {stats.uklonjeni > 0 && (
+                      <option value="uklonjeno">🗑️ Uklonjeni predmeti ({stats.uklonjeni})</option>
+                    )}
+                    <option value="sve">Svi sporovi ({stats.total})</option>
                   </select>
 
                   <select
@@ -802,7 +869,7 @@ export default function MainDashboardView({
                           </td>
                         </tr>
                       ) : (
-                        filteredSporovi.map((spor) => {
+                        filteredSporovi.map((spor, index) => {
                           const isSelected = selectedSpor?.id === spor.id;
                           return (
                             <React.Fragment key={spor.id}>
@@ -810,17 +877,24 @@ export default function MainDashboardView({
                                 onClick={() => setSelectedSpor(isSelected ? null : spor)}
                                 className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 ${
                                   isSelected ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-medium' : ''
-                                }`}
+                                } ${spor.isDismissed ? 'opacity-60 bg-slate-50/50 dark:bg-slate-900/40' : ''}`}
                               >
-                                <td className="py-3 px-3 text-center text-slate-400 font-mono text-2xs">
-                                  {spor.rbr}
+                                <td className="py-3 px-3 text-center text-slate-500 font-mono text-2xs font-bold">
+                                  {index + 1}
                                 </td>
 
                                 <td className="py-3 px-3 font-medium text-slate-900 dark:text-slate-100">
                                   <div className="flex flex-col">
-                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                                      {spor.poslovniBroj || 'Bez broja'}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                        {spor.poslovniBroj || 'Bez broja'}
+                                      </span>
+                                      {spor.isDismissed && (
+                                        <span className="px-1.5 py-0.2 rounded text-3xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                          Uklonjeno
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
                                       {spor.sud}
                                     </span>
@@ -864,55 +938,63 @@ export default function MainDashboardView({
                                 </td>
 
                                 <td className="py-3 px-3">
-                                  {spor.hitnost === 'isteklo' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                                      <AlertTriangle className="w-3 h-3" />
-                                      Isteklo ({Math.abs(spor.danaDoRoka!)} d)
-                                    </span>
+                                  {spor.isDismissed ? (
+                                    <span className="text-2xs text-slate-400 italic">Uklonjeno iz aktivnih</span>
+                                  ) : (
+                                    <>
+                                      {spor.hitnost === 'isteklo' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                          <AlertTriangle className="w-3 h-3" />
+                                          Isteklo ({Math.abs(spor.danaDoRoka!)} d)
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'danas' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-600 text-white animate-pulse">
+                                          Danas istječe rok!
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'kriticno' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                          <Clock className="w-3 h-3 text-rose-600" />
+                                          Još {spor.danaDoRoka} dana!
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'hitno' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                          <Clock className="w-3 h-3" />
+                                          Još {spor.danaDoRoka} d
+                                        </span>
+                                      )}
+                                      {spor.isOdgovoreno && (
+                                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          Odgovoreno
+                                        </span>
+                                      )}
+                                      <p className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[180px] mt-0.5">
+                                        {spor.odgovorNaTuzbu || 'Nema zabilješke'}
+                                      </p>
+                                    </>
                                   )}
-                                  {spor.hitnost === 'danas' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-600 text-white animate-pulse">
-                                      Danas istječe rok!
-                                    </span>
-                                  )}
-                                  {spor.hitnost === 'kriticno' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                                      <Clock className="w-3 h-3 text-rose-600" />
-                                      Još {spor.danaDoRoka} dana!
-                                    </span>
-                                  )}
-                                  {spor.hitnost === 'hitno' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                      <Clock className="w-3 h-3" />
-                                      Još {spor.danaDoRoka} d
-                                    </span>
-                                  )}
-                                  {spor.isOdgovoreno && (
-                                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
-                                      <CheckCircle2 className="w-3 h-3" />
-                                      Odgovoreno
-                                    </span>
-                                  )}
-                                  <p className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[180px] mt-0.5">
-                                    {spor.odgovorNaTuzbu || 'Nema zabilješke'}
-                                  </p>
                                 </td>
 
                                 <td className="py-3 px-3 max-w-[240px]">
-                                  {/* Istaknuti bedževi za troškove spora */}
+                                  {/* Istaknuti bedževi za troškove spora - UJEDINJENO U ZELENO */}
                                   {spor.troskoviInfo && spor.troskoviInfo.imaTroskova && (
                                     <div className="mb-1">
-                                      {spor.troskoviInfo.status === 'placeno' ? (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
-                                          ✓ Plaćeno ({spor.troskoviInfo.iznos})
-                                        </span>
-                                      ) : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                      {spor.troskoviInfo.status === 'placeno' ||
+                                      spor.troskoviInfo.status === 'poslan_nalog' ||
+                                      spor.troskoviInfo.bojaOznake === 'smedje' ? (
                                         <span
-                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-600"
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
                                           title={spor.troskoviInfo.opis}
                                         >
-                                          🟤 Nalog poslan ({spor.troskoviInfo.iznos || '1.250 EUR'})
-                                          {spor.troskoviInfo.nalogDatum && ` ${spor.troskoviInfo.nalogDatum}`}
+                                          ✓ {spor.troskoviInfo.nalogDatum
+                                            ? `Nalog poslan ${spor.troskoviInfo.nalogDatum} - plaćeno`
+                                            : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje'
+                                            ? 'Nalog poslan - plaćeno'
+                                            : 'Plaćeno'}
+                                          {spor.troskoviInfo.iznos ? ` (${spor.troskoviInfo.iznos})` : ''}
                                         </span>
                                       ) : (
                                         <span
@@ -984,9 +1066,47 @@ export default function MainDashboardView({
                                               ✏️ Ručno evidentirano
                                             </span>
                                           )}
+                                          {spor.isDismissed && (
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-medium border border-rose-200 dark:border-rose-800">
+                                              🗑️ Uklonjeno iz aktivnih sporova
+                                            </span>
+                                          )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
+                                          {spor.isDismissed ? (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDismissSpor(spor, true);
+                                              }}
+                                              disabled={dismissingId === spor.id}
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                            >
+                                              <RotateCcw className="w-3.5 h-3.5" />
+                                              <span>↩️ Vrati u aktivne sporove</span>
+                                            </button>
+                                          ) : (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (
+                                                  confirm(
+                                                    `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih sporova?\n\n(Predmet neće više stvarati hitne alarme na radaru rokova, a moći ćete ga pregledati pod filtrom "Uklonjeni predmeti" ili ga vratiti.)`
+                                                  )
+                                                ) {
+                                                  handleDismissSpor(spor, false);
+                                                }
+                                              }}
+                                              disabled={dismissingId === spor.id}
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                              title="Ukloni ovaj predmet ako je zastario ili nema evidentiran ishod (npr. istekli rok prije više godina)"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <span>🗑️ Ukloni iz aktivnih</span>
+                                            </button>
+                                          )}
+
                                           {editingSporId === spor.id ? (
                                             <button
                                               onClick={(e) => {
@@ -1186,8 +1306,8 @@ export default function MainDashboardView({
                                           <div className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
                                             spor.troskoviInfo?.status === 'neplaceno'
                                               ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
-                                              : spor.troskoviInfo?.status === 'poslan_nalog' || spor.troskoviInfo?.bojaOznake === 'smedje'
-                                              ? 'bg-stone-50/80 dark:bg-stone-900/40 border-stone-300 dark:border-stone-700'
+                                              : spor.troskoviInfo?.status === 'poslan_nalog' || spor.troskoviInfo?.bojaOznake === 'smedje' || spor.troskoviInfo?.status === 'placeno'
+                                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/80'
                                               : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-700/80'
                                           }`}>
                                             <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1203,12 +1323,12 @@ export default function MainDashboardView({
                                                 )}
                                                 <div className="flex items-center justify-between">
                                                   <span className="text-slate-500">Status:</span>
-                                                  {spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
-                                                    <span className="font-semibold text-stone-700 dark:text-stone-300">
-                                                      🟤 Nalog poslan {spor.troskoviInfo.nalogDatum ? `(${spor.troskoviInfo.nalogDatum})` : ''}
+                                                  {spor.troskoviInfo.status === 'poslan_nalog' ||
+                                                  spor.troskoviInfo.status === 'placeno' ||
+                                                  spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                                                      🟢 Nalog poslan {spor.troskoviInfo.nalogDatum ? `${spor.troskoviInfo.nalogDatum} ` : ''}- plaćeno
                                                     </span>
-                                                  ) : spor.troskoviInfo.status === 'placeno' ? (
-                                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Plaćeno</span>
                                                   ) : (
                                                     <span className="font-bold text-rose-600 dark:text-rose-400 animate-pulse">
                                                       🟡 Čeka nalog (žuto u tablici)
@@ -1222,7 +1342,7 @@ export default function MainDashboardView({
                                                     {spor.troskoviInfo.bojaOznake === 'zuto'
                                                       ? '🟡 Žuto obojano (neplaćeno)'
                                                       : spor.troskoviInfo.bojaOznake === 'smedje'
-                                                      ? '🟤 Smeđe obojano (nalog poslan)'
+                                                      ? '🟢 Smeđe obojano (nalog poslan - plaćeno)'
                                                       : spor.troskoviInfo.status === 'placeno'
                                                       ? '🟢 Plaćeno'
                                                       : 'Tekstualni zapis'}
@@ -1384,6 +1504,36 @@ export default function MainDashboardView({
                         <p><strong>Evidencija:</strong> {spor.odgovorNaTuzbu || spor.aktUpIiPoPresudi || '-'}</p>
                         <p><strong>Rješavatelj:</strong> {spor.rjesavatelj || '-'}</p>
                         {spor.upIiRjesenje && <p><strong>Spis:</strong> {spor.upIiRjesenje}</p>}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          onClick={() => {
+                            setSporoviSubTab('tablica');
+                            setSelectedSpor(spor);
+                          }}
+                          className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          Prikaži u tablici →
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (
+                              confirm(
+                                `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih rokova?\n\n(Predmet neće više stvarati alarme na radaru rokova, a možete ga pregledati pod filtrom "Uklonjeni predmeti".)`
+                              )
+                            ) {
+                              handleDismissSpor(spor, false);
+                            }
+                          }}
+                          disabled={dismissingId === spor.id}
+                          className="text-2xs font-medium text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Ukloni ovaj predmet s radara i iz aktivnih sporova"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Ukloni</span>
+                        </button>
                       </div>
                     </div>
                   ))

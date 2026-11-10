@@ -22,8 +22,10 @@ export interface SporoviStats {
   troskoviZuto: number;
   troskoviSmedje: number;
   troskoviPlaceno: number;
+  troskoviRijeseno: number;
   troskoviUkupno: number;
   hitniTroskovi: number;
+  uklonjeni: number;
 }
 
 export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
@@ -50,11 +52,18 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
       troskoviZuto: 0,
       troskoviSmedje: 0,
       troskoviPlaceno: 0,
+      troskoviRijeseno: 0,
       troskoviUkupno: 0,
       hitniTroskovi: 0,
+      uklonjeni: 0,
     };
 
     for (const s of sporovi) {
+      if (s.isDismissed) {
+        stats.uklonjeni++;
+        continue; // Discard from active stats
+      }
+
       if (s.isPresudeno) {
         stats.presudeni++;
       } else {
@@ -79,11 +88,13 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         stats.troskoviUkupno++;
         if (s.troskoviInfo.status === 'placeno') {
           stats.troskoviPlaceno++;
+          stats.troskoviRijeseno++;
         } else if (
           s.troskoviInfo.status === 'poslan_nalog' ||
           s.troskoviInfo.bojaOznake === 'smedje'
         ) {
           stats.troskoviSmedje++;
+          stats.troskoviRijeseno++;
         } else {
           stats.troskoviZuto++;
           stats.troskoviZaPlacanje++;
@@ -119,8 +130,10 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         troskoviZuto: 0,
         troskoviSmedje: 0,
         troskoviPlaceno: 0,
+        troskoviRijeseno: 0,
         troskoviUkupno: 0,
         hitniTroskovi: 0,
+        uklonjeni: 0,
       },
       lastModified: '',
       source: 'cache',
@@ -364,6 +377,45 @@ export async function updateSporManualDetailsAction(payload: {
       rjesavatelj: payload.rjesavatelj,
       vrijednostNapomena: payload.vrijednostNapomena,
     });
+
+    const res = parseExcelSporovi(false);
+    const updated = res.sporovi.find(
+      (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
+    );
+
+    revalidatePath('/');
+    return {
+      success: true,
+      updatedSpor: updated,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+
+export async function dismissSporAction(payload: {
+  id: string;
+  poslovniBroj?: string;
+  reason?: string;
+  unDismiss?: boolean;
+}): Promise<{
+  success: boolean;
+  updatedSpor?: UpravniSpor;
+  error?: string;
+}> {
+  try {
+    const key = payload.poslovniBroj || payload.id;
+    const overrideData = {
+      isDismissed: !payload.unDismiss,
+      dismissedReason: payload.unDismiss
+        ? undefined
+        : payload.reason || 'Ručno uklonjeno iz evidencije aktivnih sporova',
+    };
+    saveSporOverride(key, overrideData);
+    if (payload.id && payload.poslovniBroj && payload.id !== payload.poslovniBroj) {
+      saveSporOverride(payload.id, overrideData);
+    }
 
     const res = parseExcelSporovi(false);
     const updated = res.sporovi.find(

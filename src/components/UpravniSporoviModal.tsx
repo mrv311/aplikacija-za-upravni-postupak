@@ -27,6 +27,8 @@ import {
   Loader2,
   Link as LinkIcon,
   Pencil,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import {
   getUpravniSporoviAction,
@@ -35,6 +37,7 @@ import {
   analyzeFromOneDriveFolderAction,
   saveNewSporAction,
   updateSporManualDetailsAction,
+  dismissSporAction,
   type SporoviStats,
 } from '@/app/actions/sporoviActions';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
@@ -57,7 +60,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [searchQuery, setSearchQuery] = useState('');
   const [sudFilter, setSudFilter] = useState('sve');
   const [statusFilter, setStatusFilter] = useState<
-    'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'troskovi_zuto' | 'troskovi_smedje' | 'troskovi_sve' | 'rijeseno'
+    'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'troskovi_zuto' | 'troskovi_smedje' | 'troskovi_rijeseno' | 'troskovi_sve' | 'rijeseno' | 'uklonjeno'
   >('u_radu');
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
   const [sporoviSort, setSporoviSort] = useState<'novi' | 'stari' | 'rok' | 'stranka' | 'sud'>('novi');
@@ -75,6 +78,39 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [editNapomena, setEditNapomena] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editSuccessMsg, setEditSuccessMsg] = useState('');
+
+  // Uklanjanje / Vraćanje spora
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [dismissSuccessMsg, setDismissSuccessMsg] = useState<string>('');
+
+  const handleDismissSpor = async (spor: UpravniSpor, unDismiss = false) => {
+    setDismissingId(spor.id);
+    try {
+      const res = await dismissSporAction({
+        id: spor.id,
+        poslovniBroj: spor.poslovniBroj,
+        reason: unDismiss ? undefined : 'Ručno uklonjeno iz evidencije aktivnih sporova',
+        unDismiss,
+      });
+
+      if (res.success && res.updatedSpor) {
+        const updated = res.updatedSpor;
+        setSporovi((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+        if (selectedSpor?.id === updated.id) {
+          setSelectedSpor(updated);
+        }
+        const msg = unDismiss
+          ? `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} vraćen je u aktivne sporove!`
+          : `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} uklonjen je iz aktivnih sporova!`;
+        setDismissSuccessMsg(msg);
+        setTimeout(() => setDismissSuccessMsg(''), 5000);
+      }
+    } catch (err) {
+      console.error('Greška pri uklanjanju spora:', err);
+    } finally {
+      setDismissingId(null);
+    }
+  };
 
   const startEditingSpor = (spor: UpravniSpor) => {
     setEditingSporId(spor.id);
@@ -355,6 +391,14 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
       // Rješavatelj filter
       if (rjesavateljFilter !== 'sve' && s.rjesavatelj !== rjesavateljFilter) return false;
 
+      // Filter uklonjenih predmeta
+      if (statusFilter === 'uklonjeno') {
+        return !!s.isDismissed;
+      }
+
+      // U redovnim prikazima sakrij uklonjene predmete
+      if (s.isDismissed) return false;
+
       // Status filter
       if (statusFilter === 'u_radu') {
         if (s.isPresudeno) return false;
@@ -371,14 +415,13 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         ) {
           return false;
         }
-      } else if (statusFilter === 'troskovi_smedje') {
+      } else if (statusFilter === 'troskovi_smedje' || statusFilter === 'troskovi_rijeseno') {
         if (!s.troskoviInfo?.imaTroskova) return false;
-        if (
-          s.troskoviInfo.status !== 'poslan_nalog' &&
-          s.troskoviInfo.bojaOznake !== 'smedje'
-        ) {
-          return false;
-        }
+        const isRijeseno =
+          s.troskoviInfo.status === 'poslan_nalog' ||
+          s.troskoviInfo.status === 'placeno' ||
+          s.troskoviInfo.bojaOznake === 'smedje';
+        if (!isRijeseno) return false;
       } else if (statusFilter === 'troskovi_sve') {
         if (!s.troskoviInfo?.imaTroskova) return false;
       } else if (statusFilter === 'rijeseno') {
@@ -410,10 +453,10 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
     return list;
   }, [sporovi, searchQuery, sudFilter, statusFilter, rjesavateljFilter, sporoviSort]);
 
-  // Radar hitni sporovi (sorted by deadline urgency)
+  // Radar hitni sporovi (sorted by deadline urgency, bez uklonjenih)
   const radarSporovi = useMemo(() => {
     return sporovi
-      .filter((s) => ['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost) && !s.isPresudeno)
+      .filter((s) => !s.isDismissed && ['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost) && !s.isPresudeno)
       .sort((a, b) => (a.danaDoRoka ?? 999) - (b.danaDoRoka ?? 999));
   }, [sporovi]);
 
@@ -521,8 +564,8 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                 <p className="text-lg font-bold text-amber-950 dark:text-amber-100">{stats?.troskoviZuto ?? 0}</p>
                 <span className="text-2xs text-amber-600">čeka nalog</span>
               </div>
-              <p className="text-2xs text-slate-400 mt-0.5">
-                🟤 {stats?.troskoviSmedje ?? 0} nalog | ✓ {stats?.troskoviPlaceno ?? 0} plaćeno
+              <p className="text-2xs text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium">
+                🟢 {stats?.troskoviRijeseno ?? 0} nalog poslan - plaćeno
               </p>
             </div>
             <span className="text-base">💰</span>
@@ -617,6 +660,16 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           {/* TAB 1: PREGLED SVIH SPOROVA */}
           {activeTab === 'pregled' && (
             <div className="space-y-4">
+              {/* OBAVIJEST O UKLANJANJU */}
+              {dismissSuccessMsg && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold flex items-center justify-between shadow-lg">
+                  <span>{dismissSuccessMsg}</span>
+                  <button onClick={() => setDismissSuccessMsg('')} className="text-slate-400 hover:text-white dark:hover:text-black">
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* FILTRI I PRETRAGA */}
               <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
                 <div className="relative flex-1">
@@ -647,12 +700,15 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                   >
                     <option value="u_radu">U radu / Bez presude ({stats?.uTijeku ?? 0})</option>
                     <option value="hitno">Hitni rokovi odgovora ({stats?.hitni ?? 0})</option>
-                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Žuto ({stats?.troskoviZuto ?? 0})</option>
-                    <option value="troskovi_smedje">🟤 Nalog poslan računovodstvu / Smeđe ({stats?.troskoviSmedje ?? 0})</option>
+                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Čeka nalog ({stats?.troskoviZuto ?? 0})</option>
+                    <option value="troskovi_rijeseno">🟢 Nalog poslan - plaćeno ({stats?.troskoviRijeseno ?? 0})</option>
                     <option value="troskovi_sve">💰 Svi dosuđeni troškovi ({stats?.troskoviUkupno ?? 0})</option>
                     <option value="sutnja">Šutnja uprave ({stats?.sutnjaUprave ?? 0})</option>
                     <option value="rijeseno">Presuđeno / Završeno ({stats?.presudeni ?? 0})</option>
-                    <option value="sve">Svi sporovi ({sporovi.length})</option>
+                    {(stats?.uklonjeni ?? 0) > 0 && (
+                      <option value="uklonjeno">🗑️ Uklonjeni predmeti ({stats?.uklonjeni ?? 0})</option>
+                    )}
+                    <option value="sve">Svi sporovi ({stats?.total ?? sporovi.length})</option>
                   </select>
 
                   {/* Sud filter */}
@@ -722,7 +778,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                           </td>
                         </tr>
                       ) : (
-                        filteredSporovi.map((spor) => {
+                        filteredSporovi.map((spor, index) => {
                           const isSelected = selectedSpor?.id === spor.id;
                           return (
                             <React.Fragment key={spor.id}>
@@ -730,18 +786,25 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                 onClick={() => setSelectedSpor(isSelected ? null : spor)}
                                 className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 ${
                                   isSelected ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-medium' : ''
-                                }`}
+                                } ${spor.isDismissed ? 'opacity-60 bg-slate-50/50 dark:bg-slate-900/40' : ''}`}
                               >
-                                <td className="py-2.5 px-3 text-center text-slate-400 font-mono text-2xs">
-                                  {spor.rbr}
+                                <td className="py-2.5 px-3 text-center text-slate-500 font-mono text-2xs font-bold">
+                                  {index + 1}
                                 </td>
 
                                 {/* Poslovni broj & Sud */}
                                 <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-100">
                                   <div className="flex flex-col">
-                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                                      {spor.poslovniBroj || 'Bez broja'}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                        {spor.poslovniBroj || 'Bez broja'}
+                                      </span>
+                                      {spor.isDismissed && (
+                                        <span className="px-1.5 py-0.2 rounded text-3xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                          Uklonjeno
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
                                       {spor.sud}
                                     </span>
@@ -789,56 +852,64 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
                                 {/* Rok / Status odgovora */}
                                 <td className="py-2.5 px-3">
-                                  {spor.hitnost === 'isteklo' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                                      <AlertTriangle className="w-3 h-3" />
-                                      Isteklo ({Math.abs(spor.danaDoRoka!)} d)
-                                    </span>
+                                  {spor.isDismissed ? (
+                                    <span className="text-2xs text-slate-400 italic">Uklonjeno iz aktivnih</span>
+                                  ) : (
+                                    <>
+                                      {spor.hitnost === 'isteklo' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                          <AlertTriangle className="w-3 h-3" />
+                                          Isteklo ({Math.abs(spor.danaDoRoka!)} d)
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'danas' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-600 text-white animate-pulse">
+                                          Danas istječe rok!
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'kriticno' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                          <Clock className="w-3 h-3 text-rose-600" />
+                                          Još {spor.danaDoRoka} dana!
+                                        </span>
+                                      )}
+                                      {spor.hitnost === 'hitno' && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                          <Clock className="w-3 h-3" />
+                                          Još {spor.danaDoRoka} d
+                                        </span>
+                                      )}
+                                      {spor.isOdgovoreno && (
+                                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          Odgovoreno
+                                        </span>
+                                      )}
+                                      <p className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[180px] mt-0.5">
+                                        {spor.odgovorNaTuzbu || 'Nema zabilješke'}
+                                      </p>
+                                    </>
                                   )}
-                                  {spor.hitnost === 'danas' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-600 text-white animate-pulse">
-                                      Danas istječe rok!
-                                    </span>
-                                  )}
-                                  {spor.hitnost === 'kriticno' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                                      <Clock className="w-3 h-3 text-rose-600" />
-                                      Još {spor.danaDoRoka} dana!
-                                    </span>
-                                  )}
-                                  {spor.hitnost === 'hitno' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                      <Clock className="w-3 h-3" />
-                                      Još {spor.danaDoRoka} d
-                                    </span>
-                                  )}
-                                  {spor.isOdgovoreno && (
-                                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
-                                      <CheckCircle2 className="w-3 h-3" />
-                                      Odgovoreno
-                                    </span>
-                                  )}
-                                  <p className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[180px] mt-0.5">
-                                    {spor.odgovorNaTuzbu || 'Nema zabilješke'}
-                                  </p>
                                 </td>
 
                                 {/* Presuda & Troškovi */}
                                 <td className="py-2.5 px-3 max-w-[240px]">
-                                  {/* Istaknuti bedževi za troškove spora */}
+                                  {/* Istaknuti bedževi za troškove spora - UJEDINJENO U ZELENO */}
                                   {spor.troskoviInfo && spor.troskoviInfo.imaTroskova && (
                                     <div className="mb-1">
-                                      {spor.troskoviInfo.status === 'placeno' ? (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
-                                          ✓ Plaćeno ({spor.troskoviInfo.iznos})
-                                        </span>
-                                      ) : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                      {spor.troskoviInfo.status === 'placeno' ||
+                                      spor.troskoviInfo.status === 'poslan_nalog' ||
+                                      spor.troskoviInfo.bojaOznake === 'smedje' ? (
                                         <span
-                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-600"
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
                                           title={spor.troskoviInfo.opis}
                                         >
-                                          🟤 Nalog poslan ({spor.troskoviInfo.iznos || '1.250 EUR'})
-                                          {spor.troskoviInfo.nalogDatum && ` ${spor.troskoviInfo.nalogDatum}`}
+                                          ✓ {spor.troskoviInfo.nalogDatum
+                                            ? `Nalog poslan ${spor.troskoviInfo.nalogDatum} - plaćeno`
+                                            : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje'
+                                            ? 'Nalog poslan - plaćeno'
+                                            : 'Plaćeno'}
+                                          {spor.troskoviInfo.iznos ? ` (${spor.troskoviInfo.iznos})` : ''}
                                         </span>
                                       ) : (
                                         <span
@@ -910,9 +981,47 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                               ✏️ Ručno evidentirano
                                             </span>
                                           )}
+                                          {spor.isDismissed && (
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-medium border border-rose-200 dark:border-rose-800">
+                                              🗑️ Uklonjeno iz aktivnih sporova
+                                            </span>
+                                          )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
+                                          {spor.isDismissed ? (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDismissSpor(spor, true);
+                                              }}
+                                              disabled={dismissingId === spor.id}
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                            >
+                                              <RotateCcw className="w-3.5 h-3.5" />
+                                              <span>↩️ Vrati u aktivne sporove</span>
+                                            </button>
+                                          ) : (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (
+                                                  confirm(
+                                                    `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih sporova?\n\n(Predmet neće više stvarati hitne alarme na radaru rokova, a moći ćete ga pregledati pod filtrom "Uklonjeni predmeti" ili ga vratiti.)`
+                                                  )
+                                                ) {
+                                                  handleDismissSpor(spor, false);
+                                                }
+                                              }}
+                                              disabled={dismissingId === spor.id}
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                              title="Ukloni ovaj predmet ako je zastario ili nema evidentiran ishod (npr. istekli rok prije više godina)"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <span>🗑️ Ukloni iz aktivnih</span>
+                                            </button>
+                                          )}
+
                                           {editingSporId === spor.id ? (
                                             <button
                                               onClick={(e) => {
@@ -1112,8 +1221,8 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                           <div className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
                                             spor.troskoviInfo?.status === 'neplaceno'
                                               ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
-                                              : spor.troskoviInfo?.status === 'poslan_nalog' || spor.troskoviInfo?.bojaOznake === 'smedje'
-                                              ? 'bg-stone-50/80 dark:bg-stone-900/40 border-stone-300 dark:border-stone-700'
+                                              : spor.troskoviInfo?.status === 'poslan_nalog' || spor.troskoviInfo?.bojaOznake === 'smedje' || spor.troskoviInfo?.status === 'placeno'
+                                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/80'
                                               : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-700/80'
                                           }`}>
                                             <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1129,12 +1238,12 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                                 )}
                                                 <div className="flex items-center justify-between">
                                                   <span className="text-slate-500">Status:</span>
-                                                  {spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
-                                                    <span className="font-semibold text-stone-700 dark:text-stone-300">
-                                                      🟤 Nalog poslan {spor.troskoviInfo.nalogDatum ? `(${spor.troskoviInfo.nalogDatum})` : ''}
+                                                  {spor.troskoviInfo.status === 'poslan_nalog' ||
+                                                  spor.troskoviInfo.status === 'placeno' ||
+                                                  spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                                                      🟢 Nalog poslan {spor.troskoviInfo.nalogDatum ? `${spor.troskoviInfo.nalogDatum} ` : ''}- plaćeno
                                                     </span>
-                                                  ) : spor.troskoviInfo.status === 'placeno' ? (
-                                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Plaćeno</span>
                                                   ) : (
                                                     <span className="font-bold text-rose-600 dark:text-rose-400 animate-pulse">
                                                       🟡 Čeka nalog (žuto u tablici)
@@ -1148,7 +1257,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                                     {spor.troskoviInfo.bojaOznake === 'zuto'
                                                       ? '🟡 Žuto obojano (neplaćeno)'
                                                       : spor.troskoviInfo.bojaOznake === 'smedje'
-                                                      ? '🟤 Smeđe obojano (nalog poslan)'
+                                                      ? '🟢 Smeđe obojano (nalog poslan - plaćeno)'
                                                       : spor.troskoviInfo.status === 'placeno'
                                                       ? '🟢 Plaćeno'
                                                       : 'Tekstualni zapis'}
@@ -1310,6 +1419,36 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                         <p><strong>Evidencija:</strong> {spor.odgovorNaTuzbu || spor.aktUpIiPoPresudi || '-'}</p>
                         <p><strong>Rješavatelj:</strong> {spor.rjesavatelj || '-'}</p>
                         {spor.upIiRjesenje && <p><strong>Spis:</strong> {spor.upIiRjesenje}</p>}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          onClick={() => {
+                            setActiveTab('pregled');
+                            setSelectedSpor(spor);
+                          }}
+                          className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          Prikaži u tablici →
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (
+                              confirm(
+                                `Želite li ukloniti predmet ${spor.poslovniBroj || spor.tuzitelj} iz aktivnih rokova?\n\n(Predmet neće više stvarati alarme na radaru rokova, a možete ga pregledati pod filtrom "Uklonjeni predmeti".)`
+                              )
+                            ) {
+                              handleDismissSpor(spor, false);
+                            }
+                          }}
+                          disabled={dismissingId === spor.id}
+                          className="text-2xs font-medium text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Ukloni ovaj predmet s radara i iz aktivnih sporova"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Ukloni</span>
+                        </button>
                       </div>
                     </div>
                   ))

@@ -52,6 +52,8 @@ export interface UpravniSpor {
   fazaOpis: string;
   troskoviInfo?: TroskoviInfo;
   hasManualOverride?: boolean;
+  isDismissed?: boolean;
+  dismissedReason?: string;
 }
 
 export const SPOROVI_OVERRIDES_PATH = path.join(process.cwd(), 'data', 'upravni-sporovi-overrides.json');
@@ -65,6 +67,8 @@ export interface SporOverride {
   visokiUpravniSud?: string;
   rjesavatelj?: string;
   vrijednostNapomena?: string;
+  isDismissed?: boolean;
+  dismissedReason?: string;
   updatedAt?: string;
 }
 
@@ -95,6 +99,20 @@ export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, 
   const key = spor.poslovniBroj || spor.id;
   const ov = overrides[key] || (spor.poslovniBroj ? overrides[spor.poslovniBroj] : undefined) || overrides[spor.id];
   if (!ov) return spor;
+
+  if (ov.isDismissed) {
+    return {
+      ...spor,
+      isDismissed: true,
+      dismissedReason: ov.dismissedReason || 'Uklonjeno iz aktivnih sporova',
+      hitnost: 'rijeseno',
+      danaDoRoka: null,
+      rokDatum: null,
+      rokDatumObj: null,
+      fazaOpis: ov.dismissedReason ? `Uklonjeno: ${ov.dismissedReason}` : 'Uklonjeno iz aktivnih sporova',
+      hasManualOverride: true,
+    };
+  }
 
   const aktUpIiPoPresudi = ov.aktUpIiPoPresudi !== undefined ? ov.aktUpIiPoPresudi : spor.aktUpIiPoPresudi;
   const odgovorNaTuzbu = ov.odgovorNaTuzbu !== undefined ? ov.odgovorNaTuzbu : spor.odgovorNaTuzbu;
@@ -375,12 +393,15 @@ export function parseTroskoviInfo(
   let danaDoRoka: number | null = null;
   let hitnost: TroskoviInfo['hitnost'] = 'nema';
 
-  if (isPaid) {
+  if (isPaid || hasNalog) {
     hitnost = 'rijeseno';
-    opis += ' — PLAĆENO';
-  } else if (hasNalog) {
-    hitnost = 'rijeseno';
-    opis += nalogDatum ? ` — Nalog poslan ${nalogDatum}` : ' — Nalog poslan računovodstvu';
+    if (nalogDatum) {
+      opis = `${iznos ? `${iznos} — ` : ''}Nalog poslan ${nalogDatum} - plaćeno`;
+    } else if (hasNalog) {
+      opis = `${iznos ? `${iznos} — ` : ''}Nalog poslan - plaćeno`;
+    } else {
+      opis = `${iznos ? `${iznos} — ` : ''}Plaćeno`;
+    }
   } else if (rokDate) {
     const target = new Date(rokDate);
     target.setHours(0, 0, 0, 0);
