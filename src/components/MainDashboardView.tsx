@@ -788,39 +788,7 @@ export default function MainDashboardView({
             </div>
           </div>
 
-          {/* SUB-TABS */}
-          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
-            <button
-              onClick={() => setSporoviSubTab('tablica')}
-              className={`pb-3 px-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                sporoviSubTab === 'tablica'
-                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Svi sporovi ({filteredSporovi.length})</span>
-            </button>
-
-            <button
-              onClick={() => setSporoviSubTab('radar')}
-              className={`pb-3 px-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                sporoviSubTab === 'radar'
-                  ? 'border-rose-600 text-rose-600 dark:text-rose-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4 text-rose-500" />
-              <span>Radar rokova</span>
-              {radarSporovi.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                  {radarSporovi.length}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* SUB-TAB 1: TABLICA SVIH SPOROVA */}
+          {/* TABLICA SVIH SPOROVA */}
           {sporoviSubTab === 'tablica' && (
             <div className="space-y-4">
               {/* OBAVIJEST O UKLANJANJU S GUMBOM ZA PONIŠTENJE */}
@@ -1560,14 +1528,25 @@ export default function MainDashboardView({
                 </div>
               )}
 
-              <div className="p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5 shrink-0" />
-                <div className="text-xs text-rose-900 dark:text-rose-200">
-                  <p className="font-bold text-sm">Radar zakonskih i sudskih rokova (ZUS)</p>
-                  <p className="mt-0.5">
-                    Ovdje su automatski izdvojeni svi sporovi koji čekaju poduzimanje radnje (odgovor na tužbu, dostavu spisa ili izradu drugostupanjskog rješenja nakon presude kod šutnje uprave).
-                  </p>
+              <div className="p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5 shrink-0" />
+                  <div className="text-xs text-rose-900 dark:text-rose-200">
+                    <p className="font-bold text-sm">Radar zakonskih i sudskih rokova (ZUS)</p>
+                    <p className="mt-0.5">
+                      Ovdje su automatski izdvojeni svi sporovi koji čekaju poduzimanje radnje (odgovor na tužbu, dostavu spisa ili izradu drugostupanjskog rješenja nakon presude kod šutnje uprave).
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setSporoviSubTab('tablica');
+                    setStatusFilter('sve');
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <span>← Natrag na popis sporova</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

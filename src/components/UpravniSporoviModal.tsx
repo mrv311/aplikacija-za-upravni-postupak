@@ -686,53 +686,6 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           </div>
         </div>
 
-        {/* TABS NAVIGATION */}
-        <div className="flex items-center gap-2 px-6 pt-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <button
-            onClick={() => setActiveTab('pregled')}
-            className={`pb-3 px-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-              activeTab === 'pregled'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Svi sporovi ({sporovi.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('radar')}
-            className={`pb-3 px-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-              activeTab === 'radar'
-                ? 'border-rose-600 text-rose-600 dark:text-rose-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-            }`}
-          >
-            <AlertTriangle className="w-4 h-4 text-rose-500" />
-            <span>Radar rokova</span>
-            {radarSporovi.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                {radarSporovi.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('uvoz')}
-            className={`pb-3 px-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-              activeTab === 'uvoz'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-            }`}
-          >
-            <Inbox className="w-4 h-4" />
-            <span>Uvoz iz e-Komunikacije</span>
-            <span className="px-1.5 py-0.2 rounded-full text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-              AI Parser
-            </span>
-          </button>
-        </div>
-
         {/* MODAL BODY */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* TAB 1: PREGLED SVIH SPOROVA */}
