@@ -512,9 +512,17 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
     list.sort((a, b) => {
       if (sporoviSort === 'novi') {
+        const aIsCustom = a.id?.startsWith('custom-');
+        const bIsCustom = b.id?.startsWith('custom-');
+        if (aIsCustom && !bIsCustom) return -1;
+        if (!aIsCustom && bIsCustom) return 1;
         return b.rbr - a.rbr;
       }
       if (sporoviSort === 'stari') {
+        const aIsCustom = a.id?.startsWith('custom-');
+        const bIsCustom = b.id?.startsWith('custom-');
+        if (aIsCustom && !bIsCustom) return 1;
+        if (!aIsCustom && bIsCustom) return -1;
         return a.rbr - b.rbr;
       }
       if (sporoviSort === 'rok') {

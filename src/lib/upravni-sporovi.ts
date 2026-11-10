@@ -719,8 +719,15 @@ export function parseExcelSporovi(
       return baseList.map((s) => applySporOverrides(s, overrides));
     }
     const map = new Map<string, UpravniSpor>();
+    const maxBaseRbr = baseList.length > 0 ? Math.max(...baseList.map((s) => s.rbr || 0)) : 350;
+
     // First custom sporovi so they appear first or override base
-    customSporovi.forEach((s) => map.set(s.poslovniBroj || s.id, s));
+    // Osiguraj da custom novouneseni sporovi imaju visok rbr (>= 1000) kako bi pri sortiranju 'Najnoviji prvi' bili na vrhu
+    customSporovi.forEach((s, idx) => {
+      const fixedRbr = s.rbr && s.rbr > 1 ? Math.max(s.rbr, maxBaseRbr + 1 + idx) : Math.max(1000, maxBaseRbr + 1 + idx);
+      const fixedSpor = { ...s, rbr: fixedRbr };
+      map.set(fixedSpor.poslovniBroj || fixedSpor.id, fixedSpor);
+    });
     baseList.forEach((s) => {
       const key = s.poslovniBroj || s.id;
       if (!map.has(key)) {

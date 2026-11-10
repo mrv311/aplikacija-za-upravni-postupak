@@ -373,9 +373,14 @@ export async function saveNewSporAction(payload: {
       today
     );
 
+    const existingCustom = await getCustomSporoviAsync();
+    const maxExistingRbr =
+      existingCustom.length > 0 ? Math.max(...existingCustom.map((s) => s.rbr || 0)) : 1000;
+    const nextRbr = Math.max(1000, maxExistingRbr + 1);
+
     const newSpor: UpravniSpor = {
       id: `custom-${Date.now()}`,
-      rbr: 1,
+      rbr: nextRbr,
       rowNum: 9999,
       tuzitelj: payload.tuzitelj,
       oib: payload.oib,
