@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Scale,
   Search,
@@ -19,9 +19,24 @@ import {
   FolderOpen,
   ArrowRight,
   Filter,
+  Sparkles,
+  Upload,
+  Calendar,
+  FileCheck,
+  Check,
+  Loader2,
+  Link as LinkIcon,
 } from 'lucide-react';
-import { getUpravniSporoviAction, type SporoviStats } from '@/app/actions/sporoviActions';
+import {
+  getUpravniSporoviAction,
+  analyzeCourtPacketAction,
+  listOneDriveFoldersAction,
+  analyzeFromOneDriveFolderAction,
+  saveNewSporAction,
+  type SporoviStats,
+} from '@/app/actions/sporoviActions';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
+import type { ExtractedCourtCase } from '@/lib/court-packet-parser';
 
 interface UpravniSporoviModalProps {
   isOpen: boolean;
@@ -43,6 +58,36 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
   const [selectedSpor, setSelectedSpor] = useState<UpravniSpor | null>(null);
 
+  // TAB 3: UVOZ IZ E-KOMUNIKACIJE STATES
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState('');
+  const [extractedData, setExtractedData] = useState<ExtractedCourtCase | null>(null);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [saveErrorMsg, setSaveErrorMsg] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // OneDrive folders list
+  const [oneDriveFolders, setOneDriveFolders] = useState<{ name: string; mtime: string }[]>([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [selectedOneDriveFolder, setSelectedOneDriveFolder] = useState('');
+
+  // Editable Form states for extracted data
+  const [formSud, setFormSud] = useState('');
+  const [formPoslovniBroj, setFormPoslovniBroj] = useState('');
+  const [formTuzitelj, setFormTuzitelj] = useState('');
+  const [formOib, setFormOib] = useState('');
+  const [formVrstaSpora, setFormVrstaSpora] = useState('Šutnja uprave');
+  const [formPredmet, setFormPredmet] = useState('nuv');
+  const [formPobijaniAkt, setFormPobijaniAkt] = useState('');
+  const [formDatumPreuzimanja, setFormDatumPreuzimanja] = useState('');
+  const [formRokDana, setFormRokDana] = useState(30);
+  const [formRokDospijeca, setFormRokDospijeca] = useState('');
+  const [formRjesavatelj, setFormRjesavatelj] = useState('Dino Malbaša');
+  const [formSazetak, setFormSazetak] = useState('');
+
   const loadData = async (forceRefresh = false) => {
     setLoading(true);
     try {
@@ -60,11 +105,139 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
     }
   };
 
+  const loadOneDriveFolders = async () => {
+    setLoadingFolders(true);
+    try {
+      const res = await listOneDriveFoldersAction();
+      if (res.success) {
+        setOneDriveFolders(res.folders);
+      }
+    } catch (err) {
+      console.error('Greška pri listanju mapa OneDrive-a:', err);
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadData(false);
+      loadOneDriveFolders();
     }
   }, [isOpen]);
+
+  // Sync extracted data to editable form
+  const populateFormWithExtracted = (data: ExtractedCourtCase) => {
+    setExtractedData(data);
+    setFormSud(data.sud);
+    setFormPoslovniBroj(data.poslovniBroj);
+    setFormTuzitelj(data.tuzitelj);
+    setFormOib(data.oib || '');
+    setFormVrstaSpora(data.vrstaSpora);
+    setFormPredmet(data.predmet);
+    setFormPobijaniAkt(data.pobijaniAkt || '');
+    setFormDatumPreuzimanja(data.datumPreuzimanja);
+    setFormRokDana(data.rokDana);
+    setFormRokDospijeca(data.rokDospijecaFormat);
+    setFormRjesavatelj(data.rjesavateljPreporuka || 'Dino Malbaša');
+    setFormSazetak(data.sazetak);
+    setSaveSuccessMsg('');
+    setSaveErrorMsg('');
+  };
+
+  // Run analysis on uploaded files
+  const handleAnalyzeFiles = async () => {
+    if (queuedFiles.length === 0) return;
+    setIsAnalyzing(true);
+    setAnalysisStep('Čitanje i OCR priprema PDF datoteka...');
+
+    try {
+      const fd = new FormData();
+      queuedFiles.forEach((f) => fd.append('files', f));
+
+      setAnalysisStep('Ekstrakcija podataka sa suda, potvrde primitka i rokova...');
+      const res = await analyzeCourtPacketAction(fd);
+
+      if (res.success && res.data) {
+        setAnalysisStep('Dovršeno!');
+        populateFormWithExtracted(res.data);
+      } else {
+        setSaveErrorMsg(res.error || 'Nije uspjela analiza paketa.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveErrorMsg(msg || 'Greška pri analizi.');
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisStep('');
+    }
+  };
+
+  // Run analysis from an existing OneDrive folder with 1-click
+  const handleAnalyzeFromFolder = async (folderName: string) => {
+    setSelectedOneDriveFolder(folderName);
+    setIsAnalyzing(true);
+    setAnalysisStep(`Učitavanje datoteka iz mape: ${folderName}...`);
+
+    try {
+      const res = await analyzeFromOneDriveFolderAction(folderName);
+      if (res.success && res.data) {
+        populateFormWithExtracted(res.data);
+      } else {
+        setSaveErrorMsg(res.error || 'Nije uspjela analiza mape.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveErrorMsg(msg);
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisStep('');
+    }
+  };
+
+  // Save new dispute to active list
+  const handleSaveNewSpor = async () => {
+    if (!formPoslovniBroj || !formTuzitelj) {
+      setSaveErrorMsg('Poslovni broj i tužitelj su obavezna polja.');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveErrorMsg('');
+    try {
+      const dPreuzetoParts = formDatumPreuzimanja.split('-');
+      const formattedPreuzeto =
+        dPreuzetoParts.length === 3
+          ? `${parseInt(dPreuzetoParts[2], 10)}.${parseInt(dPreuzetoParts[1], 10)}.${dPreuzetoParts[0]}.`
+          : formDatumPreuzimanja;
+
+      const odgovorEvidencija = `rok ${formRokDana} dana - do ${formRokDospijeca}`;
+
+      const res = await saveNewSporAction({
+        sud: formSud,
+        poslovniBroj: formPoslovniBroj,
+        tuzitelj: formOib ? `${formTuzitelj} (OIB:${formOib})` : formTuzitelj,
+        oib: formOib,
+        upIiRjesenje: formPobijaniAkt || (formVrstaSpora === 'Šutnja uprave' ? 'šutnja uprave' : ''),
+        predmet: formPredmet,
+        rjesavatelj: formRjesavatelj,
+        tuzbaPreuzeta: formattedPreuzeto,
+        odgovorNaTuzbu: odgovorEvidencija,
+      });
+
+      if (res.success) {
+        setSaveSuccessMsg(`Predmet ${formPoslovniBroj} (${formTuzitelj}) uspješno je spremljen u evidenciju sporova!`);
+        await loadData(false);
+      } else {
+        setSaveErrorMsg(res.error || 'Greška pri spremanju.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveErrorMsg(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Unique list of courts and rješavatelji for filter dropdowns
   const sudoviList = useMemo(() => {
@@ -279,6 +452,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           >
             <Inbox className="w-4 h-4" />
             <span>Uvoz iz e-Komunikacije</span>
+            <span className="px-1.5 py-0.2 rounded-full text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              AI Parser
+            </span>
           </button>
         </div>
 
@@ -636,38 +812,427 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
             </div>
           )}
 
-          {/* TAB 3: UVOZ IZ E-KOMUNIKACIJE (DROPZONE PREP ZA KORAK 2) */}
+          {/* TAB 3: UVOZ IZ E-KOMUNIKACIJE (KORAK 2 INTERAKTIVNA OBRADA) */}
           {activeTab === 'uvoz' && (
-            <div className="space-y-4">
-              <div className="p-6 rounded-2xl border-2 border-dashed border-indigo-300 dark:border-indigo-900 bg-indigo-50/30 dark:bg-indigo-950/20 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-                  <Inbox className="w-6 h-6" />
+            <div className="space-y-6">
+              {/* OBAVIJEST O USPJEHU / GREŠCI */}
+              {saveSuccessMsg && (
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span className="font-semibold text-sm">{saveSuccessMsg}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSaveSuccessMsg('');
+                      setExtractedData(null);
+                      setQueuedFiles([]);
+                    }}
+                    className="text-xs px-2.5 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                  >
+                    Novi uvoz
+                  </button>
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Drag & Drop paket dokumenata s e-Komunikacije
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-lg mx-auto">
-                    Kada preuzmete tužbu s e-Komunikacije u svoju mapu, samo povucite PDF-ove ovdje (Tužba, Dopis suda s rokom, Potvrda primitka).
-                  </p>
-                </div>
+              )}
 
-                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 max-w-md mx-auto text-left text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <FolderOpen className="w-4 h-4 text-indigo-500" />
-                    Vaša lokalna mapa na OneDrive-u:
-                  </p>
-                  <p className="font-mono text-2xs bg-slate-100 dark:bg-slate-800 p-1.5 rounded truncate">
-                    C:\Users\dmalbasa\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\P O S A O\UPRAVNI SPOROVI\e_komunikacija sa sudovima
-                  </p>
+              {saveErrorMsg && (
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                  <span>{saveErrorMsg}</span>
                 </div>
+              )}
 
-                <div className="pt-2">
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs opacity-90 cursor-default">
-                    ✨ Pripremljeno za automatsku AI analizu i izradu Word odgovora (Korak 2)
-                  </span>
+              {!extractedData ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* DROPZONE ZA DATOTEKE S E-KOMUNIKACIJE */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(true);
+                      }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        if (e.dataTransfer.files) {
+                          const newFiles = Array.from(e.dataTransfer.files).filter((f) =>
+                            f.name.toLowerCase().endsWith('.pdf')
+                          );
+                          setQueuedFiles((prev) => [...prev, ...newFiles]);
+                        }
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`p-8 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all ${
+                        isDragOver
+                          ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/40 scale-[1.01]'
+                          : 'border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept=".pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            const newFiles = Array.from(e.target.files);
+                            setQueuedFiles((prev) => [...prev, ...newFiles]);
+                          }
+                        }}
+                      />
+
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                        <Upload className="w-6 h-6" />
+                      </div>
+
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        Povucite (Drag & Drop) paket dokumenata s e-Komunikacije
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                        Odaberite PDF datoteke koje ste skinuli s e-Komunikacije (Tužba, Dopis suda s rokom, Potvrda primitka pošiljke).
+                      </p>
+                      <p className="text-2xs text-indigo-600 dark:text-indigo-400 font-semibold mt-2">
+                        Kliknite ovdje za odabir datoteka s računala
+                      </p>
+                    </div>
+
+                    {/* POPIS PRILOŽENIH DATOTEKA */}
+                    {queuedFiles.length > 0 && (
+                      <div className="p-4 bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            Priloženi dokumenti paketa ({queuedFiles.length}):
+                          </p>
+                          <button
+                            onClick={() => setQueuedFiles([])}
+                            className="text-2xs text-rose-600 hover:underline"
+                          >
+                            Ukloni sve
+                          </button>
+                        </div>
+
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {queuedFiles.map((file, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60"
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
+                                <span className="truncate font-medium">{file.name}</span>
+                              </div>
+                              <span className="text-2xs text-slate-400 shrink-0 ml-2">
+                                {(file.size / 1024).toFixed(0)} KB
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={handleAnalyzeFiles}
+                          disabled={isAnalyzing}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-xs"
+                        >
+                          {isAnalyzing ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>{analysisStep || 'Analiza u tijeku...'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              <span>Pokreni AI analizu paketa</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BRZI ODABIR IZ POSTOJEĆIH MAPA NA ONEDRIVE-U */}
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        ⚡ Brzi uvoz iz mape na OneDrive-u
+                      </h4>
+                    </div>
+
+                    <p className="text-2xs text-slate-500 dark:text-slate-400">
+                      Kliknite na nedavno skinutu mapu iz <code>e_komunikacija sa sudovima</code> za instant analizu:
+                    </p>
+
+                    <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
+                      {loadingFolders ? (
+                        <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                          <span>Učitavanje mapa...</span>
+                        </div>
+                      ) : oneDriveFolders.length === 0 ? (
+                        <p className="text-2xs text-slate-400 italic">Nema pronađenih mapa na navedenoj putanji.</p>
+                      ) : (
+                        oneDriveFolders.map((f) => (
+                          <button
+                            key={f.name}
+                            onClick={() => handleAnalyzeFromFolder(f.name)}
+                            disabled={isAnalyzing}
+                            className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 transition-colors text-xs group"
+                          >
+                            <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
+                              {f.name}
+                            </p>
+                            <p className="text-2xs text-slate-400 mt-0.5">
+                              {new Date(f.mtime).toLocaleDateString('hr-HR')}
+                            </p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* INTERAKTIVNI OBRAZAC ZA PREGLED I POTVRDU IZVUČENIH PODATAKA */
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-6 shadow-xs animate-in fade-in-50 duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Uspješno očitani podaci sa suda
+                        </span>
+                        {extractedData.vrstaSpora === 'Šutnja uprave' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                            Šutnja uprave
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
+                        {formPoslovniBroj} — {formTuzitelj}
+                      </h3>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setExtractedData(null);
+                        setQueuedFiles([]);
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 underline"
+                    >
+                      Poništi i učitaj drugi paket
+                    </button>
+                  </div>
+
+                  {/* DETEKTIRANI DOKUMENTI PAKETA */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex flex-wrap gap-2 text-2xs">
+                    <span className="font-semibold text-slate-500">Prepoznati akti:</span>
+                    {extractedData.detektiraneDatoteke.potvrda && (
+                      <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-medium">
+                        ✓ Potvrda primitka: {extractedData.detektiraneDatoteke.potvrda}
+                      </span>
+                    )}
+                    {extractedData.detektiraneDatoteke.dopisNalog && (
+                      <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-medium">
+                        ✓ Nalog suda s rokom: {extractedData.detektiraneDatoteke.dopisNalog}
+                      </span>
+                    )}
+                    {extractedData.detektiraneDatoteke.tuzba && (
+                      <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-medium">
+                        ✓ Tužba: {extractedData.detektiraneDatoteke.tuzba}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* POVEZANI PREDMET U BAZI */}
+                  {extractedData.povezaniPredmet && (
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        <strong>Povezano s drugostupanjskim predmetom u bazi:</strong>{' '}
+                        {extractedData.povezaniPredmet.klasa} ({extractedData.povezaniPredmet.stranka})
+                      </span>
+                    </div>
+                  )}
+
+                  {/* FORM FIELDS GRID */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Nadležni sud:
+                      </label>
+                      <input
+                        type="text"
+                        value={formSud}
+                        onChange={(e) => setFormSud(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Poslovni broj suda:
+                      </label>
+                      <input
+                        type="text"
+                        value={formPoslovniBroj}
+                        onChange={(e) => setFormPoslovniBroj(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold text-indigo-600 dark:text-indigo-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Tužitelj:
+                      </label>
+                      <input
+                        type="text"
+                        value={formTuzitelj}
+                        onChange={(e) => setFormTuzitelj(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        OIB tužitelja:
+                      </label>
+                      <input
+                        type="text"
+                        value={formOib}
+                        onChange={(e) => setFormOib(e.target.value)}
+                        placeholder="11-znamenkasti OIB"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Vrsta spora:
+                      </label>
+                      <select
+                        value={formVrstaSpora}
+                        onChange={(e) => setFormVrstaSpora(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      >
+                        <option value="Šutnja uprave">Šutnja uprave (čl. 24. ZUS)</option>
+                        <option value="Pobijanje rješenja">Pobijanje drugostupanjskog rješenja</option>
+                        <option value="Upravni spor">Ostali upravni sporovi</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Pravno područje / Predmet:
+                      </label>
+                      <input
+                        type="text"
+                        value={formPredmet}
+                        onChange={(e) => setFormPredmet(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Pobijani akt / Klasa:
+                      </label>
+                      <input
+                        type="text"
+                        value={formPobijaniAkt}
+                        onChange={(e) => setFormPobijaniAkt(e.target.value)}
+                        placeholder="npr. šutnja uprave ili KLASA: UP/II-..."
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Datum primitka (e-Komunikacija):
+                      </label>
+                      <input
+                        type="date"
+                        value={formDatumPreuzimanja}
+                        onChange={(e) => setFormDatumPreuzimanja(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Zadani rok suda:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={formRokDana}
+                          onChange={(e) => setFormRokDana(parseInt(e.target.value, 10))}
+                          className="w-24 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
+                        >
+                          <option value={30}>30 dana</option>
+                          <option value={60}>60 dana</option>
+                          <option value={15}>15 dana</option>
+                        </select>
+                        <span className="text-2xs text-slate-500">➔ Istek:</span>
+                        <input
+                          type="text"
+                          value={formRokDospijeca}
+                          onChange={(e) => setFormRokDospijeca(e.target.value)}
+                          className="flex-1 px-2.5 py-2 rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200 font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Rješavatelj:
+                      </label>
+                      <input
+                        type="text"
+                        value={formRjesavatelj}
+                        onChange={(e) => setFormRjesavatelj(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        AI Sažetak tužbenih navoda:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formSazetak}
+                        onChange={(e) => setFormSazetak(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* AKCIJE */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <button
+                      onClick={handleSaveNewSpor}
+                      disabled={isSaving}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-xs"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Spremanje...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>💾 Spremi u evidenciju sporova</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center gap-2 text-2xs text-slate-500">
+                      <span>Nakon spremanja, predmet se odmah prikazuje u Radaru rokova i Tablici sporova.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -206,9 +206,45 @@ Repozitorij: `https://github.com/mrv311/aplikacija-za-upravni-postupak.git`
 
 ---
 
-## 📌 7. Sljedeći koraci & Backlog
+## 📌 8. Modul Upravni sporovi (ZUS) & e-Komunikacija sa sudovima (Dovršeni Koraci 1 i 2)
 
-1. **Kalkulator vodnog i komunalnog doprinosa**:
-   - Povezivanje unosa tlocrtne površine/obujma (P-POVRŠINA) s jediničnim tarifama jedinica lokalne samouprave i zonama vodnog doprinosa.
-2. **Automatsko slanje i urudžbiranje pismena**:
-   - Povezivanje generiranih `.docx` rješenja s arhivom predmeta i generiranjem barkodova/QR kodova prema Uredbi o uredskom poslovanju.
+Datum implementacije: 10.11.2026.
+
+1. **Kontekst i poslovni proces**:
+   - Drugostupanjsko tijelo (Služba žalbenog postupka u vodnom gospodarstvu / MZOZT) svakodnevno zaprima tužbe i naloge četiri Upravna suda (Zagreb, Split, Rijeka, Osijek) te Visokog upravnog suda RH (VUSRH) putem pravosudnog sustava **e-Komunikacija**.
+   - Korisnik preuzima pakete u lokalnu OneDrive mapu `...\UPRAVNI SPOROVI\e_komunikacija sa sudovima` te vodi centralnu Excel evidenciju `TABLICA - U P R A V N I  S P O R O V I.xlsx` (preko 335 evidentiranih sporova).
+
+2. **Korak 1 — UI Modal i Radar zakonskih rokova (`UpravniSporoviModal.tsx` & `UpravniSporoviButton.tsx`)**:
+   - Gumb `⚖️ Upravni sporovi (ZUS)` dodan na glavnu radnu ploču (`/`) uz aktivne predmete, s dinamičkim bedžom broja otvorenih sporova i upozorenjem za hitne rokove.
+   - **Izravna sinkronizacija s Excelom (`src/lib/upravni-sporovi.ts`)**:
+     - Čita tablicu u stvarnom vremenu bez blokiranja čak i dok je datoteka aktivno otvorena u Excelu.
+     - Strukturira svih 335+ predmeta: sud, poslovni broj, tužitelj, OIB, UP/II rješenje, predmet, rješavatelj, datum preuzimanja tužbe, odgovor na tužbu, presude i troškovi.
+   - **Radar zakonskih rokova**:
+     - Automatski računa rokove za odgovor na tužbu (30/60 dana) i rokove za donošenje drugostupanjskog akta po presudi kod šutnje uprave (čl. 58. st. 3. ZUS).
+     - Vizualni semafor hitnosti: Isteklo (crveno), Danas (pulsirajuće crveno), Kritično (1–3 dana), Hitno (4–10 dana), U roku (zeleno/plavo).
+
+3. **Korak 2 — AI Parser e-Komunikacije & Drag-and-Drop uvoz (`src/lib/court-packet-parser.ts`)**:
+   - **Podrška za cjelovite pakete sa suda**:
+     - Korisnik jednostavno povuče (Drag & Drop) preuzete PDF-ove paketa (Tužba, Nalog/Rješenje suda s rokom, Potvrda primitka pošiljke).
+     - **1-Klik uvoz iz OneDrive mapa**: Tablica uvoza automatski lista najnovije mape unutar `e_komunikacija sa sudovima` te omogućava analizu jednim klikom.
+   - **Automatska ekstrakcija**:
+     - **Nadležni sud**: prepoznavanje Upravnih sudova u Zagrebu, Splitu, Rijeci, Osijeku i VUSRH.
+     - **Poslovni broj**: npr. `Us I-2546/2026`, `Us I-5504/2026`.
+     - **Tužitelj & OIB**: detekcija stranke i 11-znamenkastog OIB-a iz izreke/zaglavlja.
+     - **Opunomoćenik**: detekcija odvjetnika i punomoći.
+     - **Vrsta spora**: automatsko prepoznavanje šutnje uprave (čl. 24. ZUS) vs. pobijanja rješenja.
+     - **Datum preuzimanja s Potvrde primitka**: očitavanje točnog datuma uručenja putem e-Komunikacije (npr. `12.10.2026.`).
+     - **Zakonski rok (čl. 48. ZUS & čl. 81. ZUP)**: automatski izračun točnog datuma isteka roka (npr. 30 dana ➔ 11.11.2026.) uz uračunavanje neradnih dana i državnih blagdana.
+     - **AI Sažetak merituma (`gemini-3.8-flash`)**: sažet pravni prikaz razloga podnošenja tužbe i zahtjeva tužitelja.
+     - **Povezivanje s bazom (`predmeti`)**: automatska detekcija postojećeg drugostupanjskog predmeta prema klasi ili prezimenu stranke (`🔗 Povezano s drugostupanjskim predmetom: KLASA: ...`).
+   - **Interaktivni pregled i spremanje**:
+     - Korisnik može pregledati i urediti podatke prije trajnog unosa.
+     - Gumb *"💾 Spremi u evidenciju sporova"* odmah ažurira radnu ploču i Radar rokova.
+
+---
+
+## 📌 9. Sljedeći korak: Korak 3 — Generator odgovora na tužbu (.docx)
+
+- Automatska izrada službenog odgovora na tužbu u `.docx` formatu prema stilu Ministarstva i obrascima iz mape `ODGOVORI NA TUŽBU`:
+  - Za šutnju uprave: prijedlog za obustavu spora ako je rješenje već doneseno ili očitovanje o pribavi spisa.
+  - Za meritorne sporove: povlačenje relevantne prakse iz baze sudske prakse (12.000 chunkova) i prijedlog za odbijanje tužbenog zahtjeva.
