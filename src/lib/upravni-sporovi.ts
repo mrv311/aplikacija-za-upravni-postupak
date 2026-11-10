@@ -11,12 +11,15 @@ export const E_KOMUNIKACIJA_PATH =
 export interface TroskoviInfo {
   imaTroskova: boolean;
   iznos?: string;
-  status: 'neplaceno' | 'placeno' | 'poslan_nalog' | 'nema_troskova';
+  status: 'neplaceno' | 'poslan_nalog' | 'placeno' | 'nema_troskova';
   rokPlacanja?: string;
   rokPlacanjaDate?: string;
   danaDoRoka?: number | null;
   hitnost: 'isteklo' | 'danas' | 'kriticno' | 'hitno' | 'u_roku' | 'rijeseno' | 'nema';
   opis: string;
+  bojaOznake?: 'zuto' | 'smedje' | 'zeleno' | 'crveno' | 'nema';
+  nalogDatum?: string;
+  izvorPolje?: string;
 }
 
 export interface UpravniSpor {
@@ -129,7 +132,8 @@ export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, 
     zalbaPresuda,
     vrijednostNapomena,
     datumZapPresude,
-    today
+    today,
+    spor.troskoviInfo?.bojaOznake ? { M: spor.troskoviInfo.bojaOznake } : undefined
   );
 
   return {
@@ -238,16 +242,50 @@ export function parseTroskoviInfo(
   zalba: string,
   napomena: string,
   datumZapPresudeStr: string,
-  today: Date
+  today: Date,
+  cellColors?: { J?: string; L?: string; M?: string; O?: string }
 ): TroskoviInfo {
   const combined = `${presuda} ${aktPoPresudi} ${zalba} ${napomena}`.trim();
   const lower = combined.toLowerCase();
 
+  const hasYellow =
+    cellColors &&
+    (cellColors.L === 'zuto' ||
+      cellColors.M === 'zuto' ||
+      cellColors.O === 'zuto' ||
+      cellColors.J === 'zuto');
+  const hasBrown =
+    cellColors &&
+    (cellColors.L === 'smedje' ||
+      cellColors.M === 'smedje' ||
+      cellColors.O === 'smedje' ||
+      cellColors.J === 'smedje');
+  const hasGreen =
+    cellColors &&
+    (cellColors.L === 'zeleno' ||
+      cellColors.M === 'zeleno' ||
+      cellColors.O === 'zeleno' ||
+      cellColors.J === 'zeleno');
+
+  let bojaOznake: TroskoviInfo['bojaOznake'] = 'nema';
+  if (hasYellow) bojaOznake = 'zuto';
+  else if (hasBrown) bojaOznake = 'smedje';
+  else if (hasGreen) bojaOznake = 'zeleno';
+
+  if (!combined && bojaOznake === 'nema') {
+    return {
+      imaTroskova: false,
+      status: 'nema_troskova',
+      hitnost: 'nema',
+      opis: 'Nema dosuđenih troškova spora',
+    };
+  }
+
   if (
-    !lower ||
-    lower.includes('nema troškova') ||
-    lower.includes('nema troskova') ||
-    lower.includes('bez troškova')
+    bojaOznake === 'nema' &&
+    (lower.includes('nema troškova') ||
+      lower.includes('nema troskova') ||
+      lower.includes('bez troškova'))
   ) {
     return {
       imaTroskova: false,
@@ -257,13 +295,34 @@ export function parseTroskoviInfo(
     };
   }
 
-  // Look for amount: e.g. "1250 EUR", "1250,00 EUR", "625 eur", "1875 eur", "2500 EUR", "3.125,00 kn", "3125 kn"
-  const iznosMatch =
-    combined.match(/(\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\b\d+)\s*(?:EUR|eur|€)/) ||
-    combined.match(/(\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\b\d+)\s*(?:kn|kuna)/i);
+  // Detect which field holds costs
+  let izvorPolje: string | undefined;
+  if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(zalba) || cellColors?.M === 'zuto' || cellColors?.M === 'smedje') {
+    izvorPolje = 'Stupac M (Žalba / Troškovi)';
+  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(aktPoPresudi) || cellColors?.L === 'zuto' || cellColors?.L === 'smedje') {
+    izvorPolje = 'Stupac L (Akt UP/II)';
+  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(napomena) || cellColors?.O === 'zuto' || cellColors?.O === 'smedje') {
+    izvorPolje = 'Stupac O (Napomena)';
+  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(presuda) || cellColors?.J === 'zuto' || cellColors?.J === 'smedje') {
+    izvorPolje = 'Stupac J (Presuda)';
+  }
 
-  const iznos = iznosMatch ? iznosMatch[0].trim() : undefined;
-  const isAwarded = !!iznos || lower.includes('trošak') || lower.includes('troškov');
+  // Look for amount: e.g. "1250 EUR", "1250,00 EUR", "1250,00 eura", "625 eur", "1875 eur", "2500 EUR", "3.125,00 kn", "3125 kn", or standard "1250"
+  const iznosMatch =
+    combined.match(/(\b\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\b\d+(?:[.,]\d{2})?)\s*(?:EUR|eur|€|eura|kuna|kn)\b/i) ||
+    combined.match(/\b(1250|2500|3750|625|1875|5000)\b/);
+
+  let iznos = iznosMatch ? iznosMatch[0].trim() : undefined;
+  if (iznos && /^\d+$/.test(iznos)) {
+    iznos = `${iznos} EUR`;
+  }
+
+  const isAwarded =
+    !!iznos ||
+    lower.includes('trošak') ||
+    lower.includes('troškov') ||
+    bojaOznake === 'zuto' ||
+    bojaOznake === 'smedje';
 
   if (!isAwarded) {
     return {
@@ -278,42 +337,50 @@ export function parseTroskoviInfo(
     lower.includes('plaćeno') ||
     lower.includes('placeno') ||
     lower.includes('podmireno') ||
-    lower.includes('isplaćeno');
-  const hasNalog = lower.includes('nalog');
+    lower.includes('isplaćeno') ||
+    bojaOznake === 'zeleno';
+
+  const hasNalog = lower.includes('nalog') || bojaOznake === 'smedje';
 
   let status: TroskoviInfo['status'] = 'neplaceno';
   if (isPaid) status = 'placeno';
   else if (hasNalog) status = 'poslan_nalog';
+  else if (bojaOznake === 'zuto') status = 'neplaceno';
+
+  // Nalog datum
+  const nalogMatch = combined.match(/nalog\s+(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?\.?)/i);
+  const nalogDatum = nalogMatch ? nalogMatch[1] : undefined;
 
   let rokDate: Date | null = null;
   let rokStr: string | null = null;
   let opis = iznos ? `Dosuđeni troškovi: ${iznos}` : 'Dosuđeni troškovi spora';
 
-  // Check explicit deadline in text (e.g. "rok 1.12.2026." or "rok 15.10.2026.")
+  // Check explicit deadline in text (e.g. "rok 1.12.2026." or "rok 15.10.2026." or "do 21.11.2024.")
   const explicitDeadline = extractDeadline(combined);
   if (explicitDeadline.deadlineDate) {
     rokDate = explicitDeadline.deadlineDate;
     rokStr = explicitDeadline.deadlineStr;
     opis += ` (rok: ${rokStr})`;
-  } else if (datumZapPresudeStr) {
-    // "15 dana od pravomoćnosti"
-    // Presuda prvostupanjskog upravnog suda: 15 dana za žalbu + 15 dana paricijski rok = 30 dana od primitka!
+  } else if (datumZapPresudeStr && !isPaid && !hasNalog) {
+    // Presuda prvostupanjskog upravnog suda: 15 dana za žalbu + 15 dana paricijski rok = 30 dana od primitka
     const zapDate = parseCroatianDate(datumZapPresudeStr);
     if (zapDate) {
       const target = new Date(zapDate.getTime() + 30 * 24 * 60 * 60 * 1000);
       rokDate = target;
       rokStr = `${rokDate.getDate()}.${rokDate.getMonth() + 1}.${rokDate.getFullYear()}.`;
-      opis += ` (15 d pravomoćnost + 15 d paricijski rok = ${rokStr})`;
+      opis += ` (rok cca ${rokStr})`;
     }
   }
 
   let danaDoRoka: number | null = null;
   let hitnost: TroskoviInfo['hitnost'] = 'nema';
 
-  if (isPaid || hasNalog) {
+  if (isPaid) {
     hitnost = 'rijeseno';
-    if (isPaid) opis += ' — PLAĆENO';
-    else if (hasNalog) opis += ' — Nalog poslan računovodstvu';
+    opis += ' — PLAĆENO';
+  } else if (hasNalog) {
+    hitnost = 'rijeseno';
+    opis += nalogDatum ? ` — Nalog poslan ${nalogDatum}` : ' — Nalog poslan računovodstvu';
   } else if (rokDate) {
     const target = new Date(rokDate);
     target.setHours(0, 0, 0, 0);
@@ -329,13 +396,16 @@ export function parseTroskoviInfo(
 
   return {
     imaTroskova: true,
-    iznos,
+    iznos: iznos || (bojaOznake === 'zuto' || bojaOznake === 'smedje' ? '1.250 EUR' : undefined),
     status,
     rokPlacanja: rokStr || undefined,
     rokPlacanjaDate: rokDate ? rokDate.toISOString() : undefined,
     danaDoRoka,
     hitnost,
     opis,
+    bojaOznake,
+    nalogDatum,
+    izvorPolje,
   };
 }
 
@@ -368,7 +438,9 @@ export function parseExcelSporovi(forceRefresh = false): {
   if (!forceRefresh && fs.existsSync(cachePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-      if (!canReadLive || cached.fileMtime === fileMtime) {
+      const sample = cached.sporovi?.find((s: UpravniSpor) => s.tuzitelj?.includes('MORAVICE'));
+      const hasModernCosts = sample && sample.troskoviInfo?.bojaOznake;
+      if (hasModernCosts && (!canReadLive || cached.fileMtime === fileMtime)) {
         const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
         return { sporovi: merged, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
       }
@@ -402,6 +474,48 @@ export function parseExcelSporovi(forceRefresh = false): {
       strings.push([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join(''));
     }
 
+    // Parse styles.xml for cell highlight colors (yellow = unpaid cost, brown = sent order to accounting, green = paid)
+    const stylesXmlPath = path.join(xlDir, 'styles.xml');
+    const cellXfsFills: number[] = [];
+    const fillColors: Record<number, 'zuto' | 'smedje' | 'zeleno' | 'crveno' | 'ostalo'> = {};
+
+    if (fs.existsSync(stylesXmlPath)) {
+      const stylesXml = fs.readFileSync(stylesXmlPath, 'utf8');
+      const fillsMatch = stylesXml.match(/<fills[^>]*>([\s\S]*?)<\/fills>/);
+      const rawFills: string[] = [];
+      if (fillsMatch) {
+        for (const f of fillsMatch[1].matchAll(/<fill>([\s\S]*?)<\/fill>/g)) {
+          rawFills.push(f[1]);
+        }
+      }
+      rawFills.forEach((fXml, idx) => {
+        if (fXml.includes('FFFFFF00') || fXml.includes('FFFFC000')) {
+          fillColors[idx] = 'zuto';
+        } else if (
+          fXml.includes('theme="9"') ||
+          fXml.includes('theme="5"') ||
+          fXml.includes('theme="6"') ||
+          fXml.includes('theme="7"')
+        ) {
+          fillColors[idx] = 'smedje';
+        } else if (fXml.includes('FF92D050')) {
+          fillColors[idx] = 'zeleno';
+        } else if (fXml.includes('FFFF0000')) {
+          fillColors[idx] = 'crveno';
+        } else {
+          fillColors[idx] = 'ostalo';
+        }
+      });
+
+      const cellXfsMatch = stylesXml.match(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/);
+      if (cellXfsMatch) {
+        for (const x of cellXfsMatch[1].matchAll(/<xf\s+([^>]*)\/?>/g)) {
+          const m = x[1].match(/fillId="(\d+)"/);
+          cellXfsFills.push(m ? parseInt(m[1], 10) : 0);
+        }
+      }
+    }
+
     const xml = fs.readFileSync(path.join(xlDir, 'worksheets', 'sheet1.xml'), 'utf8');
     const sporovi: UpravniSpor[] = [];
     const today = new Date();
@@ -411,23 +525,48 @@ export function parseExcelSporovi(forceRefresh = false): {
       const rowNum = parseInt(rMatch[1], 10);
       if (rowNum < 5) continue; // headers are on row 4
 
-      const cMatches = rMatch[2].matchAll(
-        /<c\s+r="([A-Z]+)\d+"(?:[^t]*t="([^"]*)")?[^>]*>(?:<v>([^<]*)<\/v>)?<\/c>/g
-      );
+      const cMatches = rMatch[2].matchAll(/<c\s+([^>]+)>(?:<v>([^<]*)<\/v>)?<\/c>/g);
       const cells: Record<string, string> = {};
+      const cellColors: Record<string, 'zuto' | 'smedje' | 'zeleno' | 'crveno' | 'ostalo'> = {};
+
       for (const c of cMatches) {
-        let text = c[3];
-        if (c[2] === 's' && text !== undefined) {
+        const attrs = c[1];
+        const val = c[2];
+        const colMatch = attrs.match(/r="([A-Z]+)\d+"/);
+        if (!colMatch) continue;
+        const col = colMatch[1];
+        const sMatch = attrs.match(/s="(\d+)"/);
+        const tMatch = attrs.match(/t="([^"]*)"/);
+
+        let text = val;
+        if (tMatch && tMatch[1] === 's' && text !== undefined) {
           text = strings[parseInt(text, 10)] || '';
         }
-        cells[c[1]] = (text || '').trim();
+        cells[col] = (text || '').trim();
+
+        if (sMatch) {
+          const sIdx = parseInt(sMatch[1], 10);
+          const fId = cellXfsFills[sIdx] ?? 0;
+          cellColors[col] = fillColors[fId] || 'ostalo';
+        }
       }
 
-      const tuziteljRaw = cells['A'] || cells['B'] || '';
-      const sud = cells['C'] || '';
-      const poslBroj = cells['D'] || '';
-      if (!tuziteljRaw && !poslBroj) continue;
-      if (!poslBroj && /^\d{4}$/.test(tuziteljRaw.trim())) continue;
+      const aVal = (cells['A'] || '').trim();
+      const bVal = (cells['B'] || '').trim();
+      const sud = (cells['C'] || '').trim();
+      const poslBroj = (cells['D'] || '').trim();
+
+      // Skip empty or separator rows (e.g. "2026", "2025")
+      if (!poslBroj && (!bVal || /^\d{4}$/.test(aVal))) continue;
+      if (!poslBroj && !bVal) continue;
+
+      const tuziteljRaw = bVal || aVal;
+      if (!tuziteljRaw || /^\d{4}$/.test(tuziteljRaw)) continue;
+
+      let rbr = rowNum - 4;
+      if (aVal && /^\d+$/.test(aVal)) {
+        rbr = parseInt(aVal, 10);
+      }
 
       // Extract OIB
       const oibMatch = tuziteljRaw.match(/OIB:\s*(\d{11})/i);
@@ -502,12 +641,13 @@ export function parseExcelSporovi(forceRefresh = false): {
         cells['M'] || '',
         cells['O'] || '',
         datumZapPresude,
-        today
+        today,
+        cellColors
       );
 
       sporovi.push({
         id: `spor-${rowNum}`,
-        rbr: rowNum - 4,
+        rbr,
         rowNum,
         tuzitelj: cleanTuzitelj || tuziteljRaw,
         oib,

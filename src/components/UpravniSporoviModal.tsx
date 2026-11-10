@@ -56,7 +56,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [sudFilter, setSudFilter] = useState('sve');
-  const [statusFilter, setStatusFilter] = useState<'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'rijeseno'>('u_radu');
+  const [statusFilter, setStatusFilter] = useState<
+    'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'troskovi_zuto' | 'troskovi_smedje' | 'troskovi_sve' | 'rijeseno'
+  >('u_radu');
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
   const [sporoviSort, setSporoviSort] = useState<'novi' | 'stari' | 'rok' | 'stranka' | 'sud'>('novi');
   const [selectedSpor, setSelectedSpor] = useState<UpravniSpor | null>(null);
@@ -318,10 +320,12 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
   // Filtered sporovi
   const filteredSporovi = useMemo(() => {
+    const hasSearch = !!searchQuery.trim();
+    const q = searchQuery.toLowerCase().trim();
+
     const list = sporovi.filter((s) => {
       // Text search
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+      if (hasSearch) {
         const matchesText =
           s.tuzitelj.toLowerCase().includes(q) ||
           s.poslovniBroj.toLowerCase().includes(q) ||
@@ -329,8 +333,20 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           s.upIiRjesenje.toLowerCase().includes(q) ||
           s.rjesavatelj.toLowerCase().includes(q) ||
           s.predmet.toLowerCase().includes(q) ||
-          s.sud.toLowerCase().includes(q);
+          s.sud.toLowerCase().includes(q) ||
+          (s.presudaTroskovi && s.presudaTroskovi.toLowerCase().includes(q)) ||
+          (s.zalbaPresuda && s.zalbaPresuda.toLowerCase().includes(q)) ||
+          (s.aktUpIiPoPresudi && s.aktUpIiPoPresudi.toLowerCase().includes(q)) ||
+          (s.vrijednostNapomena && s.vrijednostNapomena.toLowerCase().includes(q)) ||
+          (s.troskoviInfo?.iznos && s.troskoviInfo.iznos.toLowerCase().includes(q)) ||
+          (s.troskoviInfo?.opis && s.troskoviInfo.opis.toLowerCase().includes(q));
+
         if (!matchesText) return false;
+
+        // Kad korisnik traži određeni pojam, ne blokiramo statusnim filterom
+        if (sudFilter !== 'sve' && s.sud !== sudFilter) return false;
+        if (rjesavateljFilter !== 'sve' && s.rjesavatelj !== rjesavateljFilter) return false;
+        return true;
       }
 
       // Sud filter
@@ -346,8 +362,25 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         if (!['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost)) return false;
       } else if (statusFilter === 'sutnja') {
         if (!s.isSutnjaUprave) return false;
-      } else if (statusFilter === 'troskovi') {
-        if (!s.troskoviInfo?.imaTroskova || s.troskoviInfo.status === 'placeno') return false;
+      } else if (statusFilter === 'troskovi' || statusFilter === 'troskovi_zuto') {
+        if (!s.troskoviInfo?.imaTroskova) return false;
+        if (
+          s.troskoviInfo.status === 'placeno' ||
+          s.troskoviInfo.status === 'poslan_nalog' ||
+          s.troskoviInfo.bojaOznake === 'smedje'
+        ) {
+          return false;
+        }
+      } else if (statusFilter === 'troskovi_smedje') {
+        if (!s.troskoviInfo?.imaTroskova) return false;
+        if (
+          s.troskoviInfo.status !== 'poslan_nalog' &&
+          s.troskoviInfo.bojaOznake !== 'smedje'
+        ) {
+          return false;
+        }
+      } else if (statusFilter === 'troskovi_sve') {
+        if (!s.troskoviInfo?.imaTroskova) return false;
       } else if (statusFilter === 'rijeseno') {
         if (!s.isPresudeno) return false;
       }
@@ -472,17 +505,25 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           <div
             onClick={() => {
               setActiveTab('pregled');
-              setStatusFilter('troskovi');
+              setStatusFilter('troskovi_zuto');
             }}
             className={`cursor-pointer p-2.5 rounded-xl border flex items-center justify-between transition-colors ${
-              statusFilter === 'troskovi' && activeTab === 'pregled'
+              (statusFilter === 'troskovi' || statusFilter === 'troskovi_zuto') && activeTab === 'pregled'
                 ? 'border-amber-400 bg-amber-50/80 dark:bg-amber-950/40 shadow-xs'
                 : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-amber-300'
             }`}
           >
             <div>
-              <p className="text-amber-700 dark:text-amber-400 font-medium">Troškovi za isplatu</p>
-              <p className="text-lg font-bold text-amber-950 dark:text-amber-100">{stats?.troskoviZaPlacanje ?? 0}</p>
+              <p className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1 text-xs">
+                <span>🟡</span> Troškovi za isplatu
+              </p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-lg font-bold text-amber-950 dark:text-amber-100">{stats?.troskoviZuto ?? 0}</p>
+                <span className="text-2xs text-amber-600">čeka nalog</span>
+              </div>
+              <p className="text-2xs text-slate-400 mt-0.5">
+                🟤 {stats?.troskoviSmedje ?? 0} nalog | ✓ {stats?.troskoviPlaceno ?? 0} plaćeno
+              </p>
             </div>
             <span className="text-base">💰</span>
           </div>
@@ -606,7 +647,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                   >
                     <option value="u_radu">U radu / Bez presude ({stats?.uTijeku ?? 0})</option>
                     <option value="hitno">Hitni rokovi odgovora ({stats?.hitni ?? 0})</option>
-                    <option value="troskovi">Troškovi za isplatu ({stats?.troskoviZaPlacanje ?? 0})</option>
+                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Žuto ({stats?.troskoviZuto ?? 0})</option>
+                    <option value="troskovi_smedje">🟤 Nalog poslan računovodstvu / Smeđe ({stats?.troskoviSmedje ?? 0})</option>
+                    <option value="troskovi_sve">💰 Svi dosuđeni troškovi ({stats?.troskoviUkupno ?? 0})</option>
                     <option value="sutnja">Šutnja uprave ({stats?.sutnjaUprave ?? 0})</option>
                     <option value="rijeseno">Presuđeno / Završeno ({stats?.presudeni ?? 0})</option>
                     <option value="sve">Svi sporovi ({sporovi.length})</option>
@@ -781,41 +824,50 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                 </td>
 
                                 {/* Presuda & Troškovi */}
-                                <td className="py-2.5 px-3 max-w-[200px]">
+                                <td className="py-2.5 px-3 max-w-[240px]">
+                                  {/* Istaknuti bedževi za troškove spora */}
+                                  {spor.troskoviInfo && spor.troskoviInfo.imaTroskova && (
+                                    <div className="mb-1">
+                                      {spor.troskoviInfo.status === 'placeno' ? (
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                                          ✓ Plaćeno ({spor.troskoviInfo.iznos})
+                                        </span>
+                                      ) : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                        <span
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-600"
+                                          title={spor.troskoviInfo.opis}
+                                        >
+                                          🟤 Nalog poslan ({spor.troskoviInfo.iznos || '1.250 EUR'})
+                                          {spor.troskoviInfo.nalogDatum && ` ${spor.troskoviInfo.nalogDatum}`}
+                                        </span>
+                                      ) : (
+                                        <span
+                                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${
+                                            ['isteklo', 'danas', 'kriticno'].includes(spor.troskoviInfo.hitnost)
+                                              ? 'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-400 animate-pulse'
+                                              : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400 shadow-2xs'
+                                          }`}
+                                          title={spor.troskoviInfo.opis}
+                                        >
+                                          🟡 Trošak: {spor.troskoviInfo.iznos || '1.250 EUR'} (ČEKA NALOG)
+                                          {spor.troskoviInfo.rokPlacanja && ` (rok: ${spor.troskoviInfo.rokPlacanja})`}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
                                   {spor.presudaTroskovi ? (
                                     <div>
-                                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate" title={spor.presudaTroskovi}>
                                         {spor.presudaTroskovi}
                                       </p>
                                       {spor.datumZapPresude && (
                                         <p className="text-2xs text-slate-400">Zaprimljeno: {spor.datumZapPresude}</p>
                                       )}
-                                      {spor.troskoviInfo && spor.troskoviInfo.imaTroskova && (
-                                        <div className="mt-1">
-                                          {spor.troskoviInfo.status === 'poslan_nalog' ? (
-                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-medium">
-                                              <Check className="w-3 h-3" /> Nalog poslan
-                                            </span>
-                                          ) : spor.troskoviInfo.status === 'placeno' ? (
-                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-medium">
-                                              <Check className="w-3 h-3" /> Plaćeno
-                                            </span>
-                                          ) : (
-                                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold ${
-                                              ['isteklo', 'danas', 'kriticno'].includes(spor.troskoviInfo.hitnost)
-                                                ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
-                                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                            }`}>
-                                              💰 {spor.troskoviInfo.iznos || 'Trošak'}
-                                              {spor.troskoviInfo.rokPlacanja && ` (rok: ${spor.troskoviInfo.rokPlacanja})`}
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
                                     </div>
-                                  ) : (
+                                  ) : !spor.troskoviInfo?.imaTroskova ? (
                                     <span className="text-slate-400 text-2xs">U tijeku</span>
-                                  )}
+                                  ) : null}
                                 </td>
 
                                 <td className="py-2.5 px-3 text-right">
@@ -1060,6 +1112,8 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                           <div className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
                                             spor.troskoviInfo?.status === 'neplaceno'
                                               ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
+                                              : spor.troskoviInfo?.status === 'poslan_nalog' || spor.troskoviInfo?.bojaOznake === 'smedje'
+                                              ? 'bg-stone-50/80 dark:bg-stone-900/40 border-stone-300 dark:border-stone-700'
                                               : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-700/80'
                                           }`}>
                                             <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1075,13 +1129,30 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                                 )}
                                                 <div className="flex items-center justify-between">
                                                   <span className="text-slate-500">Status:</span>
-                                                  {spor.troskoviInfo.status === 'poslan_nalog' ? (
-                                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Nalog poslan računovodstvu</span>
+                                                  {spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje' ? (
+                                                    <span className="font-semibold text-stone-700 dark:text-stone-300">
+                                                      🟤 Nalog poslan {spor.troskoviInfo.nalogDatum ? `(${spor.troskoviInfo.nalogDatum})` : ''}
+                                                    </span>
                                                   ) : spor.troskoviInfo.status === 'placeno' ? (
                                                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Plaćeno</span>
                                                   ) : (
-                                                    <span className="font-bold text-rose-600 dark:text-rose-400">⚠️ Čeka nalog / Nije plaćeno</span>
+                                                    <span className="font-bold text-rose-600 dark:text-rose-400 animate-pulse">
+                                                      🟡 Čeka nalog (žuto u tablici)
+                                                    </span>
                                                   )}
+                                                </div>
+
+                                                <div className="flex items-center justify-between text-2xs">
+                                                  <span className="text-slate-500">Evidencija u Excelu:</span>
+                                                  <span className="font-mono text-slate-700 dark:text-slate-300">
+                                                    {spor.troskoviInfo.bojaOznake === 'zuto'
+                                                      ? '🟡 Žuto obojano (neplaćeno)'
+                                                      : spor.troskoviInfo.bojaOznake === 'smedje'
+                                                      ? '🟤 Smeđe obojano (nalog poslan)'
+                                                      : spor.troskoviInfo.status === 'placeno'
+                                                      ? '🟢 Plaćeno'
+                                                      : 'Tekstualni zapis'}
+                                                  </span>
                                                 </div>
 
                                                 {spor.troskoviInfo.rokPlacanja && (

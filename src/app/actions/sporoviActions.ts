@@ -19,6 +19,10 @@ export interface SporoviStats {
   sutnjaUprave: number;
   presudeni: number;
   troskoviZaPlacanje: number;
+  troskoviZuto: number;
+  troskoviSmedje: number;
+  troskoviPlaceno: number;
+  troskoviUkupno: number;
   hitniTroskovi: number;
 }
 
@@ -43,6 +47,10 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
       sutnjaUprave: 0,
       presudeni: 0,
       troskoviZaPlacanje: 0,
+      troskoviZuto: 0,
+      troskoviSmedje: 0,
+      troskoviPlaceno: 0,
+      troskoviUkupno: 0,
       hitniTroskovi: 0,
     };
 
@@ -67,10 +75,21 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         stats.hitni++;
       }
 
-      if (s.troskoviInfo?.status === 'neplaceno') {
-        stats.troskoviZaPlacanje++;
-        if (['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.troskoviInfo.hitnost)) {
-          stats.hitniTroskovi++;
+      if (s.troskoviInfo?.imaTroskova) {
+        stats.troskoviUkupno++;
+        if (s.troskoviInfo.status === 'placeno') {
+          stats.troskoviPlaceno++;
+        } else if (
+          s.troskoviInfo.status === 'poslan_nalog' ||
+          s.troskoviInfo.bojaOznake === 'smedje'
+        ) {
+          stats.troskoviSmedje++;
+        } else {
+          stats.troskoviZuto++;
+          stats.troskoviZaPlacanje++;
+          if (['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.troskoviInfo.hitnost)) {
+            stats.hitniTroskovi++;
+          }
         }
       }
     }
@@ -97,6 +116,10 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         sutnjaUprave: 0,
         presudeni: 0,
         troskoviZaPlacanje: 0,
+        troskoviZuto: 0,
+        troskoviSmedje: 0,
+        troskoviPlaceno: 0,
+        troskoviUkupno: 0,
         hitniTroskovi: 0,
       },
       lastModified: '',
