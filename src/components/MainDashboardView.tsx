@@ -621,14 +621,15 @@ export default function MainDashboardView({
             <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold">
               {sporovi.length}
             </span>
-            {stats.hitni > 0 && (
+            {radarSporovi.length > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
-                {stats.hitni} hitno
+                {radarSporovi.length} hitno
               </span>
             )}
             {stats.troskoviZaPlacanje > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                💰 {stats.troskoviZaPlacanje} troškova
+              <span className="px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800 flex items-center gap-1">
+                <span>💰</span>
+                <span>Troškovi sporova {stats.troskoviZaPlacanje}</span>
               </span>
             )}
           </button>
