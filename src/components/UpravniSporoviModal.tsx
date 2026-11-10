@@ -93,19 +93,33 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         unDismiss,
       });
 
-      if (res.success && res.updatedSpor) {
+      if (res.success) {
         const updated = res.updatedSpor;
-        setSporovi((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-        if (selectedSpor?.id === updated.id) {
-          setSelectedSpor(updated);
-        }
+        // Lokalno označi predmet (ne oslanjamo se samo na odgovor servera)
+        setSporovi((prev) =>
+          prev.map((s) =>
+            s.id === spor.id
+              ? updated && updated.id === spor.id
+                ? { ...updated, isDismissed: !unDismiss }
+                : { ...s, isDismissed: !unDismiss }
+              : s
+          )
+        );
+        setSelectedSpor(null);
+        setEditingSporId(null);
+        setStats((prev) =>
+          prev ? { ...prev, uklonjeni: Math.max(0, prev.uklonjeni + (unDismiss ? -1 : 1)) } : prev
+        );
         const msg = unDismiss
           ? `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} vraćen je u aktivne sporove!`
           : `✓ Predmet ${spor.poslovniBroj || spor.tuzitelj} uklonjen je iz aktivnih sporova!`;
         setDismissSuccessMsg(msg);
         setTimeout(() => setDismissSuccessMsg(''), 5000);
+      } else {
+        alert(`Predmet nije uklonjen – greška pri spremanju:\n${res.error || 'nepoznata greška'}`);
       }
     } catch (err) {
+      alert(`Predmet nije uklonjen – greška: ${err instanceof Error ? err.message : String(err)}`);
       console.error('Greška pri uklanjanju spora:', err);
     } finally {
       setDismissingId(null);
@@ -380,6 +394,8 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         if (!matchesText) return false;
 
         // Kad korisnik traži određeni pojam, ne blokiramo statusnim filterom
+        // Uklonjeni predmeti se ipak skrivaju (osim u filtru "Uklonjeni predmeti").
+        if (statusFilter === 'uklonjeno' ? !s.isDismissed : s.isDismissed) return false;
         if (sudFilter !== 'sve' && s.sud !== sudFilter) return false;
         if (rjesavateljFilter !== 'sve' && s.rjesavatelj !== rjesavateljFilter) return false;
         return true;
