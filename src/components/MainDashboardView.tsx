@@ -643,15 +643,6 @@ export default function MainDashboardView({
               <Upload className="w-3.5 h-3.5" />
               <span>+ Uvezi iz e-Komunikacije</span>
             </button>
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              title="Ponovno pročitaj iz Excel datoteke"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-              <span>{loading ? 'Čitanje...' : 'Osvježi iz Excela'}</span>
-            </button>
           </div>
         )}
       </div>
@@ -780,7 +771,7 @@ export default function MainDashboardView({
               <p className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Svi sporovi</p>
               <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
               <p className="text-2xs text-slate-400 mt-0.5">
-                {stats.uklonjeni > 0 ? `${stats.uklonjeni} uklonjeno` : 'iz Excel evidencije'}
+                {stats.uklonjeni > 0 ? `${stats.uklonjeni} uklonjeno` : 'aktivna evidencija'}
               </p>
             </div>
           </div>

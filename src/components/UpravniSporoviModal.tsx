@@ -568,21 +568,12 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Sinkronizirano s Excel evidencijom i OneDrive mapama • {stats?.total || 0} evidentiranih sporova
+                Evidencija upravnih sporova • {stats?.total || 0} evidentiranih sporova
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => loadData(true)}
-              disabled={loading}
-              title="Ponovno pročitaj iz Excel datoteke"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-              <span>{loading ? 'Čitanje...' : 'Osvježi iz Excela'}</span>
-            </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
