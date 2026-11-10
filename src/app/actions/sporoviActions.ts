@@ -5,7 +5,7 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { supabaseServer as dbServer } from '@/lib/supabase-server';
 import { supabase as dbClient } from '@/lib/supabase';
-import { parseExcelSporovi, type UpravniSpor, E_KOMUNIKACIJA_PATH } from '@/lib/upravni-sporovi';
+import { parseExcelSporovi, saveSporOverride, type UpravniSpor, E_KOMUNIKACIJA_PATH } from '@/lib/upravni-sporovi';
 import { parseCourtPacket, type ExtractedCourtCase } from '@/lib/court-packet-parser';
 
 const db = dbServer || dbClient;
@@ -307,6 +307,51 @@ export async function saveNewSporAction(payload: {
 
     revalidatePath('/');
     return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+
+export async function updateSporManualDetailsAction(payload: {
+  id: string;
+  poslovniBroj: string;
+  aktUpIiPoPresudi?: string;
+  odgovorNaTuzbu?: string;
+  presudaTroskovi?: string;
+  datumZapPresude?: string;
+  zalbaPresuda?: string;
+  visokiUpravniSud?: string;
+  rjesavatelj?: string;
+  vrijednostNapomena?: string;
+}): Promise<{
+  success: boolean;
+  updatedSpor?: UpravniSpor;
+  error?: string;
+}> {
+  try {
+    const key = payload.poslovniBroj || payload.id;
+    saveSporOverride(key, {
+      aktUpIiPoPresudi: payload.aktUpIiPoPresudi,
+      odgovorNaTuzbu: payload.odgovorNaTuzbu,
+      presudaTroskovi: payload.presudaTroskovi,
+      datumZapPresude: payload.datumZapPresude,
+      zalbaPresuda: payload.zalbaPresuda,
+      visokiUpravniSud: payload.visokiUpravniSud,
+      rjesavatelj: payload.rjesavatelj,
+      vrijednostNapomena: payload.vrijednostNapomena,
+    });
+
+    const res = parseExcelSporovi(false);
+    const updated = res.sporovi.find(
+      (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
+    );
+
+    revalidatePath('/');
+    return {
+      success: true,
+      updatedSpor: updated,
+    };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };

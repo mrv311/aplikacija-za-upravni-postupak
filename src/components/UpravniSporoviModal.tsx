@@ -26,6 +26,7 @@ import {
   Check,
   Loader2,
   Link as LinkIcon,
+  Pencil,
 } from 'lucide-react';
 import {
   getUpravniSporoviAction,
@@ -33,6 +34,7 @@ import {
   listOneDriveFoldersAction,
   analyzeFromOneDriveFolderAction,
   saveNewSporAction,
+  updateSporManualDetailsAction,
   type SporoviStats,
 } from '@/app/actions/sporoviActions';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
@@ -56,7 +58,65 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [sudFilter, setSudFilter] = useState('sve');
   const [statusFilter, setStatusFilter] = useState<'sve' | 'u_radu' | 'hitno' | 'sutnja' | 'troskovi' | 'rijeseno'>('u_radu');
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
+  const [sporoviSort, setSporoviSort] = useState<'novi' | 'stari' | 'rok' | 'stranka' | 'sud'>('novi');
   const [selectedSpor, setSelectedSpor] = useState<UpravniSpor | null>(null);
+
+  // Ručno uređivanje detalja spora
+  const [editingSporId, setEditingSporId] = useState<string | null>(null);
+  const [editAktUpIi, setEditAktUpIi] = useState('');
+  const [editOdgovor, setEditOdgovor] = useState('');
+  const [editPresuda, setEditPresuda] = useState('');
+  const [editDatumPresude, setEditDatumPresude] = useState('');
+  const [editZalba, setEditZalba] = useState('');
+  const [editVus, setEditVus] = useState('');
+  const [editRjesavatelj, setEditRjesavatelj] = useState('');
+  const [editNapomena, setEditNapomena] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editSuccessMsg, setEditSuccessMsg] = useState('');
+
+  const startEditingSpor = (spor: UpravniSpor) => {
+    setEditingSporId(spor.id);
+    setEditAktUpIi(spor.aktUpIiPoPresudi || '');
+    setEditOdgovor(spor.odgovorNaTuzbu || '');
+    setEditPresuda(spor.presudaTroskovi || '');
+    setEditDatumPresude(spor.datumZapPresude || '');
+    setEditZalba(spor.zalbaPresuda || '');
+    setEditVus(spor.visokiUpravniSud || '');
+    setEditRjesavatelj(spor.rjesavatelj || '');
+    setEditNapomena(spor.vrijednostNapomena || '');
+    setEditSuccessMsg('');
+  };
+
+  const handleSaveSporEdit = async (spor: UpravniSpor) => {
+    setIsSavingEdit(true);
+    try {
+      const res = await updateSporManualDetailsAction({
+        id: spor.id,
+        poslovniBroj: spor.poslovniBroj,
+        aktUpIiPoPresudi: editAktUpIi,
+        odgovorNaTuzbu: editOdgovor,
+        presudaTroskovi: editPresuda,
+        datumZapPresude: editDatumPresude,
+        zalbaPresuda: editZalba,
+        visokiUpravniSud: editVus,
+        rjesavatelj: editRjesavatelj,
+        vrijednostNapomena: editNapomena,
+      });
+
+      if (res.success && res.updatedSpor) {
+        const updated = res.updatedSpor;
+        setSporovi((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+        setSelectedSpor(updated);
+        setEditingSporId(null);
+        setEditSuccessMsg(`✓ Zabilješke za predmet ${updated.poslovniBroj || updated.tuzitelj} uspješno spremljene!`);
+        setTimeout(() => setEditSuccessMsg(''), 5000);
+      }
+    } catch (err) {
+      console.error('Greška pri spremanju izmjena spora:', err);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // TAB 3: UVOZ IZ E-KOMUNIKACIJE STATES
   const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
@@ -258,7 +318,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
   // Filtered sporovi
   const filteredSporovi = useMemo(() => {
-    return sporovi.filter((s) => {
+    const list = sporovi.filter((s) => {
       // Text search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -294,7 +354,28 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
       return true;
     });
-  }, [sporovi, searchQuery, sudFilter, statusFilter, rjesavateljFilter]);
+
+    list.sort((a, b) => {
+      if (sporoviSort === 'novi') {
+        return b.rbr - a.rbr;
+      }
+      if (sporoviSort === 'stari') {
+        return a.rbr - b.rbr;
+      }
+      if (sporoviSort === 'rok') {
+        return (a.danaDoRoka ?? 999) - (b.danaDoRoka ?? 999);
+      }
+      if (sporoviSort === 'stranka') {
+        return a.tuzitelj.localeCompare(b.tuzitelj, 'hr');
+      }
+      if (sporoviSort === 'sud') {
+        return a.sud.localeCompare(b.sud, 'hr');
+      }
+      return b.rbr - a.rbr;
+    });
+
+    return list;
+  }, [sporovi, searchQuery, sudFilter, statusFilter, rjesavateljFilter, sporoviSort]);
 
   // Radar hitni sporovi (sorted by deadline urgency)
   const radarSporovi = useMemo(() => {
@@ -558,6 +639,19 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                       </option>
                     ))}
                   </select>
+
+                  {/* Redoslijed / Sortiranje */}
+                  <select
+                    value={sporoviSort}
+                    onChange={(e) => setSporoviSort(e.target.value as any)}
+                    className="px-2.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-200 font-semibold"
+                  >
+                    <option value="novi">Sort: Najnoviji prvi</option>
+                    <option value="stari">Sort: Najstariji prvi</option>
+                    <option value="rok">Sort: Po roku (hitno)</option>
+                    <option value="stranka">Sort: Tužitelj (A–Ž)</option>
+                    <option value="sud">Sort: Sud (A–Ž)</option>
+                  </select>
                 </div>
               </div>
 
@@ -759,127 +853,307 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                               OIB: {spor.oib}
                                             </span>
                                           )}
-                                        </div>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedSpor(null);
-                                          }}
-                                          className="text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors"
-                                        >
-                                          Zatvori detalje ✕
-                                        </button>
-                                      </div>
-
-                                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                                        {/* Kartica 1: Tužba i rokovi */}
-                                        <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
-                                          <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                                            Tužba & Rok suda
-                                          </p>
-                                          <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                                            <p><span className="text-slate-400">Preuzeto s e-Kom:</span> <strong>{spor.tuzbaPreuzeta || '-'}</strong></p>
-                                            <p><span className="text-slate-400">Rok suda:</span> <strong className={spor.rokDatum ? 'text-rose-600 dark:text-rose-400' : ''}>{spor.rokDatum || 'Nema određenog roka'}</strong></p>
-                                            <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
-                                            {spor.isSutnjaUprave && (
-                                              <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
-                                                <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-
-                                        {/* Kartica 2: Dosuđeni troškovi i paricijski rok */}
-                                        <div className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
-                                          spor.troskoviInfo?.status === 'neplaceno'
-                                            ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
-                                            : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-700/80'
-                                        }`}>
-                                          <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <span>💰</span> Dosuđeni troškovi & Rok
-                                          </p>
-                                          {spor.troskoviInfo && spor.troskoviInfo.imaTroskova ? (
-                                            <div className="space-y-1.5 text-slate-700 dark:text-slate-300">
-                                              {spor.troskoviInfo.iznos && (
-                                                <div className="flex items-center justify-between">
-                                                  <span className="text-slate-500">Iznos:</span>
-                                                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{spor.troskoviInfo.iznos}</span>
-                                                </div>
-                                              )}
-                                              <div className="flex items-center justify-between">
-                                                <span className="text-slate-500">Status:</span>
-                                                {spor.troskoviInfo.status === 'poslan_nalog' ? (
-                                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Nalog poslan računovodstvu</span>
-                                                ) : spor.troskoviInfo.status === 'placeno' ? (
-                                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Plaćeno</span>
-                                                ) : (
-                                                  <span className="font-bold text-rose-600 dark:text-rose-400">⚠️ Čeka nalog / Nije plaćeno</span>
-                                                )}
-                                              </div>
-
-                                              {spor.troskoviInfo.rokPlacanja && (
-                                                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-2xs space-y-1">
-                                                  <div className="flex items-center justify-between font-semibold">
-                                                    <span className="text-slate-600 dark:text-slate-400">Rok dospijeća:</span>
-                                                    <span className="text-rose-600 dark:text-rose-400">{spor.troskoviInfo.rokPlacanja}</span>
-                                                  </div>
-                                                  {spor.troskoviInfo.danaDoRoka !== null && spor.troskoviInfo.danaDoRoka !== undefined && (
-                                                    <p className="text-slate-500">
-                                                      {spor.troskoviInfo.danaDoRoka < 0
-                                                        ? `Rok je istekao prije ${Math.abs(spor.troskoviInfo.danaDoRoka)} dana!`
-                                                        : spor.troskoviInfo.danaDoRoka === 0
-                                                        ? 'Danas istječe rok za isplatu!'
-                                                        : `Preostalo još ${spor.troskoviInfo.danaDoRoka} dana za isplatu`}
-                                                    </p>
-                                                  )}
-                                                </div>
-                                              )}
-
-                                              <div className="p-2 rounded bg-slate-100 dark:bg-slate-800 text-2xs text-slate-600 dark:text-slate-400">
-                                                <p className="font-medium text-slate-700 dark:text-slate-300">Pravilo paricijskog roka:</p>
-                                                <p className="mt-0.5">
-                                                  &quot;15 dana od pravomoćnosti&quot; = 15 dana za žalbu na VUSRH + 15 dana paricijski rok (ukupno 30 dana od dana primitka presude).
-                                                </p>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <p className="text-slate-400 italic py-2">U ovom predmetu nisu evidentirani dosuđeni troškovi protiv Ministarstva.</p>
+                                          {spor.hasManualOverride && (
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800">
+                                              ✏️ Ručno evidentirano
+                                            </span>
                                           )}
                                         </div>
 
-                                        {/* Kartica 3: Presuda i pravni lijekovi */}
-                                        <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
-                                          <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <FileText className="w-3.5 h-3.5 text-blue-500" />
-                                            Presuda & Ishod
-                                          </p>
-                                          <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                                            <p><span className="text-slate-400">Odluka suda:</span> <strong>{spor.presudaTroskovi || 'Još nema presude (u radu)'}</strong></p>
-                                            <p><span className="text-slate-400">Datum zaprimanja:</span> <strong>{spor.datumZapPresude || '-'}</strong></p>
-                                            <p><span className="text-slate-400">Žalba / VUSRH:</span> <strong>{spor.visokiUpravniSud || spor.zalbaPresuda || 'Nije podnesena / Pravomoćno'}</strong></p>
-                                            <p><span className="text-slate-400">Akt UP/II po presudi:</span> <strong>{spor.aktUpIiPoPresudi || '-'}</strong></p>
-                                          </div>
-                                        </div>
-
-                                        {/* Kartica 4: Predmet i napomena */}
-                                        <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
-                                          <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <User className="w-3.5 h-3.5 text-purple-500" />
-                                            Predmet & Rješavatelj
-                                          </p>
-                                          <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                                            <p><span className="text-slate-400">Rješavatelj:</span> <strong>{spor.rjesavatelj || '-'}</strong></p>
-                                            <p><span className="text-slate-400">Vrsta predmeta:</span> <strong>{spor.predmet || '-'}</strong></p>
-                                            <p><span className="text-slate-400">Pobijani akt:</span> <strong>{spor.upIiRjesenje || '-'}</strong></p>
-                                            {spor.vrijednostNapomena && (
-                                              <div className="mt-2 p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-2xs">
-                                                <span className="text-slate-400 font-semibold">Napomena:</span> {spor.vrijednostNapomena}
-                                              </div>
-                                            )}
-                                          </div>
+                                        <div className="flex items-center gap-2">
+                                          {editingSporId === spor.id ? (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingSporId(null);
+                                              }}
+                                              className="text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                              Odustani
+                                            </button>
+                                          ) : (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                startEditingSpor(spor);
+                                              }}
+                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                                            >
+                                              <Pencil className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                              <span>Uredi zabilješke / Dodaj rješenje</span>
+                                            </button>
+                                          )}
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSpor(null);
+                                              setEditingSporId(null);
+                                            }}
+                                            className="text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                          >
+                                            Zatvori detalje ✕
+                                          </button>
                                         </div>
                                       </div>
+
+                                      {editSuccessMsg && (
+                                        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
+                                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                          <span>{editSuccessMsg}</span>
+                                        </div>
+                                      )}
+
+                                      {editingSporId === spor.id ? (
+                                        /* FORMA ZA RUČNO UREĐIVANJE DETALJA SPORA */
+                                        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 shadow-2xs space-y-4">
+                                          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                              <Pencil className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                              <span>Uređivanje zabilješki i podataka: {spor.poslovniBroj || spor.tuzitelj}</span>
+                                            </p>
+                                            <span className="text-2xs text-slate-400">Podaci se trajno spremaju u aplikaciji</span>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Akt UP/II po presudi / Novodoneseno rješenje:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editAktUpIi}
+                                                onChange={(e) => setEditAktUpIi(e.target.value)}
+                                                placeholder="npr. Rješenje KLASA: UP/II-361-05/26-01/123 doneseno 15.10.2026."
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Odgovor na tužbu / Status spisa:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editOdgovor}
+                                                onChange={(e) => setEditOdgovor(e.target.value)}
+                                                placeholder="npr. rok 11.11.2026. - 9.11.2026. odgovor u KP"
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Presuda suda & Dosuđeni troškovi:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editPresuda}
+                                                onChange={(e) => setEditPresuda(e.target.value)}
+                                                placeholder="npr. Presuda od 10.10.2026. - odbijena tužba ili 1250 eur trošak"
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Datum zaprimanja presude:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editDatumPresude}
+                                                onChange={(e) => setEditDatumPresude(e.target.value)}
+                                                placeholder="npr. 12.10.2026."
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Žalba na presudu / Visoki upravni sud (VUSRH):
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editZalba}
+                                                onChange={(e) => setEditZalba(e.target.value)}
+                                                placeholder="npr. žalba podnesena VUSRH 15.11.2026."
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Rješavatelj:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editRjesavatelj}
+                                                onChange={(e) => setEditRjesavatelj(e.target.value)}
+                                                placeholder="npr. Dino Malbaša"
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1 md:col-span-2">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Dodatna zabilješka / Napomena o stanju postupka:
+                                              </label>
+                                              <textarea
+                                                rows={2}
+                                                value={editNapomena}
+                                                onChange={(e) => setEditNapomena(e.target.value)}
+                                                placeholder="Unesite internu napomenu ili specifičnost spora..."
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditingSporId(null)}
+                                              disabled={isSavingEdit}
+                                              className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                                            >
+                                              Odustani
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSaveSporEdit(spor)}
+                                              disabled={isSavingEdit}
+                                              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
+                                            >
+                                              {isSavingEdit ? (
+                                                <>
+                                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                  <span>Spremanje...</span>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Check className="w-3.5 h-3.5" />
+                                                  <span>💾 Spremi zabilješku</span>
+                                                </>
+                                              )}
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                                          {/* Kartica 1: Tužba i rokovi */}
+                                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
+                                            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                              <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                                              Tužba & Rok suda
+                                            </p>
+                                            <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                                              <p><span className="text-slate-400">Preuzeto s e-Kom:</span> <strong>{spor.tuzbaPreuzeta || '-'}</strong></p>
+                                              <p><span className="text-slate-400">Rok suda:</span> <strong className={spor.rokDatum ? 'text-rose-600 dark:text-rose-400' : ''}>{spor.rokDatum || 'Nema određenog roka'}</strong></p>
+                                              <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
+                                              {spor.isSutnjaUprave && (
+                                                <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
+                                                  <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* Kartica 2: Dosuđeni troškovi i paricijski rok */}
+                                          <div className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
+                                            spor.troskoviInfo?.status === 'neplaceno'
+                                              ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
+                                              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-700/80'
+                                          }`}>
+                                            <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                              <span>💰</span> Dosuđeni troškovi & Rok
+                                            </p>
+                                            {spor.troskoviInfo && spor.troskoviInfo.imaTroskova ? (
+                                              <div className="space-y-1.5 text-slate-700 dark:text-slate-300">
+                                                {spor.troskoviInfo.iznos && (
+                                                  <div className="flex items-center justify-between">
+                                                    <span className="text-slate-500">Iznos:</span>
+                                                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{spor.troskoviInfo.iznos}</span>
+                                                  </div>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-slate-500">Status:</span>
+                                                  {spor.troskoviInfo.status === 'poslan_nalog' ? (
+                                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Nalog poslan računovodstvu</span>
+                                                  ) : spor.troskoviInfo.status === 'placeno' ? (
+                                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Plaćeno</span>
+                                                  ) : (
+                                                    <span className="font-bold text-rose-600 dark:text-rose-400">⚠️ Čeka nalog / Nije plaćeno</span>
+                                                  )}
+                                                </div>
+
+                                                {spor.troskoviInfo.rokPlacanja && (
+                                                  <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-2xs space-y-1">
+                                                    <div className="flex items-center justify-between font-semibold">
+                                                      <span className="text-slate-600 dark:text-slate-400">Rok dospijeća:</span>
+                                                      <span className="text-rose-600 dark:text-rose-400">{spor.troskoviInfo.rokPlacanja}</span>
+                                                    </div>
+                                                    {spor.troskoviInfo.danaDoRoka !== null && spor.troskoviInfo.danaDoRoka !== undefined && (
+                                                      <p className="text-slate-500">
+                                                        {spor.troskoviInfo.danaDoRoka < 0
+                                                          ? `Rok je istekao prije ${Math.abs(spor.troskoviInfo.danaDoRoka)} dana!`
+                                                          : spor.troskoviInfo.danaDoRoka === 0
+                                                          ? 'Danas istječe rok za isplatu!'
+                                                          : `Preostalo još ${spor.troskoviInfo.danaDoRoka} dana za isplatu`}
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                )}
+
+                                                <div className="p-2 rounded bg-slate-100 dark:bg-slate-800 text-2xs text-slate-600 dark:text-slate-400">
+                                                  <p className="font-medium text-slate-700 dark:text-slate-300">Pravilo paricijskog roka:</p>
+                                                  <p className="mt-0.5">
+                                                    &quot;15 dana od pravomoćnosti&quot; = 15 dana za žalbu na VUSRH + 15 dana paricijski rok (ukupno 30 dana od dana primitka presude).
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <p className="text-slate-400 italic py-2">U ovom predmetu nisu evidentirani dosuđeni troškovi protiv Ministarstva.</p>
+                                            )}
+                                          </div>
+
+                                          {/* Kartica 3: Presuda i pravni lijekovi */}
+                                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
+                                            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                              <FileText className="w-3.5 h-3.5 text-blue-500" />
+                                              Presuda & Ishod
+                                            </p>
+                                            <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                                              <p><span className="text-slate-400">Odluka suda:</span> <strong>{spor.presudaTroskovi || 'Još nema presude (u radu)'}</strong></p>
+                                              <p><span className="text-slate-400">Datum zaprimanja:</span> <strong>{spor.datumZapPresude || '-'}</strong></p>
+                                              <p><span className="text-slate-400">Žalba / VUSRH:</span> <strong>{spor.visokiUpravniSud || spor.zalbaPresuda || 'Nije podnesena / Pravomoćno'}</strong></p>
+                                              <p>
+                                                <span className="text-slate-400">Akt UP/II po presudi:</span>{' '}
+                                                {spor.aktUpIiPoPresudi ? (
+                                                  <strong className="text-emerald-700 dark:text-emerald-400">{spor.aktUpIiPoPresudi}</strong>
+                                                ) : (
+                                                  <span className="text-slate-400 italic">Nije evidentirano</span>
+                                                )}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {/* Kartica 4: Predmet i napomena */}
+                                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
+                                            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                              <User className="w-3.5 h-3.5 text-purple-500" />
+                                              Predmet & Rješavatelj
+                                            </p>
+                                            <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                                              <p><span className="text-slate-400">Rješavatelj:</span> <strong>{spor.rjesavatelj || '-'}</strong></p>
+                                              <p><span className="text-slate-400">Vrsta predmeta:</span> <strong>{spor.predmet || '-'}</strong></p>
+                                              <p><span className="text-slate-400">Pobijani akt:</span> <strong>{spor.upIiRjesenje || '-'}</strong></p>
+                                              {spor.vrijednostNapomena && (
+                                                <div className="mt-2 p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-2xs">
+                                                  <span className="text-slate-400 font-semibold">Napomena:</span> {spor.vrijednostNapomena}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>

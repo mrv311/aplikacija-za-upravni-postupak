@@ -48,6 +48,106 @@ export interface UpravniSpor {
   hitnost: 'isteklo' | 'danas' | 'kriticno' | 'hitno' | 'u_roku' | 'rijeseno' | 'nepoznato';
   fazaOpis: string;
   troskoviInfo?: TroskoviInfo;
+  hasManualOverride?: boolean;
+}
+
+export const SPOROVI_OVERRIDES_PATH = path.join(process.cwd(), 'data', 'upravni-sporovi-overrides.json');
+
+export interface SporOverride {
+  aktUpIiPoPresudi?: string;
+  odgovorNaTuzbu?: string;
+  presudaTroskovi?: string;
+  datumZapPresude?: string;
+  zalbaPresuda?: string;
+  visokiUpravniSud?: string;
+  rjesavatelj?: string;
+  vrijednostNapomena?: string;
+  updatedAt?: string;
+}
+
+export function getSporoviOverrides(): Record<string, SporOverride> {
+  if (fs.existsSync(SPOROVI_OVERRIDES_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(SPOROVI_OVERRIDES_PATH, 'utf8'));
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+export function saveSporOverride(identifier: string, updates: SporOverride): void {
+  const overrides = getSporoviOverrides();
+  overrides[identifier] = {
+    ...(overrides[identifier] || {}),
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+  const dir = path.dirname(SPOROVI_OVERRIDES_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(SPOROVI_OVERRIDES_PATH, JSON.stringify(overrides, null, 2), 'utf8');
+}
+
+export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, SporOverride>): UpravniSpor {
+  const key = spor.poslovniBroj || spor.id;
+  const ov = overrides[key] || (spor.poslovniBroj ? overrides[spor.poslovniBroj] : undefined) || overrides[spor.id];
+  if (!ov) return spor;
+
+  const aktUpIiPoPresudi = ov.aktUpIiPoPresudi !== undefined ? ov.aktUpIiPoPresudi : spor.aktUpIiPoPresudi;
+  const odgovorNaTuzbu = ov.odgovorNaTuzbu !== undefined ? ov.odgovorNaTuzbu : spor.odgovorNaTuzbu;
+  const presudaTroskovi = ov.presudaTroskovi !== undefined ? ov.presudaTroskovi : spor.presudaTroskovi;
+  const datumZapPresude = ov.datumZapPresude !== undefined ? ov.datumZapPresude : spor.datumZapPresude;
+  const zalbaPresuda = ov.zalbaPresuda !== undefined ? ov.zalbaPresuda : spor.zalbaPresuda;
+  const visokiUpravniSud = ov.visokiUpravniSud !== undefined ? ov.visokiUpravniSud : spor.visokiUpravniSud;
+  const rjesavatelj = ov.rjesavatelj !== undefined ? ov.rjesavatelj : spor.rjesavatelj;
+  const vrijednostNapomena = ov.vrijednostNapomena !== undefined ? ov.vrijednostNapomena : spor.vrijednostNapomena;
+
+  const isPresudeno = !!presudaTroskovi && presudaTroskovi.trim().length > 0;
+  const isOdgovoreno = !!odgovorNaTuzbu && (
+    odgovorNaTuzbu.toLowerCase().includes('odgovor') ||
+    odgovorNaTuzbu.toLowerCase().includes('posl') ||
+    odgovorNaTuzbu.toLowerCase().includes('dostavlj') ||
+    odgovorNaTuzbu.toLowerCase().includes('kp')
+  );
+
+  let fazaOpis = spor.fazaOpis;
+  if (isPresudeno) {
+    if (spor.isSutnjaUprave && aktUpIiPoPresudi) {
+      fazaOpis = `Presuđeno — Akt po presudi: ${aktUpIiPoPresudi}`;
+    } else {
+      fazaOpis = `Dovršeno / Presuđeno: ${presudaTroskovi}`;
+    }
+  } else if (aktUpIiPoPresudi) {
+    fazaOpis = `Donesen akt: ${aktUpIiPoPresudi}`;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const troskoviInfo = parseTroskoviInfo(
+    presudaTroskovi,
+    aktUpIiPoPresudi,
+    zalbaPresuda,
+    vrijednostNapomena,
+    datumZapPresude,
+    today
+  );
+
+  return {
+    ...spor,
+    aktUpIiPoPresudi,
+    odgovorNaTuzbu,
+    presudaTroskovi,
+    datumZapPresude,
+    zalbaPresuda,
+    visokiUpravniSud,
+    rjesavatelj,
+    vrijednostNapomena,
+    isPresudeno,
+    isOdgovoreno,
+    fazaOpis,
+    troskoviInfo,
+    hasManualOverride: true,
+  };
 }
 
 const MONTHS_HR: Record<string, number> = {
@@ -262,12 +362,15 @@ export function parseExcelSporovi(forceRefresh = false): {
     canReadLive = false;
   }
 
+  const overrides = getSporoviOverrides();
+
   // Use cache if alive and not force refresh
   if (!forceRefresh && fs.existsSync(cachePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
       if (!canReadLive || cached.fileMtime === fileMtime) {
-        return { sporovi: cached.sporovi, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
+        const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+        return { sporovi: merged, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
       }
     } catch {
       // continue to parse
@@ -276,7 +379,8 @@ export function parseExcelSporovi(forceRefresh = false): {
 
   if (!canReadLive && fs.existsSync(cachePath)) {
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-    return { sporovi: cached.sporovi, lastModified: cached.fileMtime || '', source: 'cache' };
+    const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+    return { sporovi: merged, lastModified: cached.fileMtime || '', source: 'cache' };
   }
 
   if (!canReadLive) {
@@ -432,21 +536,24 @@ export function parseExcelSporovi(forceRefresh = false): {
       });
     }
 
+    const finalSporovi = sporovi.map((s) => applySporOverrides(s, overrides));
+
     // Save to cache
     const cacheData = {
       fileMtime,
       savedAt: new Date().toISOString(),
-      count: sporovi.length,
-      sporovi,
+      count: finalSporovi.length,
+      sporovi: finalSporovi,
     };
     fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), 'utf8');
 
-    return { sporovi, lastModified: fileMtime, source: 'live' };
+    return { sporovi: finalSporovi, lastModified: fileMtime, source: 'live' };
   } catch (err) {
     console.error('Error parsing live Excel sporovi:', err);
     if (fs.existsSync(cachePath)) {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-      return { sporovi: cached.sporovi, lastModified: cached.fileMtime || '', source: 'cache' };
+      const merged = (cached.sporovi || []).map((s: UpravniSpor) => applySporOverrides(s, overrides));
+      return { sporovi: merged, lastModified: cached.fileMtime || '', source: 'cache' };
     }
     return { sporovi: [], lastModified: '', source: 'cache' };
   }

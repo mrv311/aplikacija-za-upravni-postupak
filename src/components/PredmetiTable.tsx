@@ -66,7 +66,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [filterSecondary, setFilterSecondary] = useState<string>('sve'); // faza u aktivnima ili ishod u arhivi
   const [filterSluzbenik, setFilterSluzbenik] = useState<string>('sve');
   const [onlyUrgent, setOnlyUrgent] = useState(false);
-  const [sortBy, setSortBy] = useState<'datum' | 'hitnost' | 'stranka'>('datum');
+  const [sortBy, setSortBy] = useState<'datum' | 'datum_stari' | 'hitnost' | 'stranka'>('datum');
 
   // Službenici & Parafiranje modali
   const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
@@ -219,6 +219,9 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
         const da = calculateZupDeadline(a.datum_zaprimanja)?.daysRemaining ?? 999;
         const db = calculateZupDeadline(b.datum_zaprimanja)?.daysRemaining ?? 999;
         return da - db;
+      }
+      if (sortBy === 'datum_stari') {
+        return (a.datum_zaprimanja || '').localeCompare(b.datum_zaprimanja || '');
       }
       // Najnoviji datum primitka prvi
       return (b.datum_zaprimanja || '').localeCompare(a.datum_zaprimanja || '');
@@ -591,10 +594,11 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'datum' | 'hitnost' | 'stranka')}
+            onChange={(e) => setSortBy(e.target.value as 'datum' | 'datum_stari' | 'hitnost' | 'stranka')}
             className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="datum">Sortiraj: Najnoviji</option>
+            <option value="datum">Sortiraj: Najnoviji prvi</option>
+            <option value="datum_stari">Sortiraj: Najstariji prvi</option>
             {type === 'aktivni' && <option value="hitnost">Sortiraj: ZUP rok (hitnost)</option>}
             <option value="stranka">Sortiraj: Stranka (A–Ž)</option>
           </select>
