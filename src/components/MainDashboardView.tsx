@@ -408,7 +408,8 @@ export default function MainDashboardView({
         if (
           s.troskoviInfo.status === 'placeno' ||
           s.troskoviInfo.status === 'poslan_nalog' ||
-          s.troskoviInfo.bojaOznake === 'smedje'
+          s.troskoviInfo.bojaOznake === 'smedje' ||
+          s.troskoviInfo.bojaOznake === 'zeleno'
         ) {
           return false;
         }
@@ -418,7 +419,8 @@ export default function MainDashboardView({
         const isRijeseno =
           s.troskoviInfo.status === 'poslan_nalog' ||
           s.troskoviInfo.status === 'placeno' ||
-          s.troskoviInfo.bojaOznake === 'smedje';
+          s.troskoviInfo.bojaOznake === 'smedje' ||
+          s.troskoviInfo.bojaOznake === 'zeleno';
         if (!isRijeseno) return false;
       } else if (statusFilter === 'troskovi_sve') {
         if (!s.troskoviInfo?.imaTroskova) return false;

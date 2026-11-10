@@ -1,6 +1,6 @@
 {
   "fileMtime": "2026-11-09T14:58:41.000Z",
-  "savedAt": "2026-11-10T09:35:23.239Z",
+  "savedAt": "2026-11-10T11:02:35.792Z",
   "count": 327,
   "sporovi": [
     {
@@ -30,14 +30,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -70,7 +66,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -103,7 +99,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -133,14 +129,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -170,16 +162,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Odbijena tužba  da 24.7.17. požurnica",
-        "rokPlacanjaDate": "2017-07-23T22:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Odbijena tužba  da 24.7.17. požurnica) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -209,14 +195,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -246,14 +228,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -283,14 +261,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "309,89 kn",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 309,89 kn — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -320,14 +294,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -357,14 +327,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -394,14 +360,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -431,14 +393,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -468,14 +426,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -499,21 +453,20 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": false,
-      "rokDatum": "20. lipnja 2018.",
-      "rokDatumObj": "2018-06-19T22:00:00.000Z",
-      "danaDoRoka": -3065,
-      "hitnost": "isteklo",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Uklonjeno: Zastario predmet bez evidentiranog ishoda (rok istekao 2018.)",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
-      }
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
+      },
+      "isDismissed": true,
+      "dismissedReason": "Zastario predmet bez evidentiranog ishoda (rok istekao 2018.)",
+      "hasManualOverride": true
     },
     {
       "id": "spor-19",
@@ -545,7 +498,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -578,7 +531,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -611,7 +564,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -641,14 +594,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "335.228.00 kn",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 335.228.00 kn — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -678,14 +627,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "9.239,68 kn",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 9.239,68 kn — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -718,13 +663,13 @@
         "imaTroskova": true,
         "iznos": "2.500,00kn",
         "status": "neplaceno",
-        "rokPlacanja": "Poništeno UP/II rj. KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  2.500,00kn trošak spora",
+        "rokPlacanja": "2.500,00kn trošak spora KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2018-01-17T23:00:00.000Z",
         "danaDoRoka": -3218,
         "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi: 2.500,00kn (rok: Poništeno UP/II rj. KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  2.500,00kn trošak spora)",
-        "bojaOznake": "nema",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "Dosuđeni troškovi: 2.500,00kn (rok: 2.500,00kn trošak spora KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  Poništeno UP/II rj.)",
+        "bojaOznake": "zuto",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -754,14 +699,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -794,7 +735,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -824,16 +765,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Obustavljen spor   KLASA: UP/II-325-08/17-03/755, URBROJ: 525-12/0978-18-3 od 16. veljače 2018.",
-        "rokPlacanjaDate": "2018-02-15T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Obustavljen spor   KLASA: UP/II-325-08/17-03/755, URBROJ: 525-12/0978-18-3 od 16. veljače 2018.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -863,14 +798,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -903,7 +834,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -933,14 +864,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -970,14 +897,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1007,14 +930,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1044,14 +963,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1084,7 +999,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1119,9 +1034,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 6.250,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "6.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -1148,14 +1063,17 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "nepoznato",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "hitnost": "rijeseno",
+      "fazaOpis": "Uklonjeno: Ručno uklonjeno iz evidencije aktivnih sporova",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "isDismissed": true,
+      "dismissedReason": "Ručno uklonjeno iz evidencije aktivnih sporova",
+      "hasManualOverride": true
     },
     {
       "id": "spor-37",
@@ -1184,14 +1102,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1221,14 +1135,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1258,14 +1168,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1298,7 +1204,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1331,7 +1237,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1361,14 +1267,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1398,14 +1300,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1435,14 +1333,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1472,14 +1366,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1509,14 +1399,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1549,7 +1435,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1579,14 +1465,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1616,14 +1498,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1653,14 +1531,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1690,14 +1564,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1727,14 +1597,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1764,14 +1630,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1801,14 +1663,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1841,7 +1699,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1871,14 +1729,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1908,14 +1762,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1945,14 +1795,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -1985,13 +1831,13 @@
         "imaTroskova": true,
         "iznos": "10.156,25kn",
         "status": "placeno",
-        "rokPlacanja": "Odbijena tužba  da troškovi spora 10.156,25kn PLAĆENO 22.10.2020",
+        "rokPlacanja": "troškovi spora 10.156,25kn PLAĆENO 22.10.2020  da Odbijena tužba",
         "rokPlacanjaDate": "2020-10-21T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 10.156,25kn (rok: Odbijena tužba  da troškovi spora 10.156,25kn PLAĆENO 22.10.2020) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "10.156,25kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -2024,7 +1870,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2054,14 +1900,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2091,14 +1933,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2128,14 +1966,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2168,7 +2002,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2201,7 +2035,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2231,14 +2065,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2271,13 +2101,13 @@
         "imaTroskova": true,
         "iznos": "1.250,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništeno UP/II rj. KLASA: UP/II-325-08/16-01/1683, URBROJ: 517-07-2-2-19-11 od 26. kolovoza 2019.  troškovi spora 1.250,00 kn PLAĆENO",
+        "rokPlacanja": "troškovi spora 1.250,00 kn PLAĆENO KLASA: UP/II-325-08/16-01/1683, URBROJ: 517-07-2-2-19-11 od 26. kolovoza 2019.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2019-08-25T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1.250,00 kn (rok: Poništeno UP/II rj. KLASA: UP/II-325-08/16-01/1683, URBROJ: 517-07-2-2-19-11 od 26. kolovoza 2019.  troškovi spora 1.250,00 kn PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -2310,7 +2140,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2340,14 +2170,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2377,14 +2203,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2414,14 +2236,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2451,14 +2269,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2488,14 +2302,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2528,7 +2338,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2559,13 +2369,13 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "5 kn",
+        "iznos": "2.812,5 kn",
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 5 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "opis": "2.812,5 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -2595,14 +2405,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2632,14 +2438,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2669,14 +2471,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2706,14 +2504,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2743,14 +2537,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2780,14 +2570,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2820,7 +2606,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2853,13 +2639,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "neplaceno",
-        "rokPlacanja": "Poništeno UP/II rj. 4.1.2021. IG  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 4.1.2021. IG  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2021-01-03T23:00:00.000Z",
         "danaDoRoka": -2136,
         "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno UP/II rj. 4.1.2021. IG  troškovi spora 3.125,00 kn)",
+        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: troškovi spora 3.125,00 kn 4.1.2021. IG  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -2889,14 +2675,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -2931,9 +2713,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -2964,15 +2746,14 @@
       "fazaOpis": "Presuda: Poništeno UP/II rj.",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "1.250 EUR",
         "status": "neplaceno",
-        "rokPlacanja": "Poništeno UP/II rj. 12.6.2020. IG  troškovi spora",
+        "rokPlacanja": "troškovi spora 12.6.2020. IG  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2020-06-11T22:00:00.000Z",
         "danaDoRoka": -2342,
         "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi spora (rok: Poništeno UP/II rj. 12.6.2020. IG  troškovi spora)",
+        "opis": "Dosuđeni troškovi spora (rok: troškovi spora 12.6.2020. IG  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3005,7 +2786,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3035,14 +2816,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3075,13 +2852,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništeno UP/II rj. DOPIS KLASA: UP/II-325-08-15-01/1637, URBROJ: 517-07-2-2-20-8 od 15. travnja 2020.  troškovi spora 3.125,00 kn PLAĆENO",
+        "rokPlacanja": "troškovi spora 3.125,00 kn PLAĆENO DOPIS KLASA: UP/II-325-08-15-01/1637, URBROJ: 517-07-2-2-20-8 od 15. travnja 2020.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2020-04-14T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno UP/II rj. DOPIS KLASA: UP/II-325-08-15-01/1637, URBROJ: 517-07-2-2-20-8 od 15. travnja 2020.  troškovi spora 3.125,00 kn PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3114,13 +2891,13 @@
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništeno UP/II rj. 12.6.2020. IG  troškovi spora 6.250,00 kn PLAĆENO",
+        "rokPlacanja": "troškovi spora 6.250,00 kn PLAĆENO 12.6.2020. IG  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2020-06-11T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 6.250,00 kn (rok: Poništeno UP/II rj. 12.6.2020. IG  troškovi spora 6.250,00 kn PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "6.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3150,14 +2927,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3187,16 +2960,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "neplaceno",
-        "rokPlacanja": "23.10.2020.",
-        "rokPlacanjaDate": "2020-10-22T22:00:00.000Z",
-        "danaDoRoka": -2209,
-        "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi spora (rok cca 23.10.2020.)",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3226,16 +2993,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno UP/II rj. KLASA: UP/II-325-08/18-03/98, URBROJ: 517-07-2-2-20-11 od 25. VELJAČE 2020.",
-        "rokPlacanjaDate": "2020-02-24T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Poništeno UP/II rj. KLASA: UP/II-325-08/18-03/98, URBROJ: 517-07-2-2-20-11 od 25. VELJAČE 2020.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3270,9 +3031,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — PLAĆENO",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3302,14 +3063,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "neplaceno",
-        "danaDoRoka": null,
+        "imaTroskova": false,
+        "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Dosuđeni troškovi spora",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3339,14 +3096,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "neplaceno",
-        "danaDoRoka": null,
+        "imaTroskova": false,
+        "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Dosuđeni troškovi spora",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3376,14 +3129,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3413,16 +3162,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno UP/II rj. i I rješenje KLASA: UP/II-325-08/17-03/430, URBROJ: 517-07-2-2-20-9 od 2. RUJNA 2020.  0",
-        "rokPlacanjaDate": "2020-09-01T22:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Poništeno UP/II rj. i I rješenje KLASA: UP/II-325-08/17-03/430, URBROJ: 517-07-2-2-20-9 od 2. RUJNA 2020.  0) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3452,14 +3195,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3496,7 +3235,7 @@
         "hitnost": "nema",
         "opis": "Dosuđeni troškovi: 3.125,00 kn",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3529,7 +3268,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3562,7 +3301,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3625,14 +3364,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3662,14 +3397,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3699,14 +3430,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3745,7 +3472,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 3.125,00kn (rok cca 19.8.2020.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -3775,14 +3502,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3812,14 +3535,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3852,7 +3571,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3882,14 +3601,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3919,14 +3634,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3956,14 +3667,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -3996,13 +3703,13 @@
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništeno UP/II rj. KLASA: UP/II-325-08/20-02/13, URBROJ: 517-09-2-2-21-22 od 23. KOLOVOZA 2021.  troškovi spora 6.250,00 kn  PLAĆENO",
+        "rokPlacanja": "troškovi spora 6.250,00 kn  PLAĆENO KLASA: UP/II-325-08/20-02/13, URBROJ: 517-09-2-2-21-22 od 23. KOLOVOZA 2021.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2021-08-22T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 6.250,00 kn (rok: Poništeno UP/II rj. KLASA: UP/II-325-08/20-02/13, URBROJ: 517-09-2-2-21-22 od 23. KOLOVOZA 2021.  troškovi spora 6.250,00 kn  PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "6.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -4032,14 +3739,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4069,14 +3772,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4106,14 +3805,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4143,14 +3838,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4180,14 +3871,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4217,14 +3904,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4254,14 +3937,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4291,14 +3970,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4328,14 +4003,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4365,14 +4036,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4402,14 +4069,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4439,14 +4102,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4479,7 +4138,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4509,14 +4168,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4546,14 +4201,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4583,14 +4234,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4620,14 +4267,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4657,14 +4300,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4694,14 +4333,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4731,14 +4366,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4771,7 +4402,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4801,14 +4432,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4841,7 +4468,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4874,7 +4501,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4904,14 +4531,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4941,14 +4564,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -4979,14 +4598,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5016,14 +4631,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5057,7 +4668,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5087,14 +4698,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5124,14 +4731,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5161,14 +4764,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5199,14 +4798,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5237,14 +4832,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5275,14 +4866,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5322,7 +4909,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1.500,00kn (rok cca 21.7.2021.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5353,14 +4940,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5428,13 +5011,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno dopunsko rješenje 1.2.2023. - NAKON POŽURNICE IZRAĐENO RJEŠENJE  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 1.2.2023. - NAKON POŽURNICE IZRAĐENO RJEŠENJE  Poništeno dopunsko rješenje",
         "rokPlacanjaDate": "2023-01-31T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno dopunsko rješenje 1.2.2023. - NAKON POŽURNICE IZRAĐENO RJEŠENJE  troškovi spora 3.125,00 kn) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5468,13 +5051,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno dopunsko rješenje 6.7.2022.  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 6.7.2022.  Poništeno dopunsko rješenje",
         "rokPlacanjaDate": "2022-07-05T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno dopunsko rješenje 6.7.2022.  troškovi spora 3.125,00 kn) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5508,13 +5091,13 @@
         "imaTroskova": true,
         "iznos": "312,50 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništeno dopunsko rješenje 6.7.2022.  troškovi spora 312,50 kn - PLAĆENO",
+        "rokPlacanja": "troškovi spora 312,50 kn - PLAĆENO 6.7.2022.  Poništeno dopunsko rješenje",
         "rokPlacanjaDate": "2022-07-05T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 312,50 kn (rok: Poništeno dopunsko rješenje 6.7.2022.  troškovi spora 312,50 kn - PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "312,50 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5550,9 +5133,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5583,14 +5166,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5624,13 +5203,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno dopunsko rješenje 7.10.2022.  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 7.10.2022.  Poništeno dopunsko rješenje",
         "rokPlacanjaDate": "2022-10-06T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno dopunsko rješenje 7.10.2022.  troškovi spora 3.125,00 kn) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5666,9 +5245,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 6.250,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "6.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5708,7 +5287,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 2.500,00kn (rok cca 16.10.2021.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5739,14 +5318,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5777,14 +5352,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -5820,9 +5391,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 312,50 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "312,50 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5856,13 +5427,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništena točka II rješenja 10.10.2022.  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 10.10.2022.  Poništena točka II rješenja",
         "rokPlacanjaDate": "2022-10-09T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništena točka II rješenja 10.10.2022.  troškovi spora 3.125,00 kn) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5896,13 +5467,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "neplaceno",
-        "rokPlacanja": "Poništeno UP/II rj. 3.6.2022.  troškovi spora 3.125,00 kn",
+        "rokPlacanja": "troškovi spora 3.125,00 kn 3.6.2022.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2022-06-02T22:00:00.000Z",
         "danaDoRoka": -1621,
         "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništeno UP/II rj. 3.6.2022.  troškovi spora 3.125,00 kn)",
+        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: troškovi spora 3.125,00 kn 3.6.2022.  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5938,9 +5509,9 @@
         "status": "poslan_nalog",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -5971,14 +5542,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6014,9 +5581,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 6.250,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "6.250,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6052,9 +5619,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6085,14 +5652,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6123,14 +5686,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6166,9 +5725,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6200,13 +5759,13 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "1.250 EUR",
+        "iznos": "3.125,00 kn",
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6238,13 +5797,13 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "1.250 EUR",
+        "iznos": "3.125,00 kn",
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6275,14 +5834,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6313,14 +5868,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6386,13 +5937,13 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "1.250 EUR",
+        "iznos": "3.125,00 kn",
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6428,9 +5979,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6466,9 +6017,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6499,14 +6050,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6537,14 +6084,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6575,14 +6118,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6648,15 +6187,15 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "8 EUR",
+        "iznos": "331,8 EUR",
         "status": "placeno",
-        "rokPlacanja": "Obustavljen spor  da troškovi spora po presudi VUSRH - 331,8 EUR - plaćeno 13.9.2024",
+        "rokPlacanja": "troškovi spora po presudi VUSRH - 331,8 EUR - plaćeno 13.9.2024  da Obustavljen spor",
         "rokPlacanjaDate": "2024-09-12T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 8 EUR (rok: Obustavljen spor  da troškovi spora po presudi VUSRH - 331,8 EUR - plaćeno 13.9.2024) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "331,8 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6690,13 +6229,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništena točka II rješenja i vraćeno na ponovni postupak 23.6.2022.  troškovi spora 3.125,00 kn - PLAĆENO",
+        "rokPlacanja": "troškovi spora 3.125,00 kn - PLAĆENO 23.6.2022.  Poništena točka II rješenja i vraćeno na ponovni postupak",
         "rokPlacanjaDate": "2022-06-22T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništena točka II rješenja i vraćeno na ponovni postupak 23.6.2022.  troškovi spora 3.125,00 kn - PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6730,13 +6269,13 @@
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "placeno",
-        "rokPlacanja": "Poništena točka II rješenja i vraćeno na ponovni postupak 27.6.2022.  troškovi spora 3.125,00 kn - PLAĆENO",
+        "rokPlacanja": "troškovi spora 3.125,00 kn - PLAĆENO 27.6.2022.  Poništena točka II rješenja i vraćeno na ponovni postupak",
         "rokPlacanjaDate": "2022-06-26T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: Poništena točka II rješenja i vraćeno na ponovni postupak 27.6.2022.  troškovi spora 3.125,00 kn - PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6767,14 +6306,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6805,14 +6340,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6848,9 +6379,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3.125,00 kn — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "3.125,00 kn — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6888,9 +6419,9 @@
         "rokPlacanjaDate": "2024-06-25T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 2500 eur (rok: 26.6.2024.) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "opis": "2500 eur — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -6921,14 +6452,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -6959,14 +6486,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7002,9 +6525,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1.244,28 eur — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1.244,28 eur — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7036,15 +6559,15 @@
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "3 EUR",
+        "iznos": "2099,3 EUR",
         "status": "placeno",
         "rokPlacanja": "18.9.2024.",
         "rokPlacanjaDate": "2024-09-17T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3 EUR (rok: 18.9.2024.) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "2099,3 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7075,14 +6598,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7122,7 +6641,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 233,30 EUR (rok cca 21.6.2023.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7153,14 +6672,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7194,14 +6709,14 @@
         "imaTroskova": true,
         "iznos": "414,76 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno rješenje 22.1.2025. izrađeno rješenje  trpškovi spora 414,76 EUR - nalog 18.2.2025.",
-        "rokPlacanjaDate": "2025-01-21T23:00:00.000Z",
+        "rokPlacanja": "trpškovi spora 414,76 EUR - nalog 18.2.2025. 22.1.2025. izrađeno rješenje  Poništeno rješenje",
+        "rokPlacanjaDate": "2025-02-17T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 414,76 EUR (rok: Poništeno rješenje 22.1.2025. izrađeno rješenje  trpškovi spora 414,76 EUR - nalog 18.2.2025.) — Nalog poslan 18.2.2025.",
-        "bojaOznake": "smedje",
+        "opis": "414,76 EUR — Nalog poslan 18.2.2025. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "18.2.2025.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7234,14 +6749,14 @@
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "622,14 EUR",
-        "status": "placeno",
-        "rokPlacanja": "Naloženo odlučiti o žalbi od 11.7.2022. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  troškovi spora 622,14 EUR - rok 7.10.",
-        "rokPlacanjaDate": "2022-07-10T22:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 622,14 EUR (rok: Naloženo odlučiti o žalbi od 11.7.2022. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  troškovi spora 622,14 EUR - rok 7.10.) — PLAĆENO",
+        "status": "poslan_nalog",
+        "rokPlacanja": "troškovi spora 622,14 EUR - rok 7.10. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  Naloženo odlučiti o žalbi od 11.7.2022.",
+        "rokPlacanjaDate": "2023-09-19T22:00:00.000Z",
+        "danaDoRoka": -1147,
+        "hitnost": "isteklo",
+        "opis": "Dosuđeni troškovi: 622,14 EUR (rok: troškovi spora 622,14 EUR - rok 7.10. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  Naloženo odlučiti o žalbi od 11.7.2022.)",
         "bojaOznake": "zeleno",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7272,14 +6787,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7310,16 +6821,10 @@
       "hitnost": "isteklo",
       "fazaOpis": "Donošenje akta po presudi (rok do 15.3.2024. - doneseno rješenje po presudi 26.1.24.)",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "15.3.2024.",
-        "rokPlacanjaDate": "2024-03-14T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: 15.3.2024.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7353,13 +6858,13 @@
         "imaTroskova": true,
         "iznos": "250,00 EUR",
         "status": "placeno",
-        "rokPlacanja": "Naloženo odlučiti o žalbi dopisom zatražen spis od HV - 13.9.23.  troškovi spora 250,00 EUR - rok 7.10. PLAĆENO",
+        "rokPlacanja": "troškovi spora 250,00 EUR - rok 7.10. PLAĆENO dopisom zatražen spis od HV - 13.9.23.  Naloženo odlučiti o žalbi",
         "rokPlacanjaDate": "2023-09-12T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 250,00 EUR (rok: Naloženo odlučiti o žalbi dopisom zatražen spis od HV - 13.9.23.  troškovi spora 250,00 EUR - rok 7.10. PLAĆENO) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "250,00 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7397,9 +6902,9 @@
         "rokPlacanjaDate": "2023-12-13T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 622,14 EUR (rok: 14.12.2023.) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "622,14 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7437,10 +6942,10 @@
         "rokPlacanjaDate": "2024-07-25T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 750,00 EUR (rok: 26.7.2024.) — Nalog poslan 16.8.24.",
-        "bojaOznake": "smedje",
+        "opis": "750,00 EUR — Nalog poslan 16.8.24. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "16.8.24.",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7471,14 +6976,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7509,16 +7010,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništeno rješenje",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno rješenje 12.11.2024. rješenje IG ne nema troškova",
-        "rokPlacanjaDate": "2024-11-11T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Poništeno rješenje 12.11.2024. rješenje IG ne nema troškova) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7549,14 +7044,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7587,14 +7078,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7625,14 +7112,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Tužba odbačena",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7663,14 +7146,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7710,7 +7189,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 497,71 EUR (rok: 15.12.2023.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7741,14 +7220,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7788,7 +7263,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 748,87 EUR (rok cca 31.7.2025.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7822,7 +7297,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -7862,7 +7337,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1250 EUR (rok: 8.6.2025.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7895,14 +7370,14 @@
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "497,71 EUR",
-        "status": "poslan_nalog",
+        "status": "neplaceno",
         "rokPlacanja": "15.12.2023.",
         "rokPlacanjaDate": "2023-12-14T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 497,71 EUR (rok: 15.12.2023.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "danaDoRoka": -1061,
+        "hitnost": "isteklo",
+        "opis": "Dosuđeni troškovi: 497,71 EUR (rok: 15.12.2023.)",
+        "bojaOznake": "zuto",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7934,16 +7409,16 @@
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
         "imaTroskova": true,
-        "iznos": "1.250 EUR",
+        "iznos": "2812,5 kn",
         "status": "poslan_nalog",
-        "rokPlacanja": "Obustavljen spor   o troškovima će sud naknadno odlučiti - 2812,5 nalog 27.9.24",
+        "rokPlacanja": "o troškovima će sud naknadno odlučiti - 2812,5 nalog 27.9.24   Obustavljen spor",
         "rokPlacanjaDate": "2024-09-26T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Obustavljen spor   o troškovima će sud naknadno odlučiti - 2812,5 nalog 27.9.24) — Nalog poslan 27.9.24",
-        "bojaOznake": "smedje",
+        "opis": "2812,5 kn — Nalog poslan 27.9.24 - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "27.9.24",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -7974,14 +7449,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8012,14 +7483,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8050,14 +7517,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8088,14 +7551,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8126,14 +7585,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8164,14 +7619,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8202,14 +7653,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8240,14 +7687,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8278,14 +7721,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8316,16 +7755,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "poništeno i prvostupanjsko i drugostupanjsko rj. 7.11.2024. dopis prema HV  NEMA TROŠKOVA",
-        "rokPlacanjaDate": "2024-11-06T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: poništeno i prvostupanjsko i drugostupanjsko rj. 7.11.2024. dopis prema HV  NEMA TROŠKOVA) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8356,14 +7789,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8394,14 +7823,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8432,14 +7857,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8470,14 +7891,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8508,14 +7925,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8546,14 +7959,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8587,13 +7996,13 @@
         "imaTroskova": true,
         "iznos": "2500 EUR",
         "status": "placeno",
-        "rokPlacanja": "poništeno i prvostupanjsko i drugostupanjsko rj.   2500 EUR - plaćeno 19.7.2024",
+        "rokPlacanja": "2500 EUR - plaćeno 19.7.2024   poništeno i prvostupanjsko i drugostupanjsko rj.",
         "rokPlacanjaDate": "2024-07-18T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 2500 EUR (rok: poništeno i prvostupanjsko i drugostupanjsko rj.   2500 EUR - plaćeno 19.7.2024) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "2500 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -8624,16 +8033,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "poništeno i prvostupanjsko i drugostupanjsko rj. 7.11.2024. dopis prema HV  nema troškova",
-        "rokPlacanjaDate": "2024-11-06T23:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: poništeno i prvostupanjsko i drugostupanjsko rj. 7.11.2024. dopis prema HV  nema troškova) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8671,10 +8074,10 @@
         "rokPlacanjaDate": "2024-11-20T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 3750,00 EUR (rok: 21.11.2024.) — Nalog poslan 13.12.24.",
-        "bojaOznake": "smedje",
+        "opis": "3750,00 EUR — Nalog poslan 13.12.24. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "13.12.24.",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -8705,14 +8108,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8748,9 +8147,9 @@
         "status": "placeno",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -8788,9 +8187,9 @@
         "rokPlacanjaDate": "2024-04-17T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250,00 EUR (rok: 18.4.2024.) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250,00 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -8821,14 +8220,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8859,14 +8254,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8897,14 +8288,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8935,16 +8322,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "rokPlacanja": "Odbijena tužba 5.6.2025. da",
-        "rokPlacanjaDate": "2025-06-04T22:00:00.000Z",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora (rok: Odbijena tužba 5.6.2025. da) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -8978,13 +8359,13 @@
         "imaTroskova": true,
         "iznos": "1250,00 eura",
         "status": "poslan_nalog",
-        "rokPlacanja": "Naloženo donijeti rješenje po žalbi u roku od 60 dana Izrađeno II rješenje - na znanje Upravnom sudu 8.7.24.  troškovi spora 1250,00 eura + TROŠKOVI VUSRH",
+        "rokPlacanja": "troškovi spora 1250,00 eura + TROŠKOVI VUSRH Izrađeno II rješenje - na znanje Upravnom sudu 8.7.24.  Naloženo donijeti rješenje po žalbi u roku od 60 dana",
         "rokPlacanjaDate": "2024-07-07T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250,00 eura (rok: Naloženo donijeti rješenje po žalbi u roku od 60 dana Izrađeno II rješenje - na znanje Upravnom sudu 8.7.24.  troškovi spora 1250,00 eura + TROŠKOVI VUSRH) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "opis": "1250,00 eura — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -9015,14 +8396,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9056,14 +8433,14 @@
         "imaTroskova": true,
         "iznos": "1250 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Obustavljen spor   1250 EUR - NALOG 16.8.24.",
+        "rokPlacanja": "1250 EUR - NALOG 16.8.24.   Obustavljen spor",
         "rokPlacanjaDate": "2024-08-15T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: Obustavljen spor   1250 EUR - NALOG 16.8.24.) — Nalog poslan 16.8.24.",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 16.8.24. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "16.8.24.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -9094,14 +8471,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9132,14 +8505,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9170,14 +8539,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9208,14 +8573,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9246,14 +8607,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9284,14 +8641,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9322,14 +8675,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9360,14 +8709,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9398,14 +8743,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9436,14 +8777,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9474,14 +8811,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9517,9 +8850,9 @@
         "status": "poslan_nalog",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 2500 EUR — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "2500 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -9553,14 +8886,14 @@
         "imaTroskova": true,
         "iznos": "1250 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Naloženo odlučiti o žalbi Doneseno II rješenje - 4.2.2025.  troškovi spora - 1250 EUR - nalog 4.2.2025.",
+        "rokPlacanja": "troškovi spora - 1250 EUR - nalog 4.2.2025. Doneseno II rješenje - 4.2.2025.  Naloženo odlučiti o žalbi",
         "rokPlacanjaDate": "2025-02-03T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: Naloženo odlučiti o žalbi Doneseno II rješenje - 4.2.2025.  troškovi spora - 1250 EUR - nalog 4.2.2025.) — Nalog poslan 4.2.2025.",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 4.2.2025. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "4.2.2025.",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -9591,14 +8924,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9636,10 +8965,10 @@
         "rokPlacanjaDate": "2025-06-12T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: 13.6.2025.) — Nalog poslan 19.5.2025",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 19.5.2025 - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "19.5.2025",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -9673,7 +9002,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9738,14 +9067,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9776,14 +9101,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9814,14 +9135,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9852,14 +9169,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -9965,9 +9278,9 @@
         "rokPlacanjaDate": "2025-09-30T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: 1.10.2025.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10073,10 +9386,10 @@
         "rokPlacanjaDate": "2026-07-31T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: 1.8.2026.) — Nalog poslan 25.8.2026.",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 25.8.2026. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "25.8.2026.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10107,16 +9420,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "neplaceno",
-        "rokPlacanja": "4.4.2026.",
-        "rokPlacanjaDate": "2026-04-03T23:00:00.000Z",
-        "danaDoRoka": -220,
-        "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi spora (rok cca 4.4.2026.)",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10147,16 +9454,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "neplaceno",
-        "rokPlacanja": "28.2.2026.",
-        "rokPlacanjaDate": "2026-02-27T23:00:00.000Z",
-        "danaDoRoka": -255,
-        "hitnost": "isteklo",
-        "opis": "Dosuđeni troškovi spora (rok cca 28.2.2026.)",
-        "bojaOznake": "zuto",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10194,10 +9495,10 @@
         "rokPlacanjaDate": "2026-08-31T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 2500 EUR (rok: 1.9.2026.) — Nalog poslan 28.8.2026.",
-        "bojaOznake": "smedje",
+        "opis": "2500 EUR — Nalog poslan 28.8.2026. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "28.8.2026.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10228,14 +9529,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10368,14 +9665,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10406,14 +9699,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuđeno",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10451,9 +9740,9 @@
         "rokPlacanjaDate": "2026-07-13T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 2500 EUR (rok: 2500 EUR - plaćeno 14.7.2026.) — PLAĆENO",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "2500 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10484,14 +9773,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac M (Žalba / Troškovi)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10556,14 +9841,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10601,9 +9882,9 @@
         "rokPlacanjaDate": "2026-03-27T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: 28.3.2026.) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10641,10 +9922,10 @@
         "rokPlacanjaDate": "2026-03-27T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: 28.3.2026) — Nalog poslan 17.4.2026",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 17.4.2026 - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "17.4.2026",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10675,14 +9956,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbačena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10720,10 +9997,10 @@
         "rokPlacanjaDate": "2026-08-31T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 eur (rok: 1.9.2026.) — Nalog poslan 28.8.2026.",
-        "bojaOznake": "smedje",
+        "opis": "1250 eur — Nalog poslan 28.8.2026. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "28.8.2026.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10754,14 +10031,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Poništen I i dijelom II rješenje",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10795,7 +10068,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -10897,13 +10170,13 @@
         "imaTroskova": true,
         "iznos": "1250 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno I i II rješenje   1250 EUR - 11.1.2026. NALOG",
+        "rokPlacanja": "1250 EUR - 11.1.2026. NALOG   Poništeno I i II rješenje",
         "rokPlacanjaDate": "2026-01-10T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: Poništeno I i II rješenje   1250 EUR - 11.1.2026. NALOG) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10937,14 +10210,14 @@
         "imaTroskova": true,
         "iznos": "1250 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Poništeno I i II rješenje dopis 23.3.2026.  1250 - nalog 31.2.2026",
-        "rokPlacanjaDate": "2026-03-22T23:00:00.000Z",
+        "rokPlacanja": "1250 - nalog 31.2.2026 dopis 23.3.2026.  Poništeno I i II rješenje",
+        "rokPlacanjaDate": "2026-03-02T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 EUR (rok: Poništeno I i II rješenje dopis 23.3.2026.  1250 - nalog 31.2.2026) — Nalog poslan 31.2.2026",
-        "bojaOznake": "smedje",
+        "opis": "1250 EUR — Nalog poslan 31.2.2026 - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "31.2.2026",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -10978,7 +10251,7 @@
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
-        "opis": "Nema zabilježenih troškova"
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -11009,14 +10282,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Obustavljen spor (povučena tužba)",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -11054,10 +10323,10 @@
         "rokPlacanjaDate": "2026-08-31T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 625 eur (rok: 1.9.2026.) — Nalog poslan 18.9.2026.",
-        "bojaOznake": "smedje",
+        "opis": "625 eur — Nalog poslan 18.9.2026. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "18.9.2026.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -11091,14 +10360,14 @@
         "imaTroskova": true,
         "iznos": "1250 eur",
         "status": "poslan_nalog",
-        "rokPlacanja": "Obustavljen spor   trošak 1250 eur - 60 dana - nalog 17.7.26.",
+        "rokPlacanja": "trošak 1250 eur - 60 dana - nalog 17.7.26.   Obustavljen spor",
         "rokPlacanjaDate": "2026-07-16T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250 eur (rok: Obustavljen spor   trošak 1250 eur - 60 dana - nalog 17.7.26.) — Nalog poslan 17.7.26.",
-        "bojaOznake": "smedje",
+        "opis": "1250 eur — Nalog poslan 17.7.26. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "17.7.26.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -11136,10 +10405,10 @@
         "rokPlacanjaDate": "2026-09-30T22:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1875 eur (rok: 1.10.2026.) — Nalog poslan 29.9.2026.",
-        "bojaOznake": "smedje",
+        "opis": "1875 eur — Nalog poslan 29.9.2026. - plaćeno",
+        "bojaOznake": "zeleno",
         "nalogDatum": "29.9.2026.",
-        "izvorPolje": "Stupac O (Napomena)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -11274,13 +10543,13 @@
         "imaTroskova": true,
         "iznos": "1250,00 EUR",
         "status": "poslan_nalog",
-        "rokPlacanja": "Obustavljen spor   trošak 1250,00 EUR - 28.11.2025 NALOG",
+        "rokPlacanja": "trošak 1250,00 EUR - 28.11.2025 NALOG   Obustavljen spor",
         "rokPlacanjaDate": "2025-11-27T23:00:00.000Z",
         "danaDoRoka": null,
         "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi: 1250,00 EUR (rok: Obustavljen spor   trošak 1250,00 EUR - 28.11.2025 NALOG) — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac O (Napomena)"
+        "opis": "1250,00 EUR — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -11583,14 +10852,10 @@
       "hitnost": "rijeseno",
       "fazaOpis": "Presuda: Odbijena tužba",
       "troskoviInfo": {
-        "imaTroskova": true,
-        "iznos": "1.250 EUR",
-        "status": "poslan_nalog",
-        "danaDoRoka": null,
-        "hitnost": "rijeseno",
-        "opis": "Dosuđeni troškovi spora — Nalog poslan računovodstvu",
-        "bojaOznake": "smedje",
-        "izvorPolje": "Stupac J (Presuda)"
+        "imaTroskova": false,
+        "status": "nema_troskova",
+        "hitnost": "nema",
+        "opis": "Nema dosuđenih troškova spora"
       }
     },
     {
@@ -11862,13 +11127,13 @@
         "imaTroskova": true,
         "iznos": "1250 eur",
         "status": "neplaceno",
-        "rokPlacanja": "13.11.2026",
-        "rokPlacanjaDate": "2026-11-12T23:00:00.000Z",
-        "danaDoRoka": 3,
-        "hitnost": "kriticno",
-        "opis": "Dosuđeni troškovi: 1250 eur (rok: 13.11.2026)",
+        "rokPlacanja": "1.12.2026.",
+        "rokPlacanjaDate": "2026-11-30T23:00:00.000Z",
+        "danaDoRoka": 21,
+        "hitnost": "u_roku",
+        "opis": "Dosuđeni troškovi: 1250 eur (rok: 1.12.2026.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {
@@ -11908,7 +11173,7 @@
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1250 eur (rok: 15.10.2026.)",
         "bojaOznake": "zuto",
-        "izvorPolje": "Stupac L (Akt UP/II)"
+        "izvorPolje": "Stupac O (Razno / Napomena)"
       }
     },
     {

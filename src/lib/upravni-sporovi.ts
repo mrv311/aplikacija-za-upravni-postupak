@@ -371,6 +371,42 @@ function extractDeadline(text: string): { deadlineDate: Date | null; deadlineStr
   return { deadlineDate: null, deadlineStr: null };
 }
 
+export function extractCostAmount(text: string): string | undefined {
+  if (!text) return undefined;
+
+  // 1. Iznos praćen valutom: npr. "2.812,5 kn", "331,8 EUR", "1250 eur", "10.156,25kn", "1.250,00 kn", "750,00 EUR"
+  const m1 = text.match(
+    /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:EUR|eur|€|eura|kn|kuna)\b/i
+  );
+  if (m1) return m1[0].trim();
+
+  // 2. Iznos praćen riječju "troškovi" ili "trošak": npr. "3.125,00 troškovi"
+  const m2 = text.match(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:troš|tros)/i);
+  if (m2) {
+    const val = m2[1].trim();
+    const curr = text.toLowerCase().includes('eur') ? ' EUR' : ' kn';
+    return `${val}${curr}`;
+  }
+
+  // 3. Iznos praćen riječju "nalog": npr. "2812,5 nalog" ili "1250 - nalog"
+  const m3 = text.match(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:-\s*)?nalog/i);
+  if (m3) {
+    const val = m3[1].trim();
+    const num = parseFloat(val.replace(/\./g, '').replace(',', '.'));
+    const curr = text.toLowerCase().includes('eur') || num <= 2000 ? ' EUR' : ' kn';
+    return `${val}${curr}`;
+  }
+
+  // 4. Standardni iznosi troškova u praksi (1250, 2500, 3750, 625, 1875 u eurima; 3125, 6250 u kunama)
+  const m4 = text.match(/\b(1250|2500|3750|625|1875)\b/);
+  if (m4) return `${m4[1]} EUR`;
+
+  const m5 = text.match(/\b(3125|6250)\b/);
+  if (m5) return `${m5[1]} kn`;
+
+  return undefined;
+}
+
 export function parseTroskoviInfo(
   presuda: string,
   aktPoPresudi: string,
@@ -380,34 +416,12 @@ export function parseTroskoviInfo(
   today: Date,
   cellColors?: { J?: string; L?: string; M?: string; O?: string }
 ): TroskoviInfo {
-  const combined = `${presuda} ${aktPoPresudi} ${zalba} ${napomena}`.trim();
+  const combined = `${napomena} ${aktPoPresudi} ${zalba} ${presuda}`.trim();
   const lower = combined.toLowerCase();
 
-  const hasYellow =
-    cellColors &&
-    (cellColors.L === 'zuto' ||
-      cellColors.M === 'zuto' ||
-      cellColors.O === 'zuto' ||
-      cellColors.J === 'zuto');
-  const hasBrown =
-    cellColors &&
-    (cellColors.L === 'smedje' ||
-      cellColors.M === 'smedje' ||
-      cellColors.O === 'smedje' ||
-      cellColors.J === 'smedje');
-  const hasGreen =
-    cellColors &&
-    (cellColors.L === 'zeleno' ||
-      cellColors.M === 'zeleno' ||
-      cellColors.O === 'zeleno' ||
-      cellColors.J === 'zeleno');
-
-  let bojaOznake: TroskoviInfo['bojaOznake'] = 'nema';
-  if (hasYellow) bojaOznake = 'zuto';
-  else if (hasBrown) bojaOznake = 'smedje';
-  else if (hasGreen) bojaOznake = 'zeleno';
-
-  if (!combined && bojaOznake === 'nema') {
+  // 1. Ako u polju Razno / Napomena nije ništa upisano i nema spomena troškova u ostalim poljima:
+  // NEMA TROŠKOVA (zelena boja je korisnikova oznaka pozitivnog ishoda spora za ministarstvo!)
+  if (!napomena && !lower.includes('trošak') && !lower.includes('troškov') && !lower.includes('nalog')) {
     return {
       imaTroskova: false,
       status: 'nema_troskova',
@@ -416,11 +430,14 @@ export function parseTroskoviInfo(
     };
   }
 
+  // 2. Eksplicitno navedeno da nema troškova ili je zahtjev odbijen
   if (
-    bojaOznake === 'nema' &&
-    (lower.includes('nema troškova') ||
-      lower.includes('nema troskova') ||
-      lower.includes('bez troškova'))
+    lower.includes('nema troškova') ||
+    lower.includes('nema troskova') ||
+    lower.includes('bez troškova') ||
+    lower.includes('odbijen zahtjev za troškove') ||
+    lower.includes('odbijeni troškovi') ||
+    lower.includes('odbijen trošak')
   ) {
     return {
       imaTroskova: false,
@@ -430,59 +447,61 @@ export function parseTroskoviInfo(
     };
   }
 
-  // Detect which field holds costs
-  let izvorPolje: string | undefined;
-  if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(zalba) || cellColors?.M === 'zuto' || cellColors?.M === 'smedje') {
-    izvorPolje = 'Stupac M (Žalba / Troškovi)';
-  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(aktPoPresudi) || cellColors?.L === 'zuto' || cellColors?.L === 'smedje') {
-    izvorPolje = 'Stupac L (Akt UP/II)';
-  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(napomena) || cellColors?.O === 'zuto' || cellColors?.O === 'smedje') {
-    izvorPolje = 'Stupac O (Napomena)';
-  } else if (/1250|eur|€|troš|tros|kn|kuna|nalog/i.test(presuda) || cellColors?.J === 'zuto' || cellColors?.J === 'smedje') {
-    izvorPolje = 'Stupac J (Presuda)';
-  }
-
-  // Look for amount: e.g. "1250 EUR", "1250,00 EUR", "1250,00 eura", "625 eur", "1875 eur", "2500 EUR", "3.125,00 kn", "3125 kn", or standard "1250"
-  const iznosMatch =
-    combined.match(/(\b\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\b\d+(?:[.,]\d{2})?)\s*(?:EUR|eur|€|eura|kuna|kn)\b/i) ||
-    combined.match(/\b(1250|2500|3750|625|1875|5000)\b/);
-
-  let iznos = iznosMatch ? iznosMatch[0].trim() : undefined;
-  if (iznos && /^\d+$/.test(iznos)) {
-    iznos = `${iznos} EUR`;
-  }
-
-  const isAwarded =
-    !!iznos ||
-    lower.includes('trošak') ||
-    lower.includes('troškov') ||
-    bojaOznake === 'zuto' ||
-    bojaOznake === 'smedje';
-
-  if (!isAwarded) {
+  // 3. Mjesečne naknade (npr. "309,89 kn/mj.", "2.862,50/mjesečno" - to je vodni doprinos, a ne trošak spora)
+  if ((napomena.includes('/mj') || napomena.includes('mjesečno')) && !lower.includes('troš')) {
     return {
       imaTroskova: false,
       status: 'nema_troskova',
       hitnost: 'nema',
-      opis: 'Nema zabilježenih troškova',
+      opis: 'Nema dosuđenih troškova spora',
     };
   }
 
-  const isPaid =
-    lower.includes('plaćeno') ||
-    lower.includes('placeno') ||
-    lower.includes('podmireno') ||
-    lower.includes('isplaćeno') ||
-    bojaOznake === 'zeleno';
+  // 4. Pronađi točan iznos troška
+  const iznos = extractCostAmount(combined);
+  const hasCostWord = lower.includes('trošak') || lower.includes('troškov') || lower.includes('nalog');
 
-  const hasNalog = lower.includes('nalog') || bojaOznake === 'smedje';
+  // Ako nema ni iznosa ni riječi trošak/nalog u tekstu: NEMA TROŠKOVA
+  // (nema veze što je neko polje obojano u zeleno ili drugu boju!)
+  if (!iznos && !hasCostWord) {
+    return {
+      imaTroskova: false,
+      status: 'nema_troskova',
+      hitnost: 'nema',
+      opis: 'Nema dosuđenih troškova spora',
+    };
+  }
+
+  // Preskoči čiste vrijednosti predmeta (npr. 335.228.00 kn) ako se ne spominje trošak
+  if (!hasCostWord && !/eur|€|1250|2500|3750|625|1875/i.test(combined)) {
+    return {
+      imaTroskova: false,
+      status: 'nema_troskova',
+      hitnost: 'nema',
+      opis: 'Nema dosuđenih troškova spora',
+    };
+  }
+
+  // Status plaćanja:
+  // Korisnik je tražio:
+  // "distinkcija između plaćeno (zeleno) i nalog poslan (smeđe), htio bih da to sve bude zeleno označeno, možemo to nazvati nalog poslan xy datuma - plaćeno"
+  const isPaid = lower.includes('plaćeno') || lower.includes('placeno') || lower.includes('podmireno');
+  const hasNalog = lower.includes('nalog') || (cellColors && cellColors.O === 'smedje');
+  const isYellow =
+    (cellColors && (cellColors.O === 'zuto' || cellColors.L === 'zuto' || cellColors.M === 'zuto')) ||
+    (lower.includes('rok') && !isPaid && !hasNalog);
 
   let status: TroskoviInfo['status'] = 'neplaceno';
-  if (isPaid) status = 'placeno';
-  else if (hasNalog) status = 'poslan_nalog';
-  else if (bojaOznake === 'zuto') status = 'neplaceno';
+  let bojaOznake: TroskoviInfo['bojaOznake'] = 'zuto';
 
-  // Nalog datum
+  if (isPaid || hasNalog || (cellColors && cellColors.O === 'zeleno')) {
+    status = isPaid ? 'placeno' : 'poslan_nalog';
+    bojaOznake = 'zeleno'; // Sve riješeno označavamo zelenom bojom prema korisnikovom zahtjevu
+  } else if (isYellow) {
+    status = 'neplaceno';
+    bojaOznake = 'zuto';
+  }
+
   const nalogMatch = combined.match(/nalog\s+(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?\.?)/i);
   const nalogDatum = nalogMatch ? nalogMatch[1] : undefined;
 
@@ -490,14 +509,13 @@ export function parseTroskoviInfo(
   let rokStr: string | null = null;
   let opis = iznos ? `Dosuđeni troškovi: ${iznos}` : 'Dosuđeni troškovi spora';
 
-  // Check explicit deadline in text (e.g. "rok 1.12.2026." or "rok 15.10.2026." or "do 21.11.2024.")
+  // Provjeri eksplicitni rok u tekstu (npr. "rok 15.10.2026." ili "do 21.11.2024.")
   const explicitDeadline = extractDeadline(combined);
   if (explicitDeadline.deadlineDate) {
     rokDate = explicitDeadline.deadlineDate;
     rokStr = explicitDeadline.deadlineStr;
     opis += ` (rok: ${rokStr})`;
   } else if (datumZapPresudeStr && !isPaid && !hasNalog) {
-    // Presuda prvostupanjskog upravnog suda: 15 dana za žalbu + 15 dana paricijski rok = 30 dana od primitka
     const zapDate = parseCroatianDate(datumZapPresudeStr);
     if (zapDate) {
       const target = new Date(zapDate.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -532,9 +550,16 @@ export function parseTroskoviInfo(
     else hitnost = 'u_roku';
   }
 
+  // Prepoznaj stupac izvora
+  let izvorPolje: string | undefined;
+  if (napomena) izvorPolje = 'Stupac O (Razno / Napomena)';
+  else if (aktPoPresudi) izvorPolje = 'Stupac L (Akt UP/II)';
+  else if (zalba) izvorPolje = 'Stupac M (Žalba)';
+  else if (presuda) izvorPolje = 'Stupac J (Presuda)';
+
   return {
     imaTroskova: true,
-    iznos: iznos || (bojaOznake === 'zuto' || bojaOznake === 'smedje' ? '1.250 EUR' : undefined),
+    iznos,
     status,
     rokPlacanja: rokStr || undefined,
     rokPlacanjaDate: rokDate ? rokDate.toISOString() : undefined,

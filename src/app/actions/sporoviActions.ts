@@ -99,7 +99,8 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
           stats.troskoviRijeseno++;
         } else if (
           s.troskoviInfo.status === 'poslan_nalog' ||
-          s.troskoviInfo.bojaOznake === 'smedje'
+          s.troskoviInfo.bojaOznake === 'smedje' ||
+          s.troskoviInfo.bojaOznake === 'zeleno'
         ) {
           stats.troskoviSmedje++;
           stats.troskoviRijeseno++;
