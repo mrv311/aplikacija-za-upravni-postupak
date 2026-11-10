@@ -86,14 +86,16 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         stats.sutnjaUprave++;
       }
 
-      if (s.hitnost === 'isteklo') {
-        stats.istekli++;
-        stats.hitni++;
-      } else if (s.hitnost === 'danas' || s.hitnost === 'kriticno') {
-        stats.danasIKriticno++;
-        stats.hitni++;
-      } else if (s.hitnost === 'hitno') {
-        stats.hitni++;
+      if (!s.isPresudeno) {
+        if (s.hitnost === 'isteklo') {
+          stats.istekli++;
+          stats.hitni++;
+        } else if (s.hitnost === 'danas' || s.hitnost === 'kriticno') {
+          stats.danasIKriticno++;
+          stats.hitni++;
+        } else if (s.hitnost === 'hitno') {
+          stats.hitni++;
+        }
       }
 
       if (s.troskoviInfo?.imaTroskova) {

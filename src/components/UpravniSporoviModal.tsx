@@ -618,7 +618,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                 Radar rokova
               </p>
-              <p className="text-lg font-bold text-rose-950 dark:text-rose-100">{stats?.hitni ?? 0}</p>
+              <p className="text-lg font-bold text-rose-950 dark:text-rose-100">{radarSporovi.length}</p>
             </div>
             <AlertTriangle className="w-5 h-5 text-rose-500" />
           </div>
