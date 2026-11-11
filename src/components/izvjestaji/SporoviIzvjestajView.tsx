@@ -19,6 +19,12 @@ import {
   ShieldAlert,
   HelpCircle,
   FileText,
+  Sparkles,
+  RefreshCw,
+  Copy,
+  Check,
+  X,
+  Download,
 } from 'lucide-react';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
 import {
@@ -27,6 +33,7 @@ import {
   calculateSporoviReportMetrics,
   exportSporoviReportToCsv,
 } from '@/lib/report-sporovi-utils';
+import { generateAiSporoviNarrativeAction } from '@/app/actions/reportActions';
 
 interface SporoviIzvjestajViewProps {
   initialSporovi: UpravniSpor[];
@@ -43,6 +50,13 @@ export default function SporoviIzvjestajView({ initialSporovi }: SporoviIzvjesta
   const [troskoviFilter, setTroskoviFilter] = useState('Sve');
   const [rjesavatelj, setRjesavatelj] = useState('Svi');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // AI narativno izvješće i izvozi
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiNarrative, setAiNarrative] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [copiedAi, setCopiedAi] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
 
   // Dinamičko pronalaženje svih rješavatelja u podacima
   const availableRjesavatelji = useMemo(() => {
@@ -74,6 +88,96 @@ export default function SporoviIzvjestajView({ initialSporovi }: SporoviIzvjesta
   // Filtrirani sporovi i metrike
   const filteredSporovi = useMemo(() => filterSporovi(initialSporovi, filters), [initialSporovi, filters]);
   const metrics = useMemo(() => calculateSporoviReportMetrics(filteredSporovi), [filteredSporovi]);
+
+  // Prikaz naziva razdoblja
+  const periodLabel = useMemo(() => {
+    if (razdoblje === 'sve') return 'Sve godine (ukupno)';
+    if (razdoblje === 'custom') {
+      if (datumOd && datumDo) return `Od ${datumOd} do ${datumDo}`;
+      if (datumOd) return `Od ${datumOd}`;
+      if (datumDo) return `Do ${datumDo}`;
+      return 'Prilagođeno razdoblje';
+    }
+    return `${razdoblje}. godina`;
+  }, [razdoblje, datumOd, datumDo]);
+
+  // Generiranje AI narativnog sažetka za kolegij / ministra
+  const handleGenerateAiNarrative = async () => {
+    setIsGeneratingAi(true);
+    setAiError(null);
+    try {
+      const sampleItems = filteredSporovi.slice(0, 15).map((s) => ({
+        poslBroj: s.poslovniBroj || '-',
+        sud: s.sud || '-',
+        tuzitelj: s.tuzitelj || '-',
+        vrsta: s.isSutnjaUprave ? 'Šutnja uprave' : 'Redovni spor',
+        ishod: s.presudaTroskovi || (s.isPresudeno ? 'Presuđeno' : 'U tijeku'),
+        troskovi: s.troskoviInfo?.iznos || s.presudaTroskovi || '0,00 €',
+      }));
+
+      const res = await generateAiSporoviNarrativeAction({
+        periodLabel,
+        metrics,
+        sampleSporovi: sampleItems,
+      });
+
+      if (res.success && res.narrative) {
+        setAiNarrative(res.narrative);
+      } else {
+        setAiError(res.error || 'Neuspjelo generiranje narativnog izvješća.');
+      }
+    } catch (err: any) {
+      setAiError(err?.message || 'Greška u komunikaciji s AI poslužiteljem.');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  const handleCopyAiNarrative = () => {
+    if (!aiNarrative) return;
+    navigator.clipboard.writeText(aiNarrative);
+    setCopiedAi(true);
+    setTimeout(() => setCopiedAi(false), 2000);
+  };
+
+  // Izvoz u službeni Word (.docx)
+  const handleExportDocx = async () => {
+    setIsExportingDocx(true);
+    try {
+      const payload = {
+        periodLabel,
+        metrics,
+        sporovi: filteredSporovi,
+        aiNarrative,
+      };
+
+      const res = await fetch('/api/sporovi/export-report-docx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Greška pri generiranju Word dokumenta (${res.status})`);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const safePeriod = periodLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\s+/g, '_');
+      a.download = `Izvjesce_upravni_sporovi_${safePeriod}_${dateStr}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err?.message || 'Neuspjelo preuzimanje Word izvješća.');
+    } finally {
+      setIsExportingDocx(false);
+    }
+  };
 
   // Izvoz u CSV (Excel)
   const handleExportCsv = () => {
@@ -130,7 +234,47 @@ export default function SporoviIzvjestajView({ initialSporovi }: SporoviIzvjesta
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleGenerateAiNarrative}
+              disabled={isGeneratingAi || filteredSporovi.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
+              title="Sastavi analitički narativni sažetak za ministra i kolegij pomoću AI savjetnika"
+            >
+              {isGeneratingAi ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>AI analizira sporove...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-purple-200" />
+                  <span>AI Narativni sažetak</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportDocx}
+              disabled={isExportingDocx || filteredSporovi.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+              title="Preuzmi službeno izvješće s memorandumom Ministarstva u Word (.docx) formatu"
+            >
+              {isExportingDocx ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  <span>Priprema Word...</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Službeni Word (.docx)</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={handleExportCsv}
@@ -140,10 +284,12 @@ export default function SporoviIzvjestajView({ initialSporovi }: SporoviIzvjesta
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
               <span>Izvoz u Excel (CSV)</span>
             </button>
+
             <button
               type="button"
               onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
+              title="Ispiši ili spremi kao PDF dokument"
             >
               <Printer className="w-3.5 h-3.5 text-slate-500" />
               <span>Ispiši / PDF</span>
@@ -280,6 +426,68 @@ export default function SporoviIzvjestajView({ initialSporovi }: SporoviIzvjesta
           )}
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* AI NARATIVNO IZVJEŠĆE KARTICA (Ako je generirano)             */}
+      {/* ============================================================ */}
+      {aiNarrative && (
+        <section className="bg-gradient-to-br from-purple-50/70 via-indigo-50/40 to-white dark:from-purple-950/20 dark:via-indigo-950/10 dark:to-slate-900 p-6 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-3 pb-3 border-b border-purple-200/60 dark:border-purple-800/40">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
+                  Službeni nalaz i sažetak za kolegij Ministarstva (AI Savjetnik)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Pripremljeno na temelju evidencije upravnih sporova za {periodLabel} • Uključeno u Word izvoz
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopyAiNarrative}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-2xs transition-colors cursor-pointer"
+              >
+                {copiedAi ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Kopirano u međuspremnik!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    Kopiraj tekst
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiNarrative(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors cursor-pointer"
+                title="Zatvori sažetak"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="prose prose-sm dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
+            {aiNarrative}
+          </div>
+        </section>
+      )}
+
+      {aiError && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+          <span>{aiError}</span>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* 2. GLAVNE KPI METRIKE (KARTICE NA VRHU)                       */}
