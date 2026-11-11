@@ -32,6 +32,7 @@ import type { EnrichedPredmet } from '@/lib/predmet-meta';
 import type { ExtractedCourtCase } from '@/lib/court-packet-parser';
 import PredmetiTable from '@/components/PredmetiTable';
 import NewPredmetButton from '@/components/NewPredmetButton';
+import OdgovorNaTuzbuModal from '@/components/OdgovorNaTuzbuModal';
 import {
   getUpravniSporoviAction,
   analyzeCourtPacketAction,
@@ -74,6 +75,7 @@ export default function MainDashboardView({
   const [rjesavateljFilter, setRjesavateljFilter] = useState('sve');
   const [sporoviSort, setSporoviSort] = useState<'novi' | 'stari' | 'rok' | 'stranka' | 'sud'>('novi');
   const [selectedSpor, setSelectedSpor] = useState<UpravniSpor | null>(null);
+  const [odgovorModalSpor, setOdgovorModalSpor] = useState<UpravniSpor | null>(null);
 
   // Ručno uređivanje detalja spora
   const [editingSporId, setEditingSporId] = useState<string | null>(null);
@@ -1181,16 +1183,31 @@ export default function MainDashboardView({
                                               Odustani
                                             </button>
                                           ) : (
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                startEditingSpor(spor);
-                                              }}
-                                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                                            >
-                                              <Pencil className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                                              <span>Uredi zabilješke / Dodaj rješenje</span>
-                                            </button>
+                                            <>
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setOdgovorModalSpor(spor);
+                                                }}
+                                                className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-2xs cursor-pointer"
+                                                title="Sastavi i preuzmi službeni odgovor na tužbu u Word formatu (.docx)"
+                                              >
+                                                <FileText className="w-3.5 h-3.5 text-white" />
+                                                <span>📄 Odgovor na tužbu (.docx)</span>
+                                              </button>
+
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  startEditingSpor(spor);
+                                                }}
+                                                className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                                              >
+                                                <Pencil className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                                <span>Uredi zabilješke / Dodaj rješenje</span>
+                                              </button>
+                                            </>
                                           )}
                                           <button
                                             onClick={(e) => {
@@ -1357,6 +1374,19 @@ export default function MainDashboardView({
                                               <p><span className="text-slate-400">Preuzeto s e-Kom:</span> <strong>{spor.tuzbaPreuzeta || '-'}</strong></p>
                                               <p><span className="text-slate-400">Rok suda:</span> <strong className={spor.rokDatum ? 'text-rose-600 dark:text-rose-400' : ''}>{spor.rokDatum || 'Nema određenog roka'}</strong></p>
                                               <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
+                                              <div className="pt-2">
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOdgovorModalSpor(spor);
+                                                  }}
+                                                  className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
+                                                >
+                                                  <FileText className="w-3.5 h-3.5" />
+                                                  <span>📄 Sastavi odgovor na tužbu (.docx)</span>
+                                                </button>
+                                              </div>
                                               {spor.isSutnjaUprave && (
                                                 <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
                                                   <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
@@ -1610,15 +1640,28 @@ export default function MainDashboardView({
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
-                        <button
-                          onClick={() => {
-                            setSporoviSubTab('tablica');
-                            setSelectedSpor(spor);
-                          }}
-                          className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-                        >
-                          Prikaži u tablici →
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSporoviSubTab('tablica');
+                              setSelectedSpor(spor);
+                            }}
+                            className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                          >
+                            Prikaži u tablici →
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOdgovorModalSpor(spor);
+                            }}
+                            className="flex items-center gap-1 text-2xs px-2 py-0.5 rounded font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-colors cursor-pointer"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span>📄 Odgovor (.docx)</span>
+                          </button>
+                        </div>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -2077,23 +2120,63 @@ export default function MainDashboardView({
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <button
-                      onClick={handleSaveNewSpor}
-                      disabled={isSaving}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-xs"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Spremanje...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4" />
-                          <span>💾 Spremi u evidenciju sporova</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                      <button
+                        onClick={handleSaveNewSpor}
+                        disabled={isSaving}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-xs cursor-pointer"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Spremanje...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>💾 Spremi u evidenciju sporova</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tempSpor: UpravniSpor = {
+                            id: `temp-${Date.now()}`,
+                            rbr: 1,
+                            rowNum: 1,
+                            sud: formSud,
+                            poslovniBroj: formPoslovniBroj,
+                            tuzitelj: formTuzitelj,
+                            oib: formOib,
+                            predmet: formPredmet,
+                            upIiRjesenje: formPobijaniAkt,
+                            tuzbaPreuzeta: formDatumPreuzimanja,
+                            rokDatum: formRokDospijeca,
+                            odgovorNaTuzbu: '',
+                            presudaTroskovi: formPresuda,
+                            datumZapPresude: formDatumZapPresude,
+                            zalbaPresuda: '',
+                            visokiUpravniSud: '',
+                            aktUpIiPoPresudi: '',
+                            rjesavatelj: formRjesavatelj,
+                            vrijednostNapomena: formSazetak,
+                            isSutnjaUprave: formVrstaSpora.toLowerCase().includes('šutnja'),
+                            isOdgovoreno: false,
+                            isPresudeno: !!formPresuda,
+                            fazaOpis: 'U radu',
+                            danaDoRoka: formRokDana,
+                            hitnost: 'hitno',
+                          };
+                          setOdgovorModalSpor(tempSpor);
+                        }}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <span>📄 Sastavi odgovor na tužbu (.docx)</span>
+                      </button>
+                    </div>
 
                     <div className="flex items-center gap-2 text-2xs text-slate-500">
                       <span>Nakon spremanja, predmet se odmah prikazuje u Radaru rokova i Tablici sporova.</span>
@@ -2105,6 +2188,13 @@ export default function MainDashboardView({
           )}
         </div>
       )}
+
+      {/* MODAL ZA SASTAVLJANJE ODGOVORA NA TUŽBU (.DOCX) */}
+      <OdgovorNaTuzbuModal
+        isOpen={!!odgovorModalSpor}
+        onClose={() => setOdgovorModalSpor(null)}
+        spor={odgovorModalSpor}
+      />
 
       {/* VIEW 2: DRUGOSTUPANJSKI UPRAVNI PREDMETI (ZUP) */}
       {mainView === 'zup' && (
