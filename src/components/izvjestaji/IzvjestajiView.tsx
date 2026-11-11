@@ -40,13 +40,19 @@ import {
 } from '@/lib/report-utils';
 import { generateAiReportNarrativeAction } from '@/app/actions/reportActions';
 import { getSluzbeniciAction } from '@/app/actions/predmetActions';
+import type { UpravniSpor } from '@/lib/upravni-sporovi';
+import SporoviIzvjestajView from '@/components/izvjestaji/SporoviIzvjestajView';
 
 interface Props {
   initialPredmeti: EnrichedPredmet[];
+  initialSporovi?: UpravniSpor[];
 }
 
-export default function IzvjestajiView({ initialPredmeti }: Props) {
-  // Stanje filtera
+export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }: Props) {
+  // Glavni tab (ZUP ili ZUS)
+  const [activeMainTab, setActiveMainTab] = useState<'zup' | 'zus'>('zup');
+
+  // Stanje filtera (ZUP)
   const [period, setPeriod] = useState<ReportPeriodPreset>('ova-godina');
   const [customOd, setCustomOd] = useState('');
   const [customDo, setCustomDo] = useState('');
@@ -173,20 +179,71 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
       {/* ============================================================ */}
-      {/* SLUŽBENI MEMORANDUM ZA ISPIS (Vidljivo samo na window.print)  */}
+      {/* GLAVNA NAVIGACIJSKA TRAKA: PREDMETI (ZUP) vs SPOROVI (ZUS)   */}
       {/* ============================================================ */}
-      <div className="hidden print:block mb-8 text-center border-b pb-6 text-slate-900">
-        <h2 className="text-sm font-semibold tracking-widest uppercase text-slate-600">
-          Republika Hrvatska • Ministarstvo
-        </h2>
-        <h1 className="text-xl font-bold mt-1">
-          SLUŽBENO IZVJEŠĆE O RADU NA DRUGOSTUPANJSKIM UPRAVNIM PREDMETIMA
-        </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Promatrano razdoblje: {dateRangeLabel} • Generirano:{' '}
-          {new Date().toLocaleDateString('hr-HR')} u {new Date().toLocaleTimeString('hr-HR')}
-        </p>
+      <div className="print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('zup')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all cursor-pointer ${
+              activeMainTab === 'zup'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+            }`}
+          >
+            <FolderCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>Drugostupanjski predmeti (ZUP)</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">
+              {initialPredmeti.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('zus')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all cursor-pointer ${
+              activeMainTab === 'zus'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+            }`}
+          >
+            <Scale className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>Upravni sporovi (ZUS)</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold">
+              {initialSporovi.length}
+            </span>
+          </button>
+        </div>
+
+        <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+          {activeMainTab === 'zup' ? (
+            <span>Analiza efikasnosti rješavanja žalbi i ZUP rokova (60 dana)</span>
+          ) : (
+            <span>Zakonitost rješenja, uspješnost na sudovima i dosuđeni troškovi</span>
+          )}
+        </div>
       </div>
+
+      {activeMainTab === 'zus' ? (
+        <SporoviIzvjestajView initialSporovi={initialSporovi} />
+      ) : (
+        <>
+          {/* ============================================================ */}
+          {/* SLUŽBENI MEMORANDUM ZA ISPIS (Vidljivo samo na window.print)  */}
+          {/* ============================================================ */}
+          <div className="hidden print:block mb-8 text-center border-b pb-6 text-slate-900">
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-slate-600">
+              Republika Hrvatska • Ministarstvo
+            </h2>
+            <h1 className="text-xl font-bold mt-1">
+              SLUŽBENO IZVJEŠĆE O RADU NA DRUGOSTUPANJSKIM UPRAVNIM PREDMETIMA
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              Promatrano razdoblje: {dateRangeLabel} • Generirano:{' '}
+              {new Date().toLocaleDateString('hr-HR')} u {new Date().toLocaleTimeString('hr-HR')}
+            </p>
+          </div>
 
       {/* ============================================================ */}
       {/* STANDARDNO ZAGLAVLJE EKRANA (Skriveno na ispisu)               */}
@@ -1095,6 +1152,8 @@ export default function IzvjestajiView({ initialPredmeti }: Props) {
           <p className="font-semibold">Viši upravni savjetnik</p>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

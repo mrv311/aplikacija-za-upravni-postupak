@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { supabaseServer as supabase } from '@/lib/supabase-server';
 import IzvjestajiView from '@/components/izvjestaji/IzvjestajiView';
 import { enrichPredmetRow, type EnrichedPredmet } from '@/lib/predmet-meta';
+import { parseExcelSporoviAsync } from '@/lib/upravni-sporovi';
 import { AlertCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Izvještaji i analitika | Upravni postupak',
-  description: 'Statistički pregled, poštivanje ZUP rokova, struktura odluka i službeni izvozi',
+  title: 'Izvještaji i analitika | Upravni postupak i sporovi',
+  description: 'Statistički pregled, poštivanje ZUP rokova, analiza upravnih sporova i financijskih troškova',
 };
 
 export default async function IzvjestajiPage() {
@@ -23,6 +24,9 @@ export default async function IzvjestajiPage() {
 
   const allPredmeti: EnrichedPredmet[] = (predmeti || []).map(enrichPredmetRow);
 
+  // Dohvaćamo upravne sporove izravno s diska i baze
+  const { sporovi } = await parseExcelSporoviAsync(false);
+
   return (
     <div>
       {error && (
@@ -35,7 +39,7 @@ export default async function IzvjestajiPage() {
         </div>
       )}
 
-      <IzvjestajiView initialPredmeti={allPredmeti} />
+      <IzvjestajiView initialPredmeti={allPredmeti} initialSporovi={sporovi} />
     </div>
   );
 }
