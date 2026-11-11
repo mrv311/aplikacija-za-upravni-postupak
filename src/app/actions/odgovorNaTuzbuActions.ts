@@ -4,6 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
+// @ts-ignore
+import WordExtractor from 'word-extractor';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import { E_KOMUNIKACIJA_PATH } from '@/lib/upravni-sporovi';
@@ -11,6 +14,7 @@ import { supabaseServer as dbServer } from '@/lib/supabase-server';
 import { supabase as dbClient } from '@/lib/supabase';
 
 const db = dbServer || dbClient;
+const wordExtractor = new WordExtractor();
 
 export interface ExtractedDocResult {
   success: boolean;
@@ -18,11 +22,104 @@ export interface ExtractedDocResult {
   text?: string;
   charCount?: number;
   pageCount?: number;
+  isOcr?: boolean;
   error?: string;
 }
 
 /**
- * Parsira prenesenu datoteku (.pdf, .docx, .txt) i vraća čisti tekst za pravnu analizu
+ * Univerzalni čitač teksta za sve formate (.pdf sa i bez teksta/sken, .docx, .doc, .txt)
+ */
+async function extractTextFromAnyDocumentBuffer(
+  buffer: Buffer,
+  filename: string
+): Promise<{ text: string; pageCount?: number; isOcr?: boolean }> {
+  const nameLower = filename.toLowerCase();
+
+  // 1. Stariji .doc format (Word 97-2003)
+  if (nameLower.endsWith('.doc') && !nameLower.endsWith('.docx')) {
+    try {
+      const extracted = await wordExtractor.extract(buffer);
+      const docBody = extracted.getBody().trim();
+      if (docBody) {
+        return { text: docBody };
+      }
+    } catch (docErr) {
+      console.warn('WordExtractor greška:', docErr);
+    }
+  }
+
+  // 2. Noviji .docx format
+  if (nameLower.endsWith('.docx')) {
+    try {
+      const parsed = await mammoth.extractRawText({ buffer });
+      if (parsed.value && parsed.value.trim()) {
+        return { text: parsed.value.trim() };
+      }
+    } catch (docxErr) {
+      console.warn('Mammoth docx greška:', docxErr);
+    }
+  }
+
+  // 3. PDF format
+  if (nameLower.endsWith('.pdf')) {
+    let fastText = '';
+    let pageCount: number | undefined = undefined;
+
+    try {
+      const parsed = await pdf(buffer);
+      fastText = (parsed.text || '').trim();
+      pageCount = parsed.numpages;
+    } catch (pdfErr) {
+      console.warn('pdf-parse nije uspio (vjerojatno sken):', pdfErr);
+    }
+
+    // Ako PDF ima ugrađen tekstualni sloj, vrati ga odmah
+    if (fastText.length > 80) {
+      return { text: fastText, pageCount, isOcr: false };
+    }
+
+    // Ako je skenirani PDF (slika bez OCR sloja), koristi Gemini 3.8 Flash OCR!
+    try {
+      const apiKey =
+        process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        process.env.GOOGLE_GEMINI_KEY;
+
+      if (apiKey) {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+
+        const result = await model.generateContent([
+          'Ti si visoko precizan OCR sustav za sudske spise i upravne postupke u Republici Hrvatskoj. Prepiši sav tekst iz ovog skeniranog dokumenta (izvornik rješenja, tužbe ili žalbe). Vrati točan tekst dokumenta bez svojih komentara.',
+          {
+            inlineData: {
+              data: buffer.toString('base64'),
+              mimeType: 'application/pdf',
+            },
+          },
+        ]);
+
+        const ocrText = result.response.text().trim();
+        if (ocrText && ocrText.length > 30) {
+          return { text: ocrText, pageCount, isOcr: true };
+        }
+      }
+    } catch (ocrErr) {
+      console.error('Gemini OCR greška:', ocrErr);
+    }
+
+    if (fastText) {
+      return { text: fastText, pageCount, isOcr: false };
+    }
+  }
+
+  // 4. Tekstualni zapis (TXT ili sirovi fallback)
+  const fallback = buffer.toString('utf-8').trim();
+  return { text: fallback };
+}
+
+/**
+ * Parsira prenesenu datoteku (.pdf, .docx, .doc, .txt) i vraća čisti tekst za pravnu analizu
  */
 export async function parseDocumentTextAction(formData: FormData): Promise<ExtractedDocResult> {
   try {
@@ -32,22 +129,17 @@ export async function parseDocumentTextAction(formData: FormData): Promise<Extra
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const nameLower = file.name.toLowerCase();
-    let text = '';
-    let pageCount: number | undefined = undefined;
-
-    if (nameLower.endsWith('.pdf')) {
-      const parsed = await pdf(buffer);
-      text = parsed.text || '';
-      pageCount = parsed.numpages;
-    } else if (nameLower.endsWith('.docx') || nameLower.endsWith('.doc')) {
-      const parsed = await mammoth.extractRawText({ buffer });
-      text = parsed.value || '';
-    } else {
-      text = buffer.toString('utf-8');
-    }
+    const { text, pageCount, isOcr } = await extractTextFromAnyDocumentBuffer(buffer, file.name);
 
     const cleanText = text.replace(/\r\n/g, '\n').trim();
+
+    if (!cleanText || cleanText.length < 5) {
+      return {
+        success: false,
+        filename: file.name,
+        error: `Datoteka "${file.name}" ne sadrži prepoznatljiv tekst. Ako je riječ o skeniranom dokumentu niske kvalitete, provjerite čitljivost.`,
+      };
+    }
 
     return {
       success: true,
@@ -55,6 +147,7 @@ export async function parseDocumentTextAction(formData: FormData): Promise<Extra
       text: cleanText,
       charCount: cleanText.length,
       pageCount,
+      isOcr,
     };
   } catch (err: any) {
     console.error('Greška pri parsiranju priložene datoteke:', err);
@@ -137,9 +230,18 @@ export async function findOneDriveCourtFilesAction(
       const fLower = f.name.toLowerCase();
 
       let role: CourtFolderFileItem['role'] = 'ostalo';
-      if (fLower.includes('tužba') || fLower.includes('tuzba') || (fLower.includes('podnesak') && !fLower.includes('prilog'))) {
+      if (
+        fLower.includes('tužba') ||
+        fLower.includes('tuzba') ||
+        (fLower.includes('podnesak') && !fLower.includes('prilog'))
+      ) {
         role = 'tuzba';
-      } else if (fLower.includes('rješenje') || fLower.includes('rjesenje') || fLower.includes('presuda') || fLower.includes('odluka')) {
+      } else if (
+        fLower.includes('rješenje') ||
+        fLower.includes('rjesenje') ||
+        fLower.includes('presuda') ||
+        fLower.includes('odluka')
+      ) {
         role = 'rjesenje';
       } else if (fLower.includes('dopis') || fLower.includes('nalog')) {
         role = 'dopis';
@@ -182,7 +284,7 @@ export async function findOneDriveCourtFilesAction(
 }
 
 /**
- * Učitava i parsira tekst datoteke iz pronađene OneDrive e-Komunikacija mape
+ * Učitava i parsira tekst datoteke iz pronađene OneDrive e-Komunikacija mape (podržava i skenirani OCR)
  */
 export async function loadOneDriveCourtFileAction(
   folderName: string,
@@ -198,22 +300,17 @@ export async function loadOneDriveCourtFileAction(
     }
 
     const buffer = fs.readFileSync(fullPath);
-    const nameLower = safeFile.toLowerCase();
-    let text = '';
-    let pageCount: number | undefined = undefined;
-
-    if (nameLower.endsWith('.pdf')) {
-      const parsed = await pdf(buffer);
-      text = parsed.text || '';
-      pageCount = parsed.numpages;
-    } else if (nameLower.endsWith('.docx') || nameLower.endsWith('.doc')) {
-      const parsed = await mammoth.extractRawText({ buffer });
-      text = parsed.value || '';
-    } else {
-      text = buffer.toString('utf-8');
-    }
+    const { text, pageCount, isOcr } = await extractTextFromAnyDocumentBuffer(buffer, safeFile);
 
     const cleanText = text.replace(/\r\n/g, '\n').trim();
+
+    if (!cleanText || cleanText.length < 5) {
+      return {
+        success: false,
+        filename: safeFile,
+        error: `Datoteka "${safeFile}" ne sadrži prepoznatljiv tekst.`,
+      };
+    }
 
     return {
       success: true,
@@ -221,6 +318,7 @@ export async function loadOneDriveCourtFileAction(
       text: cleanText,
       charCount: cleanText.length,
       pageCount,
+      isOcr,
     };
   } catch (err: any) {
     console.error('Greška pri čitanju datoteke s diska:', err);

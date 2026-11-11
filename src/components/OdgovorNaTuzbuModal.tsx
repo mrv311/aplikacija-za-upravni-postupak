@@ -258,8 +258,11 @@ export default function OdgovorNaTuzbuModal({
         } else {
           setRjesenjeDoc(docInfo);
         }
+        if (res.isOcr) {
+          setAiSuccessMsg(`✓ Skenirani dokument "${fileName}" uspješno je prepoznat putem optičkog OCR-a!`);
+        }
       } else {
-        setAiError(res.error || 'Nije uspjelo čitanje datoteke.');
+        setAiError(res.error || `Nije uspjelo čitanje datoteke "${fileName}".`);
       }
     } catch (err: any) {
       setAiError(err.message || 'Greška pri čitanju s OneDrive-a.');
@@ -293,8 +296,11 @@ export default function OdgovorNaTuzbuModal({
         } else {
           setRjesenjeDoc(docInfo);
         }
+        if (res.isOcr) {
+          setAiSuccessMsg(`✓ Skenirani dokument "${file.name}" uspješno je prepoznat putem optičkog OCR-a!`);
+        }
       } else {
-        setAiError(res.error || 'Neuspjelo čitanje teksta iz datoteke.');
+        setAiError(res.error || `Nije uspjelo čitanje teksta iz datoteke "${file.name}".`);
       }
     } catch (err: any) {
       setAiError(err.message || 'Greška pri obradi datoteke.');
@@ -469,6 +475,18 @@ export default function OdgovorNaTuzbuModal({
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{exportError}</span>
+            </div>
+          )}
+
+          {(isParsingFile || loadingFileId) && (
+            <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs font-semibold flex items-center gap-2.5 shadow-2xs animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <div>
+                <p>Učitavanje i obrada dokumenta u tijeku...</p>
+                <p className="text-2xs font-normal text-indigo-700 dark:text-indigo-300">
+                  Ako je datoteka skenirana slika bez tekstualnog sloja, automatski se provodi optičko prepoznavanje (OCR).
+                </p>
+              </div>
             </div>
           )}
 
