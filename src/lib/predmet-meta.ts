@@ -144,6 +144,7 @@ export const DOKUMENT_VRSTE = [
   'Prvostupanjsko rješenje',
   'Dostavnica',
   'Popratni dopis I. stupnja',
+  'Košuljica spisa',
   'Dopis — slanje žalbe na nadležni postupak',
   'Punomoć',
   'Drugostupanjsko rješenje',
@@ -238,6 +239,15 @@ export function decodeDocLabel(rawTipDokumenta: string | null | undefined): Deco
  */
 export function guessDocRoleFromFilename(fileName: string): string {
   const f = fileName.toLowerCase();
+  if (
+    f.includes('košulj') ||
+    f.includes('kosulj') ||
+    f.includes('omot') ||
+    f.includes('naljepn') ||
+    f.includes('koric')
+  ) {
+    return 'Košuljica spisa';
+  }
   if (f.includes('žalba') || f.includes('zalba') || f.includes('prigovor')) return 'Žalba';
   if (f.includes('dostavn') || f.includes('povratnic')) return 'Dostavnica';
   if (f.includes('punomo')) return 'Punomoć';

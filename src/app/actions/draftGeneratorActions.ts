@@ -297,6 +297,7 @@ export async function getDraftingContext(
     const zalbaDoc = docs.find((d: any) => {
       const docMeta = decodeDocLabel(d.tip_dokumenta);
       const v = (docMeta.vrsta || '').toLowerCase();
+      if (v.includes('košulj')) return false;
       const n = (docMeta.izvorniNaziv || '').toLowerCase();
       const raw = (d.tip_dokumenta || '').toLowerCase();
       return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
@@ -474,6 +475,7 @@ export async function generateLegalDraft(payload: GenerateDraftPayload): Promise
     const zalbaDoc = docs.find((d) => {
       const meta = decodeDocLabel(d.tip_dokumenta);
       const v = (meta.vrsta || '').toLowerCase();
+      if (v.includes('košulj')) return false;
       const n = (meta.izvorniNaziv || '').toLowerCase();
       const raw = (d.tip_dokumenta || '').toLowerCase();
       return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
@@ -816,6 +818,7 @@ export async function runLegalReviewAction(payload: {
     const zalbaDoc = docs.find((d) => {
       const meta = decodeDocLabel(d.tip_dokumenta);
       const v = (meta.vrsta || '').toLowerCase();
+      if (v.includes('košulj')) return false;
       const n = (meta.izvorniNaziv || '').toLowerCase();
       const raw = (d.tip_dokumenta || '').toLowerCase();
       return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');

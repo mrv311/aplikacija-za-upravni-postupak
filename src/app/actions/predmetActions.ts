@@ -142,34 +142,43 @@ async function upsertPredmetMeta(predmetId: string, patch: Partial<PredmetExtend
 }
 
 const EXTRACT_SCAN_SYSTEM_PROMPT = `Ti si stručni pravni asistent za pisarnicu i drugostupanjski upravni postupak u Ministarstvu (Republika Hrvatska).
-Iz priloženog dokumenta (najčešće popratni dopis Hrvatskih voda kojim se dostavlja spis povodom žalbe, sama žalba ili prvostupanjsko rješenje) izvuci metapodatke za otvaranje novog drugostupanjskog predmeta i vrati ISKLJUČIVO valjani JSON:
+Iz priloženog dokumenta (koji može biti **košuljica spisa s pisarničkom naljepnicom i rukopisnim bilješkama**, popratni dopis Hrvatskih voda kojim se dostavlja spis povodom žalbe, sama žalba ili prvostupanjsko rješenje) izvuci metapodatke za otvaranje novog drugostupanjskog predmeta i vrati ISKLJUČIVO valjani JSON:
 {
   "klasa": "npr. UP/II-325-08/... ili UP/I-325-08/...",
   "stranka": "puno ime i prezime fizičke osobe ili puni naziv pravne osobe (žalitelja / stranke)",
   "datumZaprimanja": "YYYY-MM-DD",
-  "izvorDatuma": "prijamni štambilj" | "datum dokumenta" | "",
+  "izvorDatuma": "prijamni štambilj" | "pisarnička naljepnica" | "datum dokumenta" | "",
   "podrucje": "NUV" | "VD" | "NZZV" | "Ostalo",
-  "vrstaDokumenta": "Popratni dopis I. stupnja" | "Žalba" | "Prvostupanjsko rješenje" | "Dostavnica" | "Kompletni spis",
-  "napomena": "kratki opis predmeta u 1 rečenici do 95 znakova"
+  "vrstaDokumenta": "Košuljica spisa" | "Popratni dopis I. stupnja" | "Žalba" | "Prvostupanjsko rješenje" | "Dostavnica" | "Kompletni spis",
+  "rukopisnaNapomena": "doslovni prijepis svih rukom pisanih bilješki/napomena na košuljici ili dokumentu (ako ih nema, prazno '')",
+  "napomena": "cjeloviti tekst rukopisne napomene ako postoji, inače kratki opis predmeta"
 }
 
+PREPOZNAVANJE KOŠULJICE SPISA ("vrstaDokumenta": "Košuljica spisa"):
+- Ako je na slici/PDF-u omotnica ili naslovnica spisa (**košuljica spisa**) s otisnutom pisarničkom/bar-kod naljepnicom (npr. naziv tijela, KLASA, datum otvaranja/primitka, stranka/predmet) i/ili rukom pisanim bilješkama savjetnika/voditelja po koricama, postavi "vrstaDokumenta": "Košuljica spisa".
+
 STROGA PRAVILA ZA DATUM ZAPRIMANJA ("datumZaprimanja"):
-1. PRVO I NAJVAŽNIJE: Pažljivo vizualno pregledaj cijelu prvu stranicu (osobito gornji desni, gornji lijevi i donji dio) i potraži PRIJAMNI ŠTAMBILJ / PRIJEMNI PEČAT (pravokutni pečat pisarnice s oznakama "REPUBLIKA HRVATSKA", "MINISTARSTVO...", "Primljeno", "Zaprimljeno", "KLASA", "URBROJ" ili datumom otisnutim ili upisanim rukom u sredini štambilja).
-2. Ako se na dokumentu nalaze dva prijamna štambilja (npr. raniji štambilj Hrvatskih voda i noviji štambilj Ministarstva / drugostupanjskog tijela), OBAVEZNO uzmi datum s prijamnog štambilja Ministarstva (odnosno noviji datum zaprimanja na štambilju).
-3. Pretvori pročitani datum sa štambilja u ISO format "YYYY-MM-DD" (npr. "14. 02. 2025." ili "14.II.2025." -> "2025-02-14") i postavi "izvorDatuma": "prijamni štambilj".
-4. Tek ako na dokumentu uopće NEMA nikakvog prijamnog štambilja/pečata, uzmi datum iz zaglavlja samog akta/dopisa u formatu "YYYY-MM-DD" i postavi "izvorDatuma": "datum dokumenta".
+1. PRVO I NAJVAŽNIJE: Pažljivo vizualno pregledaj cijelu stranicu i potraži PRIJAMNI ŠTAMBILJ / PEČAT ZAPRIMANJA ili PISARNIČKU NALJEPNICU na košuljici (s oznakama "REPUBLIKA HRVATSKA", "MINISTARSTVO...", "Primljeno", "Zaprimljeno", "Datum", bar-kod naljepnica s datumom).
+2. Ako se na dokumentu nalaze dva datuma zaprimanja (npr. raniji štambilj Hrvatskih voda i noviji štambilj/naljepnica Ministarstva odnosno drugostupanjskog tijela), OBAVEZNO uzmi datum Ministarstva (odnosno noviji datum zaprimanja).
+3. Pretvori pročitani datum u ISO format "YYYY-MM-DD" (npr. "14. 02. 2025." ili "14.II.2025." -> "2025-02-14") i postavi "izvorDatuma": "pisarnička naljepnica" (ako je s naljepnice košuljice) ili "prijamni štambilj".
+4. Tek ako na dokumentu uopće NEMA ni prijamnog štambilja ni pisarničke naljepnice, uzmi datum iz zaglavlja samog akta u formatu "YYYY-MM-DD" i postavi "izvorDatuma": "datum dokumenta".
 5. Nikada ne izmišljaj današnji datum ako nije napisan na dokumentu. Ako nijedan datum nije čitljiv, vrati "".
 
 STROGA PRAVILA ZA KLASU ("klasa"):
-- Ako je u prijamnom štambilju Ministarstva upisana KLASA (npr. UP/II-...), prednost daj toj KLASI.
-- Inače uzmi KLASU predmeta navedenu na dopisu/rješenju (ako postoje i UP/II i UP/I, prednost daj UP/II, a ako postoji samo UP/I ili klasifikacijska oznaka predmeta iz popratnog dopisa, uzmi nju).
+- Ako je na pisarničkoj naljepnici košuljice ili u prijamnom štambilju Ministarstva upisana KLASA (npr. UP/II-...), prednost daj toj KLASI.
+- Inače uzmi KLASU predmeta navedenu na dopisu/rješenju/košuljici (ako postoje i UP/II i UP/I, prednost daj UP/II, a ako postoji samo UP/I ili osnovna klasifikacijska oznaka, uzmi nju).
 - NE izvlači URBROJ prvostupanjskog tijela (Hrvatskih voda) jer URBROJ Ministarstvo generira tek po izradi drugostupanjskog akta.
 
+STROGA PRAVILA ZA RUKOPISNE NAPOMENE NA KOŠULJICI ("rukopisnaNapomena" i "napomena"):
+1. Vrlo pažljivo pročitaj SAV RUKOPIS na košuljici ili rubovima dokumenta (kemijska olovka, flomaster, grafitna olovka) — korisnik često rukom upisuje ključne pravne bilješke kao što su "zastara", "NKD", "sporno činjenično stanje", "nepravodobna", "čl. ...", "dopuna spisa", "poništiti", "odbiti" itd.
+2. U "rukopisnaNapomena" vjerno i doslovno prepiši SVE rukopisne bilješke bez izostavljanja i bez umjetnog skraćivanja (više bilješki spoji točka-zarezom ili zarezom). Ako rukopisa nema, vrati "".
+3. U "napomena": ako postoji "rukopisnaNapomena", obavezno uvrsti njezin puni sadržaj (ne reži važne pojmove na 95 znakova); ako nema rukopisa, daj sažeti opis predmeta u 1 rečenici.
+
 PRAVILA ZA PODRUČJE ("podrucje"):
-- "NUV" za naknadu za uređenje voda,
-- "VD" za vodni doprinos,
-- "NZZV" za naknadu za zaštitu voda,
-- "Ostalo" za sve ostalo.`;
+- "NUV" za naknadu za uređenje voda (uključujući oznaku NUV na naljepnici ili tekstu),
+- "VD" za vodni doprinos (VD),
+- "NZZV" za naknadu za zaštitu voda (NZZV),
+- "Ostalo" za sve ostalo (npr. ako se iz košuljice ne vidi o kojoj je naknadi riječ, ostavi "Ostalo", a rukopisne kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").`;
 
 function normalizeDateToIso(raw: string | undefined | null): string {
   if (!raw) return '';
@@ -266,14 +275,29 @@ export async function extractCaseInfoFromScan(formData: FormData) {
       jsonRaw = text;
     }
 
-    const cleaned = jsonRaw
+    const cleanedRaw = jsonRaw
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
       .replace(/```$/i, '')
       .trim();
 
+    const firstBrace = cleanedRaw.indexOf('{');
+    const lastBrace = cleanedRaw.lastIndexOf('}');
+    const cleaned =
+      firstBrace !== -1 && lastBrace > firstBrace
+        ? cleanedRaw.slice(firstBrace, lastBrace + 1)
+        : cleanedRaw;
+
     const parsed = JSON.parse(cleaned);
     const datumZaprimanja = normalizeDateToIso(parsed.datumZaprimanja);
+    const rukopisnaNapomena = (parsed.rukopisnaNapomena || '').trim();
+    const baseNapomena = (parsed.napomena || '').trim();
+    const combinedNapomena =
+      rukopisnaNapomena && !baseNapomena.toLowerCase().includes(rukopisnaNapomena.toLowerCase())
+        ? baseNapomena
+          ? `${rukopisnaNapomena} — ${baseNapomena}`
+          : rukopisnaNapomena
+        : baseNapomena || rukopisnaNapomena;
 
     return {
       success: true,
@@ -287,7 +311,8 @@ export async function extractCaseInfoFromScan(formData: FormData) {
           : 'Ostalo') as PredmetPodrucje,
         vrstaDokumenta:
           parsed.vrstaDokumenta || guessDocRoleFromFilename(file.name),
-        napomena: (parsed.napomena || '').trim(),
+        rukopisnaNapomena,
+        napomena: combinedNapomena,
       },
     };
   } catch (err: any) {

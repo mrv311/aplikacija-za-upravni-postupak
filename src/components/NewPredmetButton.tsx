@@ -37,6 +37,7 @@ interface QueuedCaseFile {
   uid: string;
   file: File;
   docType: string;
+  skipUpload?: boolean;
 }
 
 export default function NewPredmetButton() {
@@ -56,6 +57,7 @@ export default function NewPredmetButton() {
   const [datumPrimitka, setDatumPrimitka] = useState(today);
   const [datumIzvor, setDatumIzvor] = useState<string>('');
   const [napomena, setNapomena] = useState('');
+  const [hasHandwrittenNote, setHasHandwrittenNote] = useState(false);
 
   // Delegiranje predmeta službeniku
   const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
@@ -82,6 +84,7 @@ export default function NewPredmetButton() {
     setDatumPrimitka(today);
     setDatumIzvor('');
     setNapomena('');
+    setHasHandwrittenNote(false);
     setSluzbenikId('');
     setSluzbenikIme('');
     setInterniRok('');
@@ -121,14 +124,25 @@ export default function NewPredmetButton() {
         }
         if (res.extracted.podrucje) setPodrucje(res.extracted.podrucje);
         if (res.extracted.vrstaDokumenta) {
+          const detectedRole = res.extracted.vrstaDokumenta;
           setQueuedFiles((prev) =>
             prev.map((q) =>
-              q.uid === target.uid ? { ...q, docType: res.extracted!.vrstaDokumenta } : q
+              q.uid === target.uid
+                ? {
+                    ...q,
+                    docType: detectedRole,
+                    skipUpload: detectedRole === 'Košuljica spisa' ? true : q.skipUpload,
+                  }
+                : q
             )
           );
         }
-        if (res.extracted.napomena && !napomena) {
-          setNapomena(res.extracted.napomena);
+        const extractedNote = res.extracted.napomena || res.extracted.rukopisnaNapomena;
+        if (extractedNote && !napomena.trim()) {
+          setNapomena(extractedNote);
+        }
+        if (res.extracted.rukopisnaNapomena) {
+          setHasHandwrittenNote(true);
         }
 
         const dateNote = res.extracted.datumZaprimanja
@@ -136,8 +150,9 @@ export default function NewPredmetButton() {
               res.extracted.izvorDatuma ? ` — ${res.extracted.izvorDatuma}` : ''
             })`
           : '';
+        const handNote = res.extracted.rukopisnaNapomena ? ' i rukopisnu napomenu' : '';
         setScanSuccessMsg(
-          `AI je pročitao dokument „${target.file.name}”${dateNote} i popunio polja predmeta.`
+          `AI je pročitao dokument „${target.file.name}”${dateNote}${handNote} te popunio polja predmeta.`
         );
       }
     } catch {
@@ -150,11 +165,15 @@ export default function NewPredmetButton() {
   const handleFilesAdded = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
 
-    const newItems: QueuedCaseFile[] = Array.from(fileList).map((f, idx) => ({
-      uid: `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
-      file: f,
-      docType: guessDocRoleFromFilename(f.name),
-    }));
+    const newItems: QueuedCaseFile[] = Array.from(fileList).map((f, idx) => {
+      const guessedRole = guessDocRoleFromFilename(f.name);
+      return {
+        uid: `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+        file: f,
+        docType: guessedRole,
+        skipUpload: guessedRole === 'Košuljica spisa',
+      };
+    });
 
     const wasEmpty = queuedFiles.length === 0;
     setQueuedFiles((prev) => [...prev, ...newItems]);
@@ -164,10 +183,11 @@ export default function NewPredmetButton() {
     }
 
     // Ako prvi put dodajemo datoteke (ili ako KLASA/Stranka još nisu popunjeni),
-    // automatski pokreni AI čitanje na najboljem dokumentu (prednost: Popratni dopis I. stupnja -> Žalba -> prvi dokument)
+    // automatski pokreni AI čitanje na najboljem dokumentu (Popratni dopis -> Košuljica -> Žalba -> prvi)
     if (wasEmpty || (!klasa.trim() && !stranka.trim())) {
       const bestCandidate =
         newItems.find((item) => item.docType === 'Popratni dopis I. stupnja') ||
+        newItems.find((item) => item.docType === 'Košuljica spisa') ||
         newItems.find((item) => item.docType === 'Žalba') ||
         newItems[0];
 
@@ -191,7 +211,23 @@ export default function NewPredmetButton() {
 
   const updateQueuedFileDocType = (uid: string, docType: string) => {
     setQueuedFiles((prev) =>
-      prev.map((item) => (item.uid === uid ? { ...item, docType } : item))
+      prev.map((item) =>
+        item.uid === uid
+          ? {
+              ...item,
+              docType,
+              skipUpload: docType === 'Košuljica spisa' ? (item.skipUpload ?? true) : false,
+            }
+          : item
+      )
+    );
+  };
+
+  const toggleQueuedFileSkipUpload = (uid: string) => {
+    setQueuedFiles((prev) =>
+      prev.map((item) =>
+        item.uid === uid ? { ...item, skipUpload: !item.skipUpload } : item
+      )
     );
   };
 
@@ -227,12 +263,13 @@ export default function NewPredmetButton() {
 
     const createdId = result.data.id;
 
-    // Učitaj sve priložene PDF-ove / skenove u novootvoreni spis
-    if (queuedFiles.length > 0) {
-      for (let i = 0; i < queuedFiles.length; i++) {
-        const item = queuedFiles[i];
+    // Učitaj priložene PDF-ove / skenove u novootvoreni spis (preskoči košuljice označene samo za otvaranje)
+    const filesToUpload = queuedFiles.filter((item) => !item.skipUpload);
+    if (filesToUpload.length > 0) {
+      for (let i = 0; i < filesToUpload.length; i++) {
+        const item = filesToUpload[i];
         setUploadProgressText(
-          `Učitavam u spis (${i + 1}/${queuedFiles.length}): ${item.file.name}...`
+          `Učitavam u spis (${i + 1}/${filesToUpload.length}): ${item.file.name}...`
         );
         const docForm = new FormData();
         docForm.append('file', item.file);
@@ -279,7 +316,7 @@ export default function NewPredmetButton() {
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Novi upravni predmet</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Povucite jedan ili više PDF-ova (npr. popratni dopis Hrvatskih voda, žalbu, rješenje)
+                  Povucite sken košuljice spisa (s naljepnicom i rukopisnim bilješkama) ili dokumente spisa
                 </p>
               </div>
               <button
@@ -323,11 +360,12 @@ export default function NewPredmetButton() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-800">
-                          Povucite popratni dopis ili sve dokumente spisa odjednom
+                          Povucite sken košuljice, popratni dopis ili dokumente spisa
                         </p>
                         <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                          AI će automatski pročitati <strong>KLASU</strong>, <strong>stranku</strong> i{' '}
-                          <strong>datum s prijamnog štambilja</strong> te sve priložene PDF-ove spremiti u spis.
+                          AI čita <strong>KLASU</strong>, <strong>stranku</strong>,{' '}
+                          <strong>datum s naljepnice/štambilja</strong> i{' '}
+                          <strong>rukopisne napomene na košuljici</strong> — ostale spise možete dodati i naknadno.
                         </p>
                       </div>
                     </div>
@@ -370,58 +408,74 @@ export default function NewPredmetButton() {
                         return (
                           <div
                             key={item.uid}
-                            className="flex flex-wrap items-center justify-between gap-2 bg-white/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5"
+                            className="flex flex-col gap-1.5 bg-white/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5"
                           >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                              <span
-                                className="text-xs font-semibold text-slate-800 truncate"
-                                title={item.file.name}
-                              >
-                                {item.file.name}
-                              </span>
-                              <span className="text-[10px] text-slate-400 shrink-0">
-                                ({formatBytes(item.file.size)})
-                              </span>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span
+                                  className="text-xs font-semibold text-slate-800 truncate"
+                                  title={item.file.name}
+                                >
+                                  {item.file.name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 shrink-0">
+                                  ({formatBytes(item.file.size)})
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <select
+                                  value={item.docType}
+                                  onChange={(e) => updateQueuedFileDocType(item.uid, e.target.value)}
+                                  className="text-[11px] bg-slate-50 border border-slate-300 rounded-md px-2 py-1 text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                  {DOKUMENT_VRSTE.map((v) => (
+                                    <option key={v} value={v}>
+                                      {v}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <button
+                                  type="button"
+                                  disabled={Boolean(extractingUid)}
+                                  onClick={() => runScanExtractionOnItem(item)}
+                                  title="Izvuci KLASU, stranku, datum i rukopisne bilješke iz ovog dokumenta"
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 text-[10px] font-bold transition-colors disabled:opacity-50"
+                                >
+                                  {isItemExtracting ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="w-3 h-3" />
+                                  )}
+                                  <span className="hidden sm:inline">Čitaj podatke</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeQueuedFile(item.uid)}
+                                  title="Ukloni dokument s popisa"
+                                  className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <select
-                                value={item.docType}
-                                onChange={(e) => updateQueuedFileDocType(item.uid, e.target.value)}
-                                className="text-[11px] bg-slate-50 border border-slate-300 rounded-md px-2 py-1 text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              >
-                                {DOKUMENT_VRSTE.map((v) => (
-                                  <option key={v} value={v}>
-                                    {v}
-                                  </option>
-                                ))}
-                              </select>
-
-                              <button
-                                type="button"
-                                disabled={Boolean(extractingUid)}
-                                onClick={() => runScanExtractionOnItem(item)}
-                                title="Izvuci KLASU, stranku i datum štambilja iz ovog dokumenta"
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 text-[10px] font-bold transition-colors disabled:opacity-50"
-                              >
-                                {isItemExtracting ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <Sparkles className="w-3 h-3" />
-                                )}
-                                <span className="hidden sm:inline">Čitaj podatke</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => removeQueuedFile(item.uid)}
-                                title="Ukloni dokument s popisa"
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                            {item.docType === 'Košuljica spisa' && (
+                              <label className="inline-flex items-center gap-1.5 text-[11px] text-teal-800 bg-teal-50/80 border border-teal-200/80 rounded-md px-2 py-1 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(item.skipUpload)}
+                                  onChange={() => toggleQueuedFileSkipUpload(item.uid)}
+                                  className="rounded border-teal-300 text-teal-600 focus:ring-teal-500"
+                                />
+                                <span>
+                                  Koristi košuljicu samo za otvaranje predmeta (ne spremaj sken među dokumente spisa)
+                                </span>
+                              </label>
+                            )}
                           </div>
                         );
                       })}
@@ -471,7 +525,7 @@ export default function NewPredmetButton() {
                     {datumIzvor && (
                       <span
                         className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          datumIzvor.includes('štambilj')
+                          datumIzvor.includes('štambilj') || datumIzvor.includes('naljepnic')
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : 'bg-amber-50 text-amber-800 border border-amber-200'
                         }`}
@@ -529,16 +583,23 @@ export default function NewPredmetButton() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="napomena" className="text-xs font-semibold text-slate-700">
-                  Kratka interna bilješka (opcijski)
-                </label>
-                <input
-                  type="text"
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="napomena" className="text-xs font-semibold text-slate-700">
+                    Napomena s košuljice / interna bilješka (ulazi u AI analizu i nacrt)
+                  </label>
+                  {hasHandwrittenNote && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                      Pročitano iz rukopisa
+                    </span>
+                  )}
+                </div>
+                <textarea
                   id="napomena"
+                  rows={2}
                   value={napomena}
                   onChange={(e) => setNapomena(e.target.value)}
-                  placeholder="npr. Dostavljen spis povodom žalbe — provjeriti pravodobnost"
-                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="npr. zastara, NKD, sporno činjenično stanje — ili automatski pročitano s košuljice..."
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                 />
               </div>
 
