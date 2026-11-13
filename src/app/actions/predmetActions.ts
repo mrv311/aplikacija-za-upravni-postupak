@@ -588,7 +588,7 @@ export async function updateDatumPredajeZalbeAction(
 }
 
 /**
- * Evidentira i ažurira status slanja izravno podnesene žalbe tijelu prvog stupnja na nadležni postupak (čl. 110. st. 2. ZUP-a).
+ * Evidentira i ažurira status slanja izravno podnesene žalbe tijelu prvog stupnja na nadležni postupak (čl. 110. st. 1. ZUP-a).
  */
 export async function updateNadlezniPostupakAction(
   id: string,

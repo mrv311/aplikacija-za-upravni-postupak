@@ -125,7 +125,7 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
       <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/70 text-xs text-amber-900 dark:text-amber-200">
         <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Žalbe predane izravno Ministarstvu (čl. 110. st. 2. ZUP-a):</strong>{' '}
+          <strong>Žalbe predane izravno Ministarstvu (čl. 110. st. 1. ZUP-a):</strong>{' '}
           drugostupanjsko tijelo mora žalbu bez odgode poslati tijelu prvog stupnja na nadležni
           postupak. Ovdje pratite predmete koje je potrebno žurno otpremiti te one koji su već
           poslani i čekaju dostavu kompletnog spisa s očitovanjem.

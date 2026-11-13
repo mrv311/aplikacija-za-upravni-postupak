@@ -711,7 +711,7 @@ export default function NewPredmetButton({
                     </span>
                     <span className="text-[11px] text-slate-500 block mt-0.5">
                       Označite kad žalbu treba proslijediti tijelu prvog stupnja na nadležno
-                      postupanje po čl. 110. st. 2. ZUP-a.
+                      postupanje po čl. 110. st. 1. ZUP-a.
                     </span>
                   </div>
                 </label>
