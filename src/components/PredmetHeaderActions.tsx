@@ -20,12 +20,14 @@ import {
   CheckCircle2,
   Stamp,
   UserCheck,
+  Send,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
 import { LegalReviewModal } from '@/components/LegalReviewModal';
 import { ParafiranjeModal } from '@/components/ParafiranjeModal';
 import { SluzbeniciModal } from '@/components/SluzbeniciModal';
+import { NadlezniPostupakModal } from '@/components/NadlezniPostupakModal';
 import {
   archivePredmet,
   unarchivePredmet,
@@ -46,6 +48,7 @@ import {
   PREDMET_ISHODI,
   calculateZupDeadline,
   decodeDocLabel,
+  formatIsoDateHr,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from '@/components/StatusBadge';
 
@@ -58,6 +61,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [parafModalOpen, setParafModalOpen] = useState(false);
   const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
+  const [nadlezniModalOpen, setNadlezniModalOpen] = useState(false);
   const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -307,6 +311,45 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           </span>
         )}
 
+        {predmet.nadlezni_postupak_status === 'potrebno_poslati' && (
+          <button
+            type="button"
+            onClick={() => setNadlezniModalOpen(true)}
+            title="Žalba predana izravno Ministarstvu — kliknite za evidentiranje slanja I. stupnju"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 hover:bg-amber-200/80 text-amber-900 border border-amber-300 transition-colors cursor-pointer"
+          >
+            <Send className="w-3 h-3 text-amber-700" />
+            Potrebno poslati I. stupnju
+          </button>
+        )}
+
+        {predmet.nadlezni_postupak_status === 'poslano' && (
+          <button
+            type="button"
+            onClick={() => setNadlezniModalOpen(true)}
+            title="Predmet je na nadležnom postupku kod I. stupnja — kliknite za povrat u rad ili uređivanje"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
+          >
+            <Send className="w-3 h-3 text-emerald-600" />
+            Poslano I. stupnju
+            {predmet.nadlezni_postupak_datum_slanja
+              ? ` (${formatIsoDateHr(predmet.nadlezni_postupak_datum_slanja)})`
+              : ''}
+          </button>
+        )}
+
+        {predmet.nadlezni_postupak_status === 'vraceno' && (
+          <button
+            type="button"
+            onClick={() => setNadlezniModalOpen(true)}
+            title="Spis vraćen s nadležnog postupka I. stupnja"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3 text-blue-600" />
+            Vraćeno s I. stupnja
+          </button>
+        )}
+
         {isArchived && predmet.ishod && (
           <span
             className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
@@ -437,6 +480,23 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           <Pencil className="w-3.5 h-3.5 text-slate-500" />
           Uredi
         </button>
+
+        {!isArchived && (
+          <button
+            type="button"
+            onClick={() => setNadlezniModalOpen(true)}
+            title="Označi ili uredi slanje žalbe na nadležni postupak I. stupnju (čl. 110. ZUP)"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+              predmet.nadlezni_postupak_status === 'potrebno_poslati' ||
+              predmet.nadlezni_postupak_status === 'poslano'
+                ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <Send className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>Nadležni postupak</span>
+          </button>
+        )}
 
         {!isArchived ? (
           faza !== 'Na potpisu' && (
@@ -877,6 +937,16 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
       <SluzbeniciModal
         isOpen={sluzbeniciModalOpen}
         onClose={() => setSluzbeniciModalOpen(false)}
+      />
+
+      {/* Modal: Na nadležnom postupku (žalbe poslane izravno Ministarstvu) */}
+      <NadlezniPostupakModal
+        predmet={predmet}
+        isOpen={nadlezniModalOpen}
+        onClose={() => setNadlezniModalOpen(false)}
+        onUpdated={() => {
+          startTransition(() => router.refresh());
+        }}
       />
     </>
   );

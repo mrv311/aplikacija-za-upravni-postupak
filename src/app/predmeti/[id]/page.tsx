@@ -3,7 +3,7 @@ import { DocumentManager } from '@/components/DocumentManager';
 import { AiPanel } from '@/components/AiPanel';
 import { PredmetHeaderActions } from '@/components/PredmetHeaderActions';
 import { PredmetWorkspace } from '@/components/PredmetWorkspace';
-import { enrichPredmetRow } from '@/lib/predmet-meta';
+import { enrichPredmetRow, formatIsoDateHr } from '@/lib/predmet-meta';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -74,6 +74,25 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
                   <span className="text-blue-700 dark:text-blue-300 font-medium">
                     <strong>Žalba predana:</strong>{' '}
                     {new Date(predmet.datum_predaje_zalbe).toLocaleDateString('hr-HR')}
+                  </span>
+                </>
+              )}
+              {(predmet.nadlezni_postupak_status === 'potrebno_poslati' ||
+                predmet.nadlezni_postupak_status === 'poslano') && (
+                <>
+                  <span>&bull;</span>
+                  <span className="text-amber-700 dark:text-amber-300 font-semibold">
+                    <strong>Nadležni postupak:</strong>{' '}
+                    {predmet.nadlezni_postupak_status === 'potrebno_poslati'
+                      ? 'čeka slanje I. stupnju'
+                      : `poslano I. stupnju ${
+                          predmet.nadlezni_postupak_datum_slanja
+                            ? formatIsoDateHr(predmet.nadlezni_postupak_datum_slanja)
+                            : ''
+                        }`}
+                    {predmet.nadlezni_postupak_tijelo
+                      ? ` (${predmet.nadlezni_postupak_tijelo})`
+                      : ''}
                   </span>
                 </>
               )}

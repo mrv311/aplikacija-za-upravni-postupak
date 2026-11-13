@@ -23,6 +23,8 @@ import {
   UserCheck,
   Stamp,
   Plus,
+  Send,
+  RotateCcw,
 } from 'lucide-react';
 import {
   archivePredmet,
@@ -44,11 +46,13 @@ import {
   PREDMET_ISHODI,
   PARAF_STATUSI,
   calculateZupDeadline,
+  formatIsoDateHr,
   getInitials,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from './StatusBadge';
 import { SluzbeniciModal } from './SluzbeniciModal';
 import { ParafiranjeModal } from './ParafiranjeModal';
+import { NadlezniPostupakModal } from './NadlezniPostupakModal';
 
 export { getStatusBadge };
 export type Predmet = EnrichedPredmet;
@@ -73,6 +77,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
   const [parafModalItem, setParafModalItem] = useState<EnrichedPredmet | null>(null);
   const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
+  const [nadlezniModalItem, setNadlezniModalItem] = useState<EnrichedPredmet | null>(null);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -758,6 +763,15 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                             „{predmet.napomena}”
                           </p>
                         )}
+                        {predmet.nadlezni_postupak_status === 'vraceno' && (
+                          <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] font-semibold">
+                            <RotateCcw className="w-2.5 h-2.5" />
+                            Vraćeno s I. stupnja
+                            {predmet.nadlezni_postupak_datum_slanja
+                              ? ` (poslano ${formatIsoDateHr(predmet.nadlezni_postupak_datum_slanja)})`
+                              : ''}
+                          </span>
+                        )}
                       </td>
 
                       {/* Stranka */}
@@ -997,6 +1011,17 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           >
                             <Stamp className="w-3.5 h-3.5" />
                           </button>
+
+                          {type === 'aktivni' && (
+                            <button
+                              type="button"
+                              onClick={() => setNadlezniModalItem(predmet)}
+                              className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-transparent hover:border-amber-200 rounded-lg transition-colors cursor-pointer"
+                              title="Žalba poslana izravno Ministarstvu — prebaci u Na nadležnom postupku"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                            </button>
+                          )}
 
                           <button
                             type="button"
@@ -1436,6 +1461,39 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
         onClose={() => setSluzbeniciModalOpen(false)}
         predmeti={items}
         onUpdated={(updated) => setSluzbenici(updated)}
+      />
+
+      {/* MODAL 6: SLANJE ŽALBE NA NADLEŽNI POSTUPAK I. STUPNJU */}
+      <NadlezniPostupakModal
+        predmet={nadlezniModalItem}
+        isOpen={Boolean(nadlezniModalItem)}
+        onClose={() => setNadlezniModalItem(null)}
+        onUpdated={(updated) => {
+          setItems((prev) =>
+            prev.map((p) =>
+              p.id === updated.id
+                ? {
+                    ...p,
+                    nadlezni_postupak_status: updated.status,
+                    nadlezni_postupak_tijelo: updated.tijelo,
+                    nadlezni_postupak_datum_slanja: updated.datum_slanja,
+                    nadlezni_postupak_datum_povratka: updated.datum_povratka,
+                    nadlezni_postupak_napomena: updated.napomena,
+                  }
+                : p
+            )
+          );
+          if (updated.status === 'potrebno_poslati' || updated.status === 'poslano') {
+            setFeedback({
+              type: 'success',
+              message:
+                updated.status === 'potrebno_poslati'
+                  ? 'Predmet je premješten u karticu „Na nadležnom postupku” (čeka slanje I. stupnju).'
+                  : 'Slanje I. stupnju je evidentirano — predmet je u kartici „Na nadležnom postupku”.',
+            });
+          }
+          startTransition(() => router.refresh());
+        }}
       />
     </div>
   );

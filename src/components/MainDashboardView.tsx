@@ -26,11 +26,13 @@ import {
   Pencil,
   Trash2,
   RotateCcw,
+  Send,
 } from 'lucide-react';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
-import type { EnrichedPredmet } from '@/lib/predmet-meta';
+import { isNaNadleznomPostupku, type EnrichedPredmet } from '@/lib/predmet-meta';
 import type { ExtractedCourtCase } from '@/lib/court-packet-parser';
 import PredmetiTable from '@/components/PredmetiTable';
+import { NadlezniPostupakView } from '@/components/NadlezniPostupakView';
 import NewPredmetButton from '@/components/NewPredmetButton';
 import OdgovorNaTuzbuModal from '@/components/OdgovorNaTuzbuModal';
 import SporDualAnnulmentInfo from '@/components/SporDualAnnulmentInfo';
@@ -59,6 +61,26 @@ export default function MainDashboardView({
 }: MainDashboardViewProps) {
   // Top-level View Mode: 'zup' (default) or 'sporovi'
   const [mainView, setMainView] = useState<'sporovi' | 'zup'>('zup');
+  const [zupSubTab, setZupSubTab] = useState<'u_radu' | 'nadlezni'>('u_radu');
+
+  const { uRaduPredmeti, nadlezniAktivni, zaPoslatiCount } = useMemo(() => {
+    const uRadu: EnrichedPredmet[] = [];
+    const nadlezni: EnrichedPredmet[] = [];
+    let zaPoslati = 0;
+    for (const p of initialPredmeti) {
+      if (isNaNadleznomPostupku(p)) {
+        nadlezni.push(p);
+        if (p.nadlezni_postupak_status === 'potrebno_poslati') zaPoslati++;
+      } else {
+        uRadu.push(p);
+      }
+    }
+    return {
+      uRaduPredmeti: uRadu,
+      nadlezniAktivni: nadlezni,
+      zaPoslatiCount: zaPoslati,
+    };
+  }, [initialPredmeti]);
 
   // Sporovi state
   const [sporovi, setSporovi] = useState<UpravniSpor[]>(initialSporovi);
@@ -619,6 +641,11 @@ export default function MainDashboardView({
             <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">
               {initialPredmeti.length}
             </span>
+            {zaPoslatiCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/70">
+                {zaPoslatiCount} za poslati
+              </span>
+            )}
           </button>
 
           <button
@@ -2383,15 +2410,61 @@ export default function MainDashboardView({
                   Drugostupanjski upravni predmeti (ZUP)
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  Žalbeni predmeti u radu, praćenje zakonskog roka (60 dana - čl. 121. ZUP) i faze obrade
+                  Žalbeni predmeti u radu, praćenje zakonskog roka (60 dana - čl. 121. ZUP) i slanje izravnih žalbi na nadležni postupak
                 </p>
               </div>
             </div>
 
-            <NewPredmetButton />
+            <NewPredmetButton
+              defaultNadlezniStatus={zupSubTab === 'nadlezni' ? 'potrebno_poslati' : ''}
+            />
           </header>
 
-          <PredmetiTable initialPredmeti={initialPredmeti} type="aktivni" />
+          {/* Kartice unutar drugostupanjskih predmeta */}
+          <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 w-fit">
+            <button
+              type="button"
+              onClick={() => setZupSubTab('u_radu')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer ${
+                zupSubTab === 'u_radu'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+              }`}
+            >
+              <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>U radu (rješavanje)</span>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">
+                {uRaduPredmeti.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setZupSubTab('nadlezni')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer ${
+                zupSubTab === 'nadlezni'
+                  ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+              }`}
+            >
+              <Send className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>Na nadležnom postupku</span>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-semibold">
+                {nadlezniAktivni.length}
+              </span>
+              {zaPoslatiCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                  {zaPoslatiCount} za poslati
+                </span>
+              )}
+            </button>
+          </div>
+
+          {zupSubTab === 'u_radu' ? (
+            <PredmetiTable initialPredmeti={uRaduPredmeti} type="aktivni" />
+          ) : (
+            <NadlezniPostupakView predmeti={initialPredmeti} />
+          )}
         </div>
       )}
     </div>

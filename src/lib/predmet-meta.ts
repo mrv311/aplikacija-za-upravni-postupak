@@ -86,6 +86,64 @@ export function normalizeDateToIso(raw: string | undefined | null): string {
   return '';
 }
 
+/**
+ * Formatira ISO datum (YYYY-MM-DD) u čitljivi hrvatski zapis DD.MM.YYYY. bez pomaka vremenskih zona.
+ */
+export function formatIsoDateHr(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return `${isoMatch[3]}.${isoMatch[2]}.${isoMatch[1]}.`;
+  }
+  const d = new Date(trimmed);
+  return Number.isNaN(d.getTime()) ? trimmed : d.toLocaleDateString('hr-HR');
+}
+
+export type NadlezniPostupakStatus =
+  | ''
+  | 'potrebno_poslati'
+  | 'poslano'
+  | 'vraceno';
+
+export const NADLEZNI_POSTUPAK_STATUSI: {
+  value: Exclude<NadlezniPostupakStatus, ''>;
+  label: string;
+  shortLabel: string;
+  badgeClass: string;
+}[] = [
+  {
+    value: 'potrebno_poslati',
+    label: 'Potrebno žurno poslati tijelu I. stupnja (čl. 110. ZUP)',
+    shortLabel: 'Potrebno poslati',
+    badgeClass:
+      'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+  },
+  {
+    value: 'poslano',
+    label: 'Poslano I. stupnju na nadležni postupak (čeka povrat)',
+    shortLabel: 'Poslano I. stupnju',
+    badgeClass:
+      'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+  },
+  {
+    value: 'vraceno',
+    label: 'Spis vraćen s I. stupnja u drugostupanjsko rješavanje',
+    shortLabel: 'Vraćeno u rad',
+    badgeClass:
+      'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
+  },
+];
+
+export function isNaNadleznomPostupku(
+  predmet: Pick<EnrichedPredmet, 'nadlezni_postupak_status'>
+): boolean {
+  return (
+    predmet.nadlezni_postupak_status === 'potrebno_poslati' ||
+    predmet.nadlezni_postupak_status === 'poslano'
+  );
+}
+
 export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo' | (string & {});
 
 export const PREDMET_PODRUCJA: { value: PredmetPodrucje; label: string; fullLabel: string }[] = [
@@ -302,6 +360,12 @@ export interface PredmetExtendedMeta {
   interni_rok?: string;
   uputa_voditelja?: string;
   parafi?: ParafZapis[];
+  // Nadležni postupak (žalbe poslane izravno Ministarstvu -> slanje I. stupnju po čl. 110. ZUP-a)
+  nadlezni_postupak_status?: NadlezniPostupakStatus;
+  nadlezni_postupak_tijelo?: string;
+  nadlezni_postupak_datum_slanja?: string;
+  nadlezni_postupak_datum_povratka?: string;
+  nadlezni_postupak_napomena?: string;
 }
 
 export function encodePredmetMetaUrl(meta: PredmetExtendedMeta): string {
@@ -342,6 +406,12 @@ export interface EnrichedPredmet {
   interni_rok?: string;
   uputa_voditelja?: string;
   parafi: ParafZapis[];
+  // Nadležni postupak (žalbe poslane izravno Ministarstvu -> slanje I. stupnju)
+  nadlezni_postupak_status: NadlezniPostupakStatus;
+  nadlezni_postupak_tijelo?: string;
+  nadlezni_postupak_datum_slanja?: string;
+  nadlezni_postupak_datum_povratka?: string;
+  nadlezni_postupak_napomena?: string;
 }
 
 export function enrichPredmetRow(row: any): EnrichedPredmet {
@@ -396,6 +466,16 @@ export function enrichPredmetRow(row: any): EnrichedPredmet {
     interni_rok: meta.interni_rok || '',
     uputa_voditelja: meta.uputa_voditelja || '',
     parafi: Array.isArray(meta.parafi) ? meta.parafi : [],
+    nadlezni_postupak_status:
+      meta.nadlezni_postupak_status === 'potrebno_poslati' ||
+      meta.nadlezni_postupak_status === 'poslano' ||
+      meta.nadlezni_postupak_status === 'vraceno'
+        ? meta.nadlezni_postupak_status
+        : '',
+    nadlezni_postupak_tijelo: meta.nadlezni_postupak_tijelo || '',
+    nadlezni_postupak_datum_slanja: meta.nadlezni_postupak_datum_slanja || '',
+    nadlezni_postupak_datum_povratka: meta.nadlezni_postupak_datum_povratka || '',
+    nadlezni_postupak_napomena: meta.nadlezni_postupak_napomena || '',
   };
 }
 

@@ -19,6 +19,7 @@ import {
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
+  type NadlezniPostupakStatus,
   type Sluzbenik,
   type ParafZapis,
 } from '@/lib/predmet-meta';
@@ -153,6 +154,8 @@ Iz priloženog dokumenta (koji može biti **košuljica spisa s pisarničkom nalj
   "izvorDatumaZalbe": "prijamni štambilj I. stupnja" | "preporučena pošta" | "popratni dopis I. stupnja" | "izravno Ministarstvo" | "",
   "podrucje": "NUV" | "VD" | "NZZV" | "Ostalo",
   "vrstaDokumenta": "Košuljica spisa" | "Popratni dopis I. stupnja" | "Žalba" | "Prvostupanjsko rješenje" | "Dostavnica" | "Kompletni spis",
+  "izravnoMinistarstvu": true | false,
+  "tijeloPrvogStupnja": "npr. Hrvatske vode, VGI... ili ''",
   "rukopisnaNapomena": "doslovni prijepis svih rukom pisanih bilješki/napomena na košuljici ili dokumentu (ako ih nema, prazno '')",
   "napomena": "cjeloviti tekst rukopisne napomene ako postoji, inače kratki opis predmeta"
 }
@@ -186,7 +189,11 @@ PRAVILA ZA PODRUČJE ("podrucje"):
 - "NUV" za naknadu za uređenje voda (uključujući oznaku NUV na naljepnici ili tekstu),
 - "VD" za vodni doprinos (VD),
 - "NZZV" za naknadu za zaštitu voda (NZZV),
-- "Ostalo" za sve ostalo (npr. ako se iz košuljice ne vidi o kojoj je naknadi riječ, ostavi "Ostalo", a rukopisne kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").`;
+- "Ostalo" za sve ostalo (npr. ako se iz košuljice ne vidi o kojoj je naknadi riječ, ostavi "Ostalo", a rukopisne kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").
+
+PRAVILA ZA ŽALBE POSLANE IZRAVNO MINISTARSTVU ("izravnoMinistarstvu" i "tijeloPrvogStupnja"):
+- Postavi "izravnoMinistarstvu": true ako je iz dokumenta ili rukopisne bilješke na košuljici vidljivo da je žalba poslana/predana IZRAVNO Ministarstvu te je treba proslijediti prvostupanjskom tijelu na nadležni postupak (npr. rukopisna bilješka "na nadležni postupak", "nadležno postupanje", "čl. 110.", "izravno", "poslati HV", ili žalba naslovljena izravno na Ministarstvo bez popratnog dopisa I. stupnja); inače false.
+- Ako je iz dokumenta vidljiv naziv prvostupanjskog tijela (npr. "Hrvatske vode", "Hrvatske vode, VGI ...", "Grad Zagreb"), upiši ga u "tijeloPrvogStupnja", inače "".`;
 
 function resolveScanMediaType(fileName: string, providedMime?: string): string {
   if (providedMime && providedMime !== 'application/octet-stream') return providedMime;
@@ -306,6 +313,8 @@ export async function extractCaseInfoFromScan(formData: FormData) {
           : 'Ostalo') as PredmetPodrucje,
         vrstaDokumenta:
           parsed.vrstaDokumenta || guessDocRoleFromFilename(file.name),
+        izravnoMinistarstvu: Boolean(parsed.izravnoMinistarstvu),
+        tijeloPrvogStupnja: (parsed.tijeloPrvogStupnja || '').trim(),
         rukopisnaNapomena,
         napomena: combinedNapomena,
       },
@@ -332,6 +341,18 @@ export async function createPredmet(formData: FormData) {
   const sluzbenik_ime = ((formData.get('sluzbenik_ime') as string) || '').trim();
   const interni_rok = ((formData.get('interni_rok') as string) || '').trim();
   const uputa_voditelja = ((formData.get('uputa_voditelja') as string) || '').trim();
+  const nadlezniStatusRaw = ((formData.get('nadlezni_postupak_status') as string) || '').trim();
+  const nadlezniStatus: NadlezniPostupakStatus =
+    nadlezniStatusRaw === 'potrebno_poslati' ||
+    nadlezniStatusRaw === 'poslano' ||
+    nadlezniStatusRaw === 'vraceno'
+      ? nadlezniStatusRaw
+      : '';
+  const nadlezniTijelo = ((formData.get('nadlezni_postupak_tijelo') as string) || '').trim();
+  const nadlezniDatumSlanja = normalizeDateToIso(
+    (formData.get('nadlezni_postupak_datum_slanja') as string) || ''
+  );
+  const nadlezniNapomena = ((formData.get('nadlezni_postupak_napomena') as string) || '').trim();
 
   if (!klasa || !stranka || !datum) {
     return { error: 'KLASA, Stranka i Datum zaprimanja su obavezni.' };
@@ -359,12 +380,26 @@ export async function createPredmet(formData: FormData) {
 
     await upsertPredmetMeta(data.id, {
       podrucje,
-      faza: sluzbenik_ime ? 'U radu' : 'Novo',
+      faza:
+        nadlezniStatus === 'poslano'
+          ? 'Čeka dopunu'
+          : sluzbenik_ime
+          ? 'U radu'
+          : 'Novo',
       napomena,
       ...(datumPredajeZalbe
         ? {
             datum_predaje_zalbe: datumPredajeZalbe,
             datum_predaje_zalbe_izvor: datumPredajeZalbeIzvor || 'ručno',
+          }
+        : {}),
+      ...(nadlezniStatus
+        ? {
+            nadlezni_postupak_status: nadlezniStatus,
+            nadlezni_postupak_tijelo: nadlezniTijelo,
+            nadlezni_postupak_datum_slanja:
+              nadlezniStatus === 'poslano' ? nadlezniDatumSlanja || today : '',
+            nadlezni_postupak_napomena: nadlezniNapomena,
           }
         : {}),
       ...(sluzbenik_id ? { sluzbenik_id } : {}),
@@ -439,6 +474,11 @@ export async function updatePredmet(
     datum_dodjele?: string;
     interni_rok?: string;
     uputa_voditelja?: string;
+    nadlezni_postupak_status?: NadlezniPostupakStatus;
+    nadlezni_postupak_tijelo?: string;
+    nadlezni_postupak_datum_slanja?: string;
+    nadlezni_postupak_datum_povratka?: string;
+    nadlezni_postupak_napomena?: string;
   }
 ) {
   if (!id) return { error: 'ID predmeta je obavezan.' };
@@ -481,6 +521,29 @@ export async function updatePredmet(
       ...(payload.uputa_voditelja !== undefined
         ? { uputa_voditelja: payload.uputa_voditelja.trim() }
         : {}),
+      ...(payload.nadlezni_postupak_status !== undefined
+        ? { nadlezni_postupak_status: payload.nadlezni_postupak_status }
+        : {}),
+      ...(payload.nadlezni_postupak_tijelo !== undefined
+        ? { nadlezni_postupak_tijelo: payload.nadlezni_postupak_tijelo.trim() }
+        : {}),
+      ...(payload.nadlezni_postupak_datum_slanja !== undefined
+        ? {
+            nadlezni_postupak_datum_slanja:
+              normalizeDateToIso(payload.nadlezni_postupak_datum_slanja) ||
+              payload.nadlezni_postupak_datum_slanja.trim(),
+          }
+        : {}),
+      ...(payload.nadlezni_postupak_datum_povratka !== undefined
+        ? {
+            nadlezni_postupak_datum_povratka:
+              normalizeDateToIso(payload.nadlezni_postupak_datum_povratka) ||
+              payload.nadlezni_postupak_datum_povratka.trim(),
+          }
+        : {}),
+      ...(payload.nadlezni_postupak_napomena !== undefined
+        ? { nadlezni_postupak_napomena: payload.nadlezni_postupak_napomena.trim() }
+        : {}),
     });
 
     revalidatePath('/');
@@ -520,6 +583,83 @@ export async function updateDatumPredajeZalbeAction(
         err instanceof Error
           ? err.message
           : 'Greška pri spremanju datuma predaje žalbe.',
+    };
+  }
+}
+
+/**
+ * Evidentira i ažurira status slanja izravno podnesene žalbe tijelu prvog stupnja na nadležni postupak (čl. 110. st. 2. ZUP-a).
+ */
+export async function updateNadlezniPostupakAction(
+  id: string,
+  payload: {
+    status: NadlezniPostupakStatus;
+    tijelo?: string;
+    datum_slanja?: string;
+    datum_povratka?: string;
+    napomena?: string;
+  }
+): Promise<{ success?: boolean; error?: string }> {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await db
+      .from('dokumenti')
+      .select('storage_url')
+      .eq('predmet_id', id)
+      .eq('tip_dokumenta', META_DOC_TYPE)
+      .maybeSingle();
+
+    const current = existing ? decodePredmetMetaUrl(existing.storage_url) : {};
+    const status = payload.status;
+    const cleanedSlanje =
+      normalizeDateToIso(payload.datum_slanja) || (payload.datum_slanja || '').trim();
+    const cleanedPovratak =
+      normalizeDateToIso(payload.datum_povratka) || (payload.datum_povratka || '').trim();
+
+    const patch: Partial<PredmetExtendedMeta> = {
+      nadlezni_postupak_status: status,
+      nadlezni_postupak_tijelo:
+        status === '' ? '' : (payload.tijelo ?? current.nadlezni_postupak_tijelo ?? '').trim(),
+      nadlezni_postupak_napomena:
+        status === ''
+          ? ''
+          : (payload.napomena ?? current.nadlezni_postupak_napomena ?? '').trim(),
+    };
+
+    if (status === '') {
+      patch.nadlezni_postupak_datum_slanja = '';
+      patch.nadlezni_postupak_datum_povratka = '';
+    } else if (status === 'potrebno_poslati') {
+      patch.nadlezni_postupak_datum_slanja = '';
+      patch.nadlezni_postupak_datum_povratka = '';
+    } else if (status === 'poslano') {
+      patch.nadlezni_postupak_datum_slanja =
+        cleanedSlanje || current.nadlezni_postupak_datum_slanja || today;
+      patch.nadlezni_postupak_datum_povratka = '';
+      if (!current.faza || current.faza === 'Novo' || current.faza === 'U radu') {
+        patch.faza = 'Čeka dopunu';
+      }
+    } else if (status === 'vraceno') {
+      patch.nadlezni_postupak_datum_slanja =
+        cleanedSlanje || current.nadlezni_postupak_datum_slanja || '';
+      patch.nadlezni_postupak_datum_povratka = cleanedPovratak || today;
+      patch.faza = 'U radu';
+    }
+
+    await upsertPredmetMeta(id, patch);
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true };
+  } catch (err: unknown) {
+    return {
+      error:
+        err instanceof Error
+          ? err.message
+          : 'Greška pri spremanju statusa nadležnog postupka.',
     };
   }
 }

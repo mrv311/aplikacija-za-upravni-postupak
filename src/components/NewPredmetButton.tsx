@@ -16,6 +16,7 @@ import {
   Trash2,
   UserCheck,
   Users,
+  Send,
 } from 'lucide-react';
 import {
   createPredmet,
@@ -28,6 +29,7 @@ import {
   DOKUMENT_VRSTE,
   guessDocRoleFromFilename,
   formatBytes,
+  type NadlezniPostupakStatus,
   type PredmetPodrucje,
   type Sluzbenik,
 } from '@/lib/predmet-meta';
@@ -40,7 +42,11 @@ interface QueuedCaseFile {
   skipUpload?: boolean;
 }
 
-export default function NewPredmetButton() {
+export default function NewPredmetButton({
+  defaultNadlezniStatus = '',
+}: {
+  defaultNadlezniStatus?: NadlezniPostupakStatus;
+}) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +66,10 @@ export default function NewPredmetButton() {
   const [datumPredajeZalbeIzvor, setDatumPredajeZalbeIzvor] = useState('');
   const [napomena, setNapomena] = useState('');
   const [hasHandwrittenNote, setHasHandwrittenNote] = useState(false);
+  const [nadlezniStatus, setNadlezniStatus] = useState<NadlezniPostupakStatus>(defaultNadlezniStatus);
+  const [nadlezniTijelo, setNadlezniTijelo] = useState('Hrvatske vode');
+  const [nadlezniDatumSlanja, setNadlezniDatumSlanja] = useState(today);
+  const [nadlezniNapomena, setNadlezniNapomena] = useState('');
 
   // Delegiranje predmeta službeniku
   const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
@@ -89,6 +99,10 @@ export default function NewPredmetButton() {
     setDatumPredajeZalbeIzvor('');
     setNapomena('');
     setHasHandwrittenNote(false);
+    setNadlezniStatus(defaultNadlezniStatus);
+    setNadlezniTijelo('Hrvatske vode');
+    setNadlezniDatumSlanja(today);
+    setNadlezniNapomena('');
     setSluzbenikId('');
     setSluzbenikIme('');
     setInterniRok('');
@@ -151,6 +165,12 @@ export default function NewPredmetButton() {
         }
         if (res.extracted.rukopisnaNapomena) {
           setHasHandwrittenNote(true);
+        }
+        if (res.extracted.izravnoMinistarstvu && !nadlezniStatus) {
+          setNadlezniStatus('potrebno_poslati');
+        }
+        if (res.extracted.tijeloPrvogStupnja) {
+          setNadlezniTijelo(res.extracted.tijeloPrvogStupnja);
         }
 
         const dateNote = res.extracted.datumZaprimanja
@@ -262,6 +282,16 @@ export default function NewPredmetButton() {
     }
     formData.append('podrucje', podrucje);
     formData.append('napomena', napomena.trim());
+    if (nadlezniStatus) {
+      formData.append('nadlezni_postupak_status', nadlezniStatus);
+      formData.append('nadlezni_postupak_tijelo', nadlezniTijelo.trim());
+      if (nadlezniStatus === 'poslano') {
+        formData.append('nadlezni_postupak_datum_slanja', nadlezniDatumSlanja || today);
+      }
+      if (nadlezniNapomena.trim()) {
+        formData.append('nadlezni_postupak_napomena', nadlezniNapomena.trim());
+      }
+    }
     formData.append('sluzbenik_id', sluzbenikId);
     formData.append('sluzbenik_ime', sluzbenikIme);
     formData.append('interni_rok', interniRok);
@@ -310,7 +340,10 @@ export default function NewPredmetButton() {
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setNadlezniStatus(defaultNadlezniStatus);
+          setIsOpen(true);
+        }}
         className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer"
       >
         <Plus className="w-4 h-4" />
@@ -648,6 +681,112 @@ export default function NewPredmetButton() {
                   placeholder="npr. zastara, NKD, sporno činjenično stanje — ili automatski pročitano s košuljice..."
                   className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                 />
+              </div>
+
+              {/* Sekcija za žalbe poslane izravno Ministarstvu (Na nadležnom postupku) */}
+              <div
+                className={`p-3.5 rounded-xl border transition-colors space-y-2.5 ${
+                  nadlezniStatus
+                    ? 'bg-amber-50/70 border-amber-300'
+                    : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(nadlezniStatus)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNadlezniStatus('potrebno_poslati');
+                      } else {
+                        setNadlezniStatus('');
+                      }
+                    }}
+                    className="mt-0.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-amber-600" />
+                      Žalba poslana izravno Ministarstvu (kartica „Na nadležnom postupku”)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Označite kad žalbu treba proslijediti tijelu prvog stupnja na nadležno
+                      postupanje po čl. 110. st. 2. ZUP-a.
+                    </span>
+                  </div>
+                </label>
+
+                {nadlezniStatus && (
+                  <div className="pt-2 border-t border-amber-200/80 space-y-2.5">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNadlezniStatus('potrebno_poslati')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          nadlezniStatus === 'potrebno_poslati'
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                            : 'bg-white text-slate-700 border-slate-300 hover:border-amber-400'
+                        }`}
+                      >
+                        Potrebno žurno poslati I. stupnju
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNadlezniStatus('poslano')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          nadlezniStatus === 'poslano'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                            : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-400'
+                        }`}
+                      >
+                        Već poslano I. stupnju
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                          Tijelo prvog stupnja
+                        </label>
+                        <input
+                          type="text"
+                          value={nadlezniTijelo}
+                          onChange={(e) => setNadlezniTijelo(e.target.value)}
+                          placeholder="npr. Hrvatske vode, VGI..."
+                          className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        />
+                      </div>
+
+                      {nadlezniStatus === 'poslano' && (
+                        <div>
+                          <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                            Datum slanja I. stupnju
+                          </label>
+                          <input
+                            type="date"
+                            value={nadlezniDatumSlanja}
+                            onChange={(e) => setNadlezniDatumSlanja(e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <input
+                        type="text"
+                        value={nadlezniNapomena}
+                        onChange={(e) => setNadlezniNapomena(e.target.value)}
+                        placeholder={
+                          nadlezniStatus === 'poslano'
+                            ? 'Bilješka / klasa otpremnog dopisa (opcijski)...'
+                            : 'Kratka uputa za slanje I. stupnju (opcijski)...'
+                        }
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Sekcija za delegiranje predmeta službeniku u rad */}
