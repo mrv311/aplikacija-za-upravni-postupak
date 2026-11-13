@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useOptimistic, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Send,
   Clock,
@@ -13,6 +14,7 @@ import {
   Building2,
   AlertTriangle,
   Info,
+  Users,
 } from 'lucide-react';
 import {
   calculateZupDeadline,
@@ -21,6 +23,9 @@ import {
   type NadlezniPostupakStatus,
 } from '@/lib/predmet-meta';
 import { NadlezniPostupakModal } from './NadlezniPostupakModal';
+import { ParafiranjeModal } from './ParafiranjeModal';
+import { SluzbeniciModal } from './SluzbeniciModal';
+import { ObradjivacParafCell, useSluzbeniciList } from './ObradjivacParafCell';
 
 interface NadlezniPostupakViewProps {
   predmeti: EnrichedPredmet[];
@@ -40,9 +45,25 @@ function daysSinceIso(isoDate?: string): number | null {
 }
 
 export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [optimisticPredmeti, applyOptimisticPatch] = useOptimistic(
+    predmeti,
+    (state: EnrichedPredmet[], update: { id: string; patch: Partial<EnrichedPredmet> }) =>
+      state.map((p) => (p.id === update.id ? { ...p, ...update.patch } : p))
+  );
+
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('aktivno');
+  const [filterSluzbenik, setFilterSluzbenik] = useState<string>('sve');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortMode>('prioritet');
+
+  const [sluzbenici, setSluzbenici] = useSluzbeniciList();
+  const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
+  const [parafModalState, setParafModalState] = useState<{
+    predmet: EnrichedPredmet;
+    tab: 'paraf' | 'delegiranje';
+  } | null>(null);
   const [modalState, setModalState] = useState<{
     predmet: EnrichedPredmet;
     initialMode?: NadlezniPostupakStatus;
@@ -53,7 +74,7 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
     let poslanoCount = 0;
     let vracenoCount = 0;
 
-    for (const p of predmeti) {
+    for (const p of optimisticPredmeti) {
       if (p.nadlezni_postupak_status === 'potrebno_poslati') potrebnoPoslatiCount++;
       else if (p.nadlezni_postupak_status === 'poslano') poslanoCount++;
       else if (p.nadlezni_postupak_status === 'vraceno') vracenoCount++;
@@ -65,17 +86,27 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
       poslanoCount,
       vracenoCount,
     };
-  }, [predmeti]);
+  }, [optimisticPredmeti]);
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    const list = predmeti.filter((p) => {
+    const list = optimisticPredmeti.filter((p) => {
       const st = p.nadlezni_postupak_status;
       if (statusFilter === 'aktivno') {
         if (st !== 'potrebno_poslati' && st !== 'poslano') return false;
       } else if (st !== statusFilter) {
         return false;
+      }
+
+      if (filterSluzbenik !== 'sve') {
+        if (filterSluzbenik === '__nerasporedjeno__') {
+          if (p.sluzbenik_ime) return false;
+        } else {
+          const matchesSluzbenik =
+            p.sluzbenik_id === filterSluzbenik || p.sluzbenik_ime === filterSluzbenik;
+          if (!matchesSluzbenik) return false;
+        }
       }
 
       if (q) {
@@ -84,6 +115,8 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
           p.urbroj.toLowerCase().includes(q) ||
           p.stranka.toLowerCase().includes(q) ||
           (p.napomena || '').toLowerCase().includes(q) ||
+          (p.sluzbenik_ime || '').toLowerCase().includes(q) ||
+          (p.uputa_voditelja || '').toLowerCase().includes(q) ||
           (p.nadlezni_postupak_tijelo || '').toLowerCase().includes(q) ||
           (p.nadlezni_postupak_napomena || '').toLowerCase().includes(q);
         if (!matches) return false;
@@ -117,7 +150,7 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
     });
 
     return list;
-  }, [predmeti, statusFilter, search, sortBy]);
+  }, [optimisticPredmeti, statusFilter, filterSluzbenik, search, sortBy]);
 
   return (
     <div className="space-y-5">
@@ -222,12 +255,36 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Pretraži po klasi, stranci, tijelu I. stupnja ili bilješci..."
+            placeholder="Pretraži po klasi, stranci, službeniku, tijelu I. stupnja..."
             className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={filterSluzbenik}
+            onChange={(e) => setFilterSluzbenik(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="sve">Svi službenici</option>
+            <option value="__nerasporedjeno__">Neraspoređeno</option>
+            {sluzbenici.map((s) => (
+              <option key={s.id} value={s.imePrezime}>
+                Službenik: {s.imePrezime}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setSluzbeniciModalOpen(true)}
+            title="Uredi popis službenika u odjelu"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Službenici</span>
+          </button>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
@@ -264,6 +321,7 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
               <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                 <th className="px-4 py-3.5">KLASA / Područje</th>
                 <th className="px-4 py-3.5">Stranka / Žalitelj</th>
+                <th className="px-4 py-3.5">Obrađivač & Paraf</th>
                 <th className="px-4 py-3.5">Zaprimljeno (Min.) & ZUP rok</th>
                 <th className="px-4 py-3.5">Status slanja I. stupnju</th>
                 <th className="px-4 py-3.5 text-right">Akcije</th>
@@ -272,7 +330,7 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-sm">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center">
+                  <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-md mx-auto">
                       <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3">
                         <Send className="w-6 h-6" />
@@ -328,6 +386,14 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
                         >
                           {predmet.stranka || '-'}
                         </Link>
+                      </td>
+
+                      {/* Obrađivač (Delegiranje u rad) & Paraf */}
+                      <td className="px-4 py-3.5 align-top">
+                        <ObradjivacParafCell
+                          predmet={predmet}
+                          onOpenModal={(tab) => setParafModalState({ predmet, tab })}
+                        />
                       </td>
 
                       {/* Zaprimanje & ZUP rok */}
@@ -471,6 +537,45 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
         isOpen={Boolean(modalState)}
         initialMode={modalState?.initialMode}
         onClose={() => setModalState(null)}
+        onUpdated={(updated) => {
+          startTransition(() => {
+            applyOptimisticPatch({
+              id: updated.id,
+              patch: {
+                nadlezni_postupak_status: updated.status,
+                nadlezni_postupak_tijelo: updated.tijelo,
+                nadlezni_postupak_datum_slanja: updated.datum_slanja,
+                nadlezni_postupak_datum_povratka: updated.datum_povratka,
+                nadlezni_postupak_napomena: updated.napomena,
+              },
+            });
+            router.refresh();
+          });
+        }}
+      />
+
+      <ParafiranjeModal
+        predmet={parafModalState?.predmet || null}
+        isOpen={Boolean(parafModalState)}
+        initialTab={parafModalState?.tab || 'delegiranje'}
+        sluzbeniciList={sluzbenici}
+        onClose={() => setParafModalState(null)}
+        onManageSluzbenici={() => setSluzbeniciModalOpen(true)}
+        onUpdated={(patch) => {
+          if (!parafModalState) return;
+          const targetId = parafModalState.predmet.id;
+          startTransition(() => {
+            applyOptimisticPatch({ id: targetId, patch });
+            router.refresh();
+          });
+        }}
+      />
+
+      <SluzbeniciModal
+        isOpen={sluzbeniciModalOpen}
+        onClose={() => setSluzbeniciModalOpen(false)}
+        predmeti={optimisticPredmeti}
+        onUpdated={(updated) => setSluzbenici(updated)}
       />
     </div>
   );

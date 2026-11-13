@@ -20,7 +20,6 @@ import {
   Landmark,
   AlertTriangle,
   Users,
-  UserCheck,
   Stamp,
   Plus,
   Send,
@@ -33,26 +32,23 @@ import {
   updatePredmetFaza,
   deletePredmet,
   deleteMultiplePredmeti,
-  getSluzbeniciAction,
 } from '@/app/actions/predmetActions';
 import {
   type EnrichedPredmet,
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
-  type Sluzbenik,
   PREDMET_PODRUCJA,
   PREDMET_FAZE,
   PREDMET_ISHODI,
-  PARAF_STATUSI,
   calculateZupDeadline,
   formatIsoDateHr,
-  getInitials,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from './StatusBadge';
 import { SluzbeniciModal } from './SluzbeniciModal';
 import { ParafiranjeModal } from './ParafiranjeModal';
 import { NadlezniPostupakModal } from './NadlezniPostupakModal';
+import { ObradjivacParafCell, useSluzbeniciList } from './ObradjivacParafCell';
 
 export { getStatusBadge };
 export type Predmet = EnrichedPredmet;
@@ -73,7 +69,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [sortBy, setSortBy] = useState<'datum' | 'datum_stari' | 'hitnost' | 'stranka'>('datum');
 
   // Službenici & Parafiranje modali
-  const [sluzbenici, setSluzbenici] = useState<Sluzbenik[]>([]);
+  const [sluzbenici, setSluzbenici] = useSluzbeniciList();
   const [sluzbeniciModalOpen, setSluzbeniciModalOpen] = useState(false);
   const [parafModalItem, setParafModalItem] = useState<EnrichedPredmet | null>(null);
   const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
@@ -96,17 +92,6 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [archiveIshod, setArchiveIshod] = useState<PredmetIshod>('Odbijena žalba');
   const [archiveNapomena, setArchiveNapomena] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    getSluzbeniciAction().then(setSluzbenici);
-    const handleSluzbeniciUpdated = (e: Event) => {
-      const custom = e as CustomEvent<Sluzbenik[]>;
-      if (custom.detail) setSluzbenici(custom.detail);
-      else getSluzbeniciAction().then(setSluzbenici);
-    };
-    window.addEventListener('sluzbenici-updated', handleSluzbeniciUpdated);
-    return () => window.removeEventListener('sluzbenici-updated', handleSluzbeniciUpdated);
-  }, []);
 
   // Prečac na tipkovnici: Ctrl+K ili / za fokus tražilice
   useEffect(() => {
@@ -716,13 +701,6 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                   const fazaObj =
                     PREDMET_FAZE.find((f) => f.value === predmet.faza) || PREDMET_FAZE[0];
                   const ishodObj = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
-                  const latestParaf =
-                    Array.isArray(predmet.parafi) && predmet.parafi.length > 0
-                      ? predmet.parafi[0]
-                      : null;
-                  const latestParafStatus = latestParaf
-                    ? PARAF_STATUSI.find((s) => s.value === latestParaf.status) || PARAF_STATUSI[0]
-                    : null;
 
                   return (
                     <tr
@@ -786,89 +764,13 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
                       {/* Obrađivač (Delegirani službenik) & Parafiranje */}
                       <td className="px-4 py-3.5 align-top">
-                        <div className="flex flex-col items-start gap-1.5">
-                          {/* Zaduženi službenik */}
-                          {predmet.sluzbenik_ime ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setParafModalItem(predmet);
-                                setParafModalTab('delegiranje');
-                              }}
-                              title={
-                                predmet.uputa_voditelja
-                                  ? `Uputa: ${predmet.uputa_voditelja}`
-                                  : 'Kliknite za izmjenu zaduženog službenika ili upute'
-                              }
-                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-xs font-semibold transition-colors cursor-pointer"
-                            >
-                              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                                {getInitials(predmet.sluzbenik_ime)}
-                              </span>
-                              <span className="truncate max-w-36">{predmet.sluzbenik_ime}</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setParafModalItem(predmet);
-                                setParafModalTab('delegiranje');
-                              }}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
-                              title="Delegiraj predmet službeniku u rad"
-                            >
-                              <UserCheck className="w-3 h-3" />
-                              <span>Delegiraj u rad</span>
-                            </button>
-                          )}
-
-                          {/* Zadnji paraf ili gumb za parafiranje */}
-                          <div className="flex items-center gap-1 flex-wrap">
-                            {latestParaf && latestParafStatus ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setParafModalItem(predmet);
-                                  setParafModalTab('paraf');
-                                }}
-                                title={`${latestParaf.status}: ${latestParaf.vrsta_akta} (${new Date(
-                                  latestParaf.datum
-                                ).toLocaleDateString('hr-HR')})${
-                                  latestParaf.napomena ? ` — ${latestParaf.napomena}` : ''
-                                }`}
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:opacity-85 transition-opacity ${latestParafStatus.badgeClass}`}
-                              >
-                                <Stamp className="w-2.5 h-2.5 shrink-0" />
-                                <span className="truncate max-w-44">
-                                  {latestParaf.status === 'Parafirano'
-                                    ? 'Paraf:'
-                                    : latestParaf.status === 'Parafirano uz izmjene'
-                                    ? 'Paraf (izmj.):'
-                                    : 'Dorada:'}{' '}
-                                  {latestParaf.vrsta_akta}
-                                </span>
-                                {predmet.parafi.length > 1 && (
-                                  <span className="ml-0.5 opacity-80">
-                                    (+{predmet.parafi.length - 1})
-                                  </span>
-                                )}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setParafModalItem(predmet);
-                                  setParafModalTab('paraf');
-                                }}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold transition-colors cursor-pointer"
-                                title="Evidentiraj paraf dopisa ili rješenja u ovom predmetu"
-                              >
-                                <Stamp className="w-2.5 h-2.5" />
-                                <span>+ Evidentiraj paraf</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                        <ObradjivacParafCell
+                          predmet={predmet}
+                          onOpenModal={(tab) => {
+                            setParafModalItem(predmet);
+                            setParafModalTab(tab);
+                          }}
+                        />
                       </td>
 
                       {/* Dokumenti u spisu */}
