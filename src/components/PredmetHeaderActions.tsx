@@ -71,6 +71,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [stranka, setStranka] = useState(predmet.stranka);
   const [podrucje, setPodrucje] = useState<PredmetPodrucje>(predmet.podrucje);
   const [datumZaprimanja, setDatumZaprimanja] = useState(predmet.datum_zaprimanja);
+  const [datumPredajeZalbe, setDatumPredajeZalbe] = useState(predmet.datum_predaje_zalbe || '');
   const [napomena, setNapomena] = useState(predmet.napomena || '');
   const [ishod, setIshod] = useState<PredmetIshod>(predmet.ishod || 'Odbijena žalba');
 
@@ -92,7 +93,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   }, []);
 
   const isArchived = predmet.status === 'arhiviran';
-  const deadline = !isArchived ? calculateZupDeadline(predmet.datum_zaprimanja) : null;
+  const deadline = !isArchived ? calculateZupDeadline(predmet.datum_predaje_zalbe) : null;
   const fazaMeta = PREDMET_FAZE.find((f) => f.value === faza) || PREDMET_FAZE[0];
   const ishodMeta = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
 
@@ -185,6 +186,13 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
       urbroj,
       stranka,
       datum_zaprimanja: datumZaprimanja,
+      datum_predaje_zalbe: datumPredajeZalbe,
+      datum_predaje_zalbe_izvor:
+        datumPredajeZalbe !== (predmet.datum_predaje_zalbe || '')
+          ? datumPredajeZalbe
+            ? 'ručno'
+            : ''
+          : predmet.datum_predaje_zalbe_izvor,
       podrucje,
       faza,
       ishod: isArchived ? ishod : predmet.ishod,
@@ -276,7 +284,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         {/* ZUP rok ili Ishod */}
         {!isArchived && deadline && (
           <span
-            title={`Zakonski rok (60 dana, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
+            title={`Zakonski rok (60 dana od predaje žalbe, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
               deadline.urgency === 'overdue'
                 ? 'bg-rose-50 text-rose-700 border-rose-200'
@@ -287,6 +295,15 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           >
             <Clock className="w-3.5 h-3.5" />
             {deadline.label}
+          </span>
+        )}
+        {!isArchived && !deadline && (
+          <span
+            title="Rok od 60 dana počinje teći od dana predaje žalbe; unesite ga u traci ispod ili kroz Uredi nakon učitavanja spisa."
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"
+          >
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            Čeka datum predaje žalbe
           </span>
         )}
 
@@ -405,6 +422,13 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         <button
           type="button"
           onClick={() => {
+            setKlasa(predmet.klasa);
+            setUrbroj(predmet.urbroj);
+            setStranka(predmet.stranka);
+            setPodrucje(predmet.podrucje);
+            setDatumZaprimanja(predmet.datum_zaprimanja);
+            setDatumPredajeZalbe(predmet.datum_predaje_zalbe || '');
+            setNapomena(predmet.napomena || '');
             setErrorMsg(null);
             setEditOpen(true);
           }}
@@ -538,7 +562,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Datum primitka
+                    Datum primitka (Ministarstvo)
                   </label>
                   <input
                     type="date"
@@ -547,6 +571,22 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Datum predaje žalbe (početak roka 60 dana)
+                </label>
+                <input
+                  type="date"
+                  value={datumPredajeZalbe}
+                  onChange={(e) => setDatumPredajeZalbe(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Rok po čl. 121. ZUP-a računa se od dana predaje žalbe (ostavite prazno ako još
+                  nije vidljivo iz spisa).
+                </p>
               </div>
 
               <div>

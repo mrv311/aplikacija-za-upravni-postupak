@@ -56,6 +56,8 @@ export default function NewPredmetButton() {
   const [podrucje, setPodrucje] = useState<PredmetPodrucje>('NUV');
   const [datumPrimitka, setDatumPrimitka] = useState(today);
   const [datumIzvor, setDatumIzvor] = useState<string>('');
+  const [datumPredajeZalbe, setDatumPredajeZalbe] = useState('');
+  const [datumPredajeZalbeIzvor, setDatumPredajeZalbeIzvor] = useState('');
   const [napomena, setNapomena] = useState('');
   const [hasHandwrittenNote, setHasHandwrittenNote] = useState(false);
 
@@ -83,6 +85,8 @@ export default function NewPredmetButton() {
     setPodrucje('NUV');
     setDatumPrimitka(today);
     setDatumIzvor('');
+    setDatumPredajeZalbe('');
+    setDatumPredajeZalbeIzvor('');
     setNapomena('');
     setHasHandwrittenNote(false);
     setSluzbenikId('');
@@ -122,6 +126,10 @@ export default function NewPredmetButton() {
           setDatumPrimitka(res.extracted.datumZaprimanja);
           setDatumIzvor(res.extracted.izvorDatuma || 'prijamni štambilj');
         }
+        if (res.extracted.datumPredajeZalbe) {
+          setDatumPredajeZalbe(res.extracted.datumPredajeZalbe);
+          setDatumPredajeZalbeIzvor(res.extracted.izvorDatumaZalbe || 'iz spisa');
+        }
         if (res.extracted.podrucje) setPodrucje(res.extracted.podrucje);
         if (res.extracted.vrstaDokumenta) {
           const detectedRole = res.extracted.vrstaDokumenta;
@@ -146,13 +154,16 @@ export default function NewPredmetButton() {
         }
 
         const dateNote = res.extracted.datumZaprimanja
-          ? ` (datum primitka: ${new Date(res.extracted.datumZaprimanja).toLocaleDateString('hr-HR')}${
+          ? ` (zaprimljeno: ${new Date(res.extracted.datumZaprimanja).toLocaleDateString('hr-HR')}${
               res.extracted.izvorDatuma ? ` — ${res.extracted.izvorDatuma}` : ''
             })`
           : '';
+        const appealNote = res.extracted.datumPredajeZalbe
+          ? ` · predaja žalbe: ${new Date(res.extracted.datumPredajeZalbe).toLocaleDateString('hr-HR')}`
+          : '';
         const handNote = res.extracted.rukopisnaNapomena ? ' i rukopisnu napomenu' : '';
         setScanSuccessMsg(
-          `AI je pročitao dokument „${target.file.name}”${dateNote}${handNote} te popunio polja predmeta.`
+          `AI je pročitao dokument „${target.file.name}”${dateNote}${appealNote}${handNote} te popunio polja predmeta.`
         );
       }
     } catch {
@@ -245,6 +256,10 @@ export default function NewPredmetButton() {
     formData.append('klasa', klasa.trim());
     formData.append('stranka', stranka.trim());
     formData.append('datum_primitka', datumPrimitka);
+    if (datumPredajeZalbe.trim()) {
+      formData.append('datum_predaje_zalbe', datumPredajeZalbe.trim());
+      formData.append('datum_predaje_zalbe_izvor', datumPredajeZalbeIzvor || 'ručno');
+    }
     formData.append('podrucje', podrucje);
     formData.append('napomena', napomena.trim());
     formData.append('sluzbenik_id', sluzbenikId);
@@ -520,7 +535,7 @@ export default function NewPredmetButton() {
                       htmlFor="datum_primitka"
                       className="text-xs font-semibold text-slate-700"
                     >
-                      Datum zaprimanja (štambilj) *
+                      Zaprimanje u Ministarstvu (štambilj) *
                     </label>
                     {datumIzvor && (
                       <span
@@ -546,6 +561,38 @@ export default function NewPredmetButton() {
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-1">
+                  <label
+                    htmlFor="datum_predaje_zalbe"
+                    className="text-xs font-semibold text-slate-700"
+                  >
+                    Datum predaje žalbe — početak ZUP roka (60 d.)
+                  </label>
+                  {datumPredajeZalbeIzvor && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <Stamp className="w-2.5 h-2.5" />
+                      {datumPredajeZalbeIzvor}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="date"
+                  id="datum_predaje_zalbe"
+                  value={datumPredajeZalbe}
+                  onChange={(e) => {
+                    setDatumPredajeZalbe(e.target.value);
+                    setDatumPredajeZalbeIzvor('');
+                  }}
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Opcionalno: ako otvarate predmet samo iz košuljice spisa, ostavite prazno. Rok od
+                  60 dana računa se tek od predaje žalbe (automatski će se očitati kad naknadno
+                  učitate sken spisa ili ga možete ručno upisati).
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">

@@ -15,6 +15,7 @@ import {
   decodeDocLabel,
   encodePredmetMetaUrl,
   decodePredmetMetaUrl,
+  normalizeDateToIso,
   type IzvorTekstaTip,
   type PredmetPodrucje,
   type PredmetIshod,
@@ -134,6 +135,115 @@ function sanitizeStorageFileName(originalName: string): string {
   return cleaned.slice(-90) || 'dokument.pdf';
 }
 
+const APPEAL_DATE_PROMPT = `Ti si pravni asistent za drugostupanjski upravni postupak (čl. 121. st. 1. ZUP-a).
+Zadatak: iz teksta učitanog upravnog dokumenta utvrdi TOČAN DATUM KADA JE ŽALITELJ PREDAO ŽALBU (od tog dana počinje teći zakonski rok od 60 dana).
+
+STROGA PRAVILA:
+1. Traži datum na prijamnom štambilju PRVOSTUPANJSKOG TIJELA (Hrvatske vode, Grad Zagreb itd.) na samoj žalbi, datum predaje preporučene pošiljke pošti, ili izričiti navod u popratnom dopisu I. stupnja (npr. "stranka je dana ... podnijela žalbu", "žalba zaprimljena dana ...").
+2. Ako je žalba predana IZRAVNO Ministarstvu (nema štambilja prvostupanjskog tijela, a na samoj žalbi je prijamni štambilj Ministarstva), uzmi taj datum.
+3. STROGO PAZI DA NE ZAMIJENIŠ datum predaje žalbe s:
+   - datumom donošenja prvostupanjskog rješenja protiv kojeg se izjavljuje žalba,
+   - datumom kada je Ministarstvo NAKNADNO zaprimilo spis od Hrvatskih voda!
+4. Ako dokument ne sadrži pouzdan datum predaje žalbe (npr. samo je prvostupanjsko rješenje bez žalbe/dopisa ili košuljica Ministarstva), vrati "".
+
+Vrati ISKLJUČIVO valjani JSON:
+{
+  "datumPredajeZalbe": "YYYY-MM-DD ili ''",
+  "izvor": "prijamni štambilj I. stupnja" | "preporučena pošta" | "popratni dopis I. stupnja" | "izravno Ministarstvo" | ""
+}`;
+
+function buildAppealDateSnippet(rawText: string): string {
+  if (rawText.length <= 12000) return rawText;
+  const chunks: string[] = [rawText.slice(0, 6000)];
+  const regex = /(?:žalb|štambilj|primljen|zaprimljen|predan|preporuč|pošt)/gi;
+  let match: RegExpExecArray | null;
+  let lastEnd = 6000;
+  while ((match = regex.exec(rawText)) !== null && chunks.join('\n').length < 13000) {
+    if (match.index < lastEnd) continue;
+    const start = Math.max(lastEnd, match.index - 200);
+    const end = Math.min(rawText.length, match.index + 500);
+    chunks.push(rawText.slice(start, end));
+    lastEnd = end;
+  }
+  return chunks.join('\n...\n').slice(0, 14000);
+}
+
+async function tryDetectAndSaveAppealDate(
+  predmetId: string,
+  tipDokumenta: string,
+  rawText: string
+): Promise<{ datumPredajeZalbe: string; izvor: string } | null> {
+  const roleLower = tipDokumenta.toLowerCase();
+  if (
+    roleLower.includes('košulj') ||
+    roleLower.includes('kosulj') ||
+    roleLower.includes('drugostup') ||
+    roleLower.includes('odgovor na tužb')
+  ) {
+    return null;
+  }
+
+  try {
+    const { data: metaDoc } = await db
+      .from('dokumenti')
+      .select('id, storage_url')
+      .eq('predmet_id', predmetId)
+      .eq('tip_dokumenta', META_DOC_TYPE)
+      .maybeSingle();
+
+    const currentMeta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+    if (currentMeta.datum_predaje_zalbe) {
+      return null;
+    }
+
+    const snippet = buildAppealDateSnippet(rawText);
+    const { text } = await generateText({
+      model: google('gemini-3.8-flash'),
+      system: APPEAL_DATE_PROMPT,
+      prompt: `Vrsta dokumenta: ${tipDokumenta}\n\nSadržaj dokumenta:\n${snippet}`,
+    });
+
+    const cleanedRaw = (text || '')
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```$/i, '')
+      .trim();
+    const firstBrace = cleanedRaw.indexOf('{');
+    const lastBrace = cleanedRaw.lastIndexOf('}');
+    const cleaned =
+      firstBrace !== -1 && lastBrace > firstBrace
+        ? cleanedRaw.slice(firstBrace, lastBrace + 1)
+        : cleanedRaw;
+
+    const parsed = JSON.parse(cleaned);
+    const isoDate = normalizeDateToIso(parsed.datumPredajeZalbe);
+    if (!isoDate) return null;
+
+    const izvor = (parsed.izvor || '').trim() || 'učitani spis';
+    const mergedUrl = encodePredmetMetaUrl({
+      ...currentMeta,
+      datum_predaje_zalbe: isoDate,
+      datum_predaje_zalbe_izvor: izvor,
+    });
+
+    if (metaDoc?.id) {
+      await db.from('dokumenti').update({ storage_url: mergedUrl }).eq('id', metaDoc.id);
+    } else {
+      await db.from('dokumenti').insert({
+        predmet_id: predmetId,
+        tip_dokumenta: META_DOC_TYPE,
+        storage_url: mergedUrl,
+        raw_text: '',
+      });
+    }
+
+    return { datumPredajeZalbe: isoDate, izvor };
+  } catch (err) {
+    console.warn('Napomena: automatska detekcija datuma predaje žalbe preskočena:', err);
+    return null;
+  }
+}
+
 export async function uploadAndParseDocument(formData: FormData) {
   const file = formData.get('file') as File | null;
   const predmetId = formData.get('predmetId') as string;
@@ -198,14 +308,23 @@ export async function uploadAndParseDocument(formData: FormData) {
       return { error: `Greška pri upisu dokumenta u bazu: ${dbError.message}` };
     }
 
+    const detectedAppealDate = await tryDetectAndSaveAppealDate(
+      predmetId,
+      tipDokumenta,
+      parsedResult.rawText
+    );
+
     revalidatePath('/');
     revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
     revalidatePath(`/predmeti/${predmetId}`);
 
     return {
       success: true,
       doc: insertedDoc,
       izvorTeksta: parsedResult.izvorTeksta,
+      detectedDatumPredajeZalbe: detectedAppealDate?.datumPredajeZalbe || null,
+      detectedDatumIzvor: detectedAppealDate?.izvor || null,
     };
   } catch (err: any) {
     console.error('uploadAndParseDocument Error:', err);

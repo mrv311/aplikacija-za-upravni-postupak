@@ -1071,28 +1071,34 @@ export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }:
                       </td>
 
                       <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
-                        {duration.days} dana
+                        {duration.hasAppealDate ? `${duration.days} dana` : '—'}
                       </td>
 
                       <td className="py-3 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            duration.isOverdue
-                              ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
-                              : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
-                          }`}
-                        >
-                          {duration.isOverdue ? (
-                            <>
-                              <AlertTriangle className="w-3 h-3 shrink-0" />
-                              Prekoračeno (+{duration.days - 60} d.)
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-3 h-3 shrink-0" />U roku
-                            </>
-                          )}
-                        </span>
+                        {!duration.hasAppealDate ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                            Čeka datum predaje žalbe
+                          </span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              duration.isOverdue
+                                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
+                            }`}
+                          >
+                            {duration.isOverdue ? (
+                              <>
+                                <AlertTriangle className="w-3 h-3 shrink-0" />
+                                Prekoračeno (+{duration.days - 60} d.)
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-3 h-3 shrink-0" />U roku
+                              </>
+                            )}
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-3 px-4">

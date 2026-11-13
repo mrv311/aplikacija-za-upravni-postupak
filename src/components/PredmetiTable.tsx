@@ -148,7 +148,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
     for (const p of items) {
       if (type === 'aktivni') {
-        const dl = calculateZupDeadline(p.datum_zaprimanja);
+        const dl = calculateZupDeadline(p.datum_predaje_zalbe);
         if (dl && (dl.urgency === 'overdue' || dl.urgency === 'warning')) urgentCount++;
         if (p.faza === 'Čeka dopunu') cekaDopunuCount++;
         if (p.faza === 'Na potpisu') naPotpisuCount++;
@@ -201,7 +201,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       if (type === 'aktivni') {
         if (filterSecondary !== 'sve' && p.faza !== filterSecondary) return false;
         if (onlyUrgent) {
-          const dl = calculateZupDeadline(p.datum_zaprimanja);
+          const dl = calculateZupDeadline(p.datum_predaje_zalbe);
           if (!dl || dl.urgency === 'normal') return false;
         }
       } else {
@@ -216,8 +216,8 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
         return (a.stranka || '').localeCompare(b.stranka || '', 'hr');
       }
       if (sortBy === 'hitnost') {
-        const da = calculateZupDeadline(a.datum_zaprimanja)?.daysRemaining ?? 999;
-        const db = calculateZupDeadline(b.datum_zaprimanja)?.daysRemaining ?? 999;
+        const da = calculateZupDeadline(a.datum_predaje_zalbe)?.daysRemaining ?? 999;
+        const db = calculateZupDeadline(b.datum_predaje_zalbe)?.daysRemaining ?? 999;
         return da - db;
       }
       if (sortBy === 'datum_stari') {
@@ -325,6 +325,8 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       urbroj: editingItem.urbroj,
       stranka: editingItem.stranka,
       datum_zaprimanja: editingItem.datum_zaprimanja,
+      datum_predaje_zalbe: editingItem.datum_predaje_zalbe || '',
+      datum_predaje_zalbe_izvor: editingItem.datum_predaje_zalbe_izvor,
       podrucje: editingItem.podrucje,
       faza: editingItem.faza,
       ishod: editingItem.ishod,
@@ -658,7 +660,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                 <th className="px-4 py-3.5">Spis</th>
                 {type === 'aktivni' ? (
                   <>
-                    <th className="px-4 py-3.5">Primitak & ZUP rok</th>
+                    <th className="px-4 py-3.5">Zaprimanje & ZUP rok</th>
                     <th className="px-4 py-3.5">Faza rada</th>
                   </>
                 ) : (
@@ -705,7 +707,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                 filteredItems.map((predmet) => {
                   const isRowLoading = loadingId === predmet.id;
                   const deadline =
-                    type === 'aktivni' ? calculateZupDeadline(predmet.datum_zaprimanja) : null;
+                    type === 'aktivni' ? calculateZupDeadline(predmet.datum_predaje_zalbe) : null;
                   const fazaObj =
                     PREDMET_FAZE.find((f) => f.value === predmet.faza) || PREDMET_FAZE[0];
                   const ishodObj = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
@@ -878,26 +880,45 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
                       {type === 'aktivni' ? (
                         <>
-                          {/* Primitak & ZUP rok 60 dana */}
+                          {/* Primitak u Ministarstvu, predaja žalbe & ZUP rok 60 dana */}
                           <td className="px-4 py-3.5 align-top whitespace-nowrap">
-                            <p className="text-xs text-slate-600 font-medium">
+                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                              <span className="text-[10px] text-slate-400 mr-1">Min.:</span>
                               {predmet.datum_zaprimanja
                                 ? new Date(predmet.datum_zaprimanja).toLocaleDateString('hr-HR')
                                 : '-'}
                             </p>
-                            {deadline && (
+                            {predmet.datum_predaje_zalbe ? (
+                              <>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                  <span className="text-[10px] text-slate-400 mr-1">Žalba:</span>
+                                  {/^\d{4}-\d{2}-\d{2}$/.test(predmet.datum_predaje_zalbe)
+                                    ? `${predmet.datum_predaje_zalbe.split('-').reverse().join('.')}.`
+                                    : new Date(predmet.datum_predaje_zalbe).toLocaleDateString('hr-HR')}
+                                </p>
+                                {deadline && (
+                                  <span
+                                    title={`Zakonski rok (60 dana od predaje žalbe, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
+                                    className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                                      deadline.urgency === 'overdue'
+                                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                        : deadline.urgency === 'warning'
+                                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    }`}
+                                  >
+                                    <Clock className="w-3 h-3" />
+                                    {deadline.label}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
                               <span
-                                title={`Zakonski rok (60 dana, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
-                                className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                                  deadline.urgency === 'overdue'
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : deadline.urgency === 'warning'
-                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                }`}
+                                title="Zakonski rok od 60 dana počinje teći od predaje žalbe (ne od zaprimanja u Ministarstvu)"
+                                className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                               >
-                                <Clock className="w-3 h-3" />
-                                {deadline.label}
+                                <Clock className="w-3 h-3 text-slate-400" />
+                                Čeka datum žalbe
                               </span>
                             )}
                           </td>
@@ -1119,7 +1140,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Datum primitka
+                    Datum primitka (Ministarstvo)
                   </label>
                   <input
                     type="date"
@@ -1130,6 +1151,27 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Datum predaje žalbe (početak roka 60 dana)
+                </label>
+                <input
+                  type="date"
+                  value={editingItem.datum_predaje_zalbe || ''}
+                  onChange={(e) =>
+                    setEditingItem({
+                      ...editingItem,
+                      datum_predaje_zalbe: e.target.value,
+                      datum_predaje_zalbe_izvor: e.target.value ? 'ručno' : '',
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Ostavite prazno dok datum predaje žalbe nije poznat (čl. 121. ZUP-a).
+                </p>
               </div>
 
               {type === 'arhiva' && (

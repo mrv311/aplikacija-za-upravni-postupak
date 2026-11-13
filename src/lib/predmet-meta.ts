@@ -68,6 +68,24 @@ export function getInitials(imePrezime: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
+/**
+ * Pretvara pročitani datum (YYYY-MM-DD, DD.MM.YYYY., DD. MM. YYYY. ili DD/MM/YYYY) u ISO YYYY-MM-DD.
+ */
+export function normalizeDateToIso(raw: string | undefined | null): string {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+
+  const match = trimmed.match(/(\d{1,2})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{4})/);
+  if (match) {
+    const day = match[1].padStart(2, '0');
+    const month = match[2].padStart(2, '0');
+    const year = match[3];
+    return `${year}-${month}-${day}`;
+  }
+  return '';
+}
+
 export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo' | (string & {});
 
 export const PREDMET_PODRUCJA: { value: PredmetPodrucje; label: string; fullLabel: string }[] = [
@@ -273,6 +291,8 @@ export interface PredmetExtendedMeta {
   ishod?: PredmetIshod;
   datum_rjesavanja?: string;
   datum_slanja_na_potpis?: string;
+  datum_predaje_zalbe?: string; // Početak zakonskog ZUP roka (60 dana od predaje žalbe I. stupnju ili izravno II. stupnju)
+  datum_predaje_zalbe_izvor?: string;
   napomena?: string;
   poslano_u_praksu?: boolean;
   // Delegiranje službeniku i evidencija parafa
@@ -309,6 +329,8 @@ export interface EnrichedPredmet {
   ishod?: PredmetIshod;
   datum_rjesavanja?: string;
   datum_slanja_na_potpis?: string;
+  datum_predaje_zalbe?: string; // Početak zakonskog ZUP roka (60 dana od predaje žalbe I. stupnju ili izravno II. stupnju)
+  datum_predaje_zalbe_izvor?: string;
   napomena?: string;
   poslano_u_praksu?: boolean;
   broj_dokumenata: number;
@@ -362,6 +384,8 @@ export function enrichPredmetRow(row: any): EnrichedPredmet {
     ishod: meta.ishod,
     datum_rjesavanja: meta.datum_rjesavanja,
     datum_slanja_na_potpis: meta.datum_slanja_na_potpis,
+    datum_predaje_zalbe: meta.datum_predaje_zalbe || '',
+    datum_predaje_zalbe_izvor: meta.datum_predaje_zalbe_izvor || '',
     napomena: meta.napomena || '',
     poslano_u_praksu: Boolean(meta.poslano_u_praksu),
     broj_dokumenata: realDocs.length,
@@ -384,14 +408,16 @@ export interface ZupDeadlineInfo {
 }
 
 /**
- * Zakonski rok za donošenje i dostavu drugostupanjskog rješenja (čl. 121. ZUP-a: 60 dana od predaje uredne žalbe).
+ * Zakonski rok za donošenje i dostavu drugostupanjskog rješenja (čl. 121. st. 1. ZUP-a: 60 dana od dana predaje uredne žalbe).
+ * Računa se isključivo od datuma predaje žalbe (prvostupanjskom tijelu ili izravno drugostupanjskom),
+ * a ne od naknadnog primitka spisa u Ministarstvu. Ako datum predaje žalbe još nije unesen, vraća null.
  */
 export function calculateZupDeadline(
-  datumZaprimanja: string | null | undefined,
+  datumPredajeZalbe: string | null | undefined,
   rokDana = 60
 ): ZupDeadlineInfo | null {
-  if (!datumZaprimanja) return null;
-  const received = new Date(datumZaprimanja);
+  if (!datumPredajeZalbe) return null;
+  const received = new Date(datumPredajeZalbe);
   if (Number.isNaN(received.getTime())) return null;
 
   const now = new Date();

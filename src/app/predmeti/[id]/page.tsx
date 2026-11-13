@@ -63,8 +63,17 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
                 <>
                   <span>&bull;</span>
                   <span>
-                    <strong>Primljeno:</strong>{' '}
+                    <strong>Primljeno (Ministarstvo):</strong>{' '}
                     {new Date(predmet.datum_zaprimanja).toLocaleDateString('hr-HR')}
+                  </span>
+                </>
+              )}
+              {predmet.datum_predaje_zalbe && (
+                <>
+                  <span>&bull;</span>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">
+                    <strong>Žalba predana:</strong>{' '}
+                    {new Date(predmet.datum_predaje_zalbe).toLocaleDateString('hr-HR')}
                   </span>
                 </>
               )}

@@ -162,6 +162,7 @@ export function DocumentManager({
 
     let successCount = 0;
     let ocrCount = 0;
+    let detectedAppealInfo: { date: string; izvor: string } | null = null;
 
     try {
       for (let i = 0; i < queuedFiles.length; i++) {
@@ -181,6 +182,12 @@ export function DocumentManager({
         }
         successCount++;
         if (result.izvorTeksta === 'OCR sken') ocrCount++;
+        if (!detectedAppealInfo && result.detectedDatumPredajeZalbe) {
+          detectedAppealInfo = {
+            date: result.detectedDatumPredajeZalbe,
+            izvor: result.detectedDatumIzvor || 'učitani spis',
+          };
+        }
       }
 
       setQueuedFiles([]);
@@ -189,12 +196,18 @@ export function DocumentManager({
       window.dispatchEvent(new CustomEvent('predmet-docs-updated'));
       router.refresh();
 
+      const appealNote = detectedAppealInfo
+        ? ` Prepoznat je datum predaje žalbe: ${new Date(
+            detectedAppealInfo.date
+          ).toLocaleDateString('hr-HR')} (${detectedAppealInfo.izvor}) — ZUP rok od 60 dana je pokrenut.`
+        : '';
+
       setFeedback({
         type: 'success',
         message:
-          ocrCount > 0
+          (ocrCount > 0
             ? `Uspješno dodano ${successCount} dok. u spis (${ocrCount} pročitano putem AI OCR skena).`
-            : `Uspješno dodano ${successCount} dok. u spis.`,
+            : `Uspješno dodano ${successCount} dok. u spis.`) + appealNote,
       });
     } catch (err: any) {
       console.error(err);

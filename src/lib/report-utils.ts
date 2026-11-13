@@ -130,12 +130,13 @@ export function getDateRangeForPreset(
 }
 
 /**
- * Izračunava trajanje rješavanja predmeta u danima i provjerava poštivanje ZUP roka (60 dana).
+ * Izračunava trajanje rješavanja predmeta u danima i provjerava poštivanje ZUP roka (60 dana od predaje žalbe).
  */
 export function getPredmetDurationInfo(predmet: EnrichedPredmet): {
   days: number;
   isResolved: boolean;
   isOverdue: boolean;
+  hasAppealDate: boolean;
   statusLabel: string;
 } {
   const isResolved =
@@ -143,9 +144,16 @@ export function getPredmetDurationInfo(predmet: EnrichedPredmet): {
     Boolean(predmet.datum_rjesavanja) ||
     Boolean(predmet.datum_slanja_na_potpis);
 
-  const start = predmet.datum_zaprimanja ? new Date(predmet.datum_zaprimanja) : null;
+  const rawStart = predmet.datum_predaje_zalbe;
+  const start = rawStart ? new Date(rawStart) : null;
   if (!start || Number.isNaN(start.getTime())) {
-    return { days: 0, isResolved, isOverdue: false, statusLabel: 'Nepoznat datum' };
+    return {
+      days: 0,
+      isResolved,
+      isOverdue: false,
+      hasAppealDate: false,
+      statusLabel: 'Čeka datum predaje žalbe',
+    };
   }
 
   let end: Date;
@@ -173,7 +181,7 @@ export function getPredmetDurationInfo(predmet: EnrichedPredmet): {
       : `U roku (${diffDays}/60 d.)`;
   }
 
-  return { days: diffDays, isResolved, isOverdue, statusLabel };
+  return { days: diffDays, isResolved, isOverdue, hasAppealDate: true, statusLabel };
 }
 
 /**
@@ -317,8 +325,10 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
 
     if (isResolved) {
       ukupnoRijeseno++;
-      zbrojDanaRjesavanja += duration.days;
-      brojPredmetaSaDanima++;
+      if (duration.hasAppealDate) {
+        zbrojDanaRjesavanja += duration.days;
+        brojPredmetaSaDanima++;
+      }
       if (duration.isOverdue) {
         ukupnoPrekoracenRok++;
       } else {
@@ -333,8 +343,10 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
       if (p.faza === 'Na potpisu') {
         ukupnoNaPotpisu++;
       }
-      zbrojDanaAktivnih += duration.days;
-      brojAktivnihSaDanima++;
+      if (duration.hasAppealDate) {
+        zbrojDanaAktivnih += duration.days;
+        brojAktivnihSaDanima++;
+      }
 
       if (duration.isOverdue) {
         ukupnoPrekoracenRok++;
@@ -342,7 +354,7 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
       } else {
         ukupnoURoku++;
         // Ako je preostalo manje od 15 dana (duration.days >= 45)
-        if (duration.days >= 45) {
+        if (duration.hasAppealDate && duration.days >= 45) {
           rizicniPredmeti.push(p);
         }
       }
@@ -514,7 +526,8 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
     'Datum dodjele',
     'Status spisa',
     'Faza postupka',
-    'Datum zaprimanja',
+    'Datum zaprimanja (Ministarstvo)',
+    'Datum predaje žalbe',
     'Datum rješavanja / potpisa',
     'Utrošeno dana',
     'Status ZUP roka (60 d.)',
@@ -530,13 +543,20 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
     const datumZaprimanjaStr = p.datum_zaprimanja
       ? new Date(p.datum_zaprimanja).toLocaleDateString('hr-HR')
       : '';
+    const datumPredajeZalbeStr = p.datum_predaje_zalbe
+      ? new Date(p.datum_predaje_zalbe).toLocaleDateString('hr-HR')
+      : '';
     const datumDodjeleStr = p.datum_dodjele
       ? new Date(p.datum_dodjele).toLocaleDateString('hr-HR')
       : '';
     const datumRjesavanjaStr = p.datum_rjesavanja || p.datum_slanja_na_potpis
       ? new Date((p.datum_rjesavanja || p.datum_slanja_na_potpis)!).toLocaleDateString('hr-HR')
       : '';
-    const zupRokStatus = duration.isOverdue ? 'Prekoračen rok' : 'U zakonskom roku';
+    const zupRokStatus = !duration.hasAppealDate
+      ? 'Čeka datum predaje žalbe'
+      : duration.isOverdue
+      ? 'Prekoračen rok'
+      : 'U zakonskom roku';
     const praksaStr = p.poslano_u_praksu ? 'Da' : 'Ne';
     const parafiList = Array.isArray(p.parafi) ? p.parafi : [];
     const parafiSummary = parafiList
@@ -563,8 +583,9 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
       escapeCsv(p.status === 'arhiviran' ? 'Arhiviran (A/A)' : 'Aktivan u radu'),
       escapeCsv(p.faza || 'Novo'),
       escapeCsv(datumZaprimanjaStr),
+      escapeCsv(datumPredajeZalbeStr),
       escapeCsv(datumRjesavanjaStr),
-      escapeCsv(String(duration.days)),
+      escapeCsv(duration.hasAppealDate ? String(duration.days) : '-'),
       escapeCsv(zupRokStatus),
       escapeCsv(p.ishod || 'U radu / bez ishoda'),
       escapeCsv(String(parafiList.length)),

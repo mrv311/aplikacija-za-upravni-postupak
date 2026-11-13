@@ -14,6 +14,7 @@ import {
   decodePredmetMetaUrl,
   guessDocRoleFromFilename,
   getInitials,
+  normalizeDateToIso,
   type PredmetExtendedMeta,
   type PredmetFaza,
   type PredmetIshod,
@@ -148,6 +149,8 @@ Iz priloženog dokumenta (koji može biti **košuljica spisa s pisarničkom nalj
   "stranka": "puno ime i prezime fizičke osobe ili puni naziv pravne osobe (žalitelja / stranke)",
   "datumZaprimanja": "YYYY-MM-DD",
   "izvorDatuma": "prijamni štambilj" | "pisarnička naljepnica" | "datum dokumenta" | "",
+  "datumPredajeZalbe": "YYYY-MM-DD ili ''",
+  "izvorDatumaZalbe": "prijamni štambilj I. stupnja" | "preporučena pošta" | "popratni dopis I. stupnja" | "izravno Ministarstvo" | "",
   "podrucje": "NUV" | "VD" | "NZZV" | "Ostalo",
   "vrstaDokumenta": "Košuljica spisa" | "Popratni dopis I. stupnja" | "Žalba" | "Prvostupanjsko rješenje" | "Dostavnica" | "Kompletni spis",
   "rukopisnaNapomena": "doslovni prijepis svih rukom pisanih bilješki/napomena na košuljici ili dokumentu (ako ih nema, prazno '')",
@@ -157,12 +160,17 @@ Iz priloženog dokumenta (koji može biti **košuljica spisa s pisarničkom nalj
 PREPOZNAVANJE KOŠULJICE SPISA ("vrstaDokumenta": "Košuljica spisa"):
 - Ako je na slici/PDF-u omotnica ili naslovnica spisa (**košuljica spisa**) s otisnutom pisarničkom/bar-kod naljepnicom (npr. naziv tijela, KLASA, datum otvaranja/primitka, stranka/predmet) i/ili rukom pisanim bilješkama savjetnika/voditelja po koricama, postavi "vrstaDokumenta": "Košuljica spisa".
 
-STROGA PRAVILA ZA DATUM ZAPRIMANJA ("datumZaprimanja"):
-1. PRVO I NAJVAŽNIJE: Pažljivo vizualno pregledaj cijelu stranicu i potraži PRIJAMNI ŠTAMBILJ / PEČAT ZAPRIMANJA ili PISARNIČKU NALJEPNICU na košuljici (s oznakama "REPUBLIKA HRVATSKA", "MINISTARSTVO...", "Primljeno", "Zaprimljeno", "Datum", bar-kod naljepnica s datumom).
-2. Ako se na dokumentu nalaze dva datuma zaprimanja (npr. raniji štambilj Hrvatskih voda i noviji štambilj/naljepnica Ministarstva odnosno drugostupanjskog tijela), OBAVEZNO uzmi datum Ministarstva (odnosno noviji datum zaprimanja).
+STROGA PRAVILA ZA DATUM ZAPRIMANJA U MINISTARSTVU ("datumZaprimanja"):
+1. PRVO I NAJVAŽNIJE: Pažljivo vizualno pregledaj cijelu stranicu i potraži PRIJAMNI ŠTAMBILJ / PEČAT ZAPRIMANJA Ministarstva ili PISARNIČKU NALJEPNICU na košuljici (s oznakama "REPUBLIKA HRVATSKA", "MINISTARSTVO...", "Primljeno", "Zaprimljeno", "Datum", bar-kod naljepnica s datumom).
+2. Ako se na dokumentu nalaze dva prijamna datuma (npr. raniji štambilj Hrvatskih voda i noviji štambilj/naljepnica Ministarstva), za "datumZaprimanja" OBAVEZNO uzmi datum Ministarstva (odnosno noviji datum primitka u Ministarstvu).
 3. Pretvori pročitani datum u ISO format "YYYY-MM-DD" (npr. "14. 02. 2025." ili "14.II.2025." -> "2025-02-14") i postavi "izvorDatuma": "pisarnička naljepnica" (ako je s naljepnice košuljice) ili "prijamni štambilj".
 4. Tek ako na dokumentu uopće NEMA ni prijamnog štambilja ni pisarničke naljepnice, uzmi datum iz zaglavlja samog akta u formatu "YYYY-MM-DD" i postavi "izvorDatuma": "datum dokumenta".
 5. Nikada ne izmišljaj današnji datum ako nije napisan na dokumentu. Ako nijedan datum nije čitljiv, vrati "".
+
+STROGA PRAVILA ZA DATUM PREDAJE ŽALBE ("datumPredajeZalbe" — POČETAK ZUP ROKA 60 DANA PO ČL. 121. ZUP-a):
+1. "datumPredajeZalbe" je datum KADA JE ŽALITELJ PREDAO ŽALBU (prvostupanjskom tijelu npr. Hrvatskim vodama, pošti preporučeno ili izravno Ministarstvu), a NE datum kada je Ministarstvo naknadno zaprimilo spis od I. stupnja!
+2. Na KOŠULJICI SPISA u pravilu piše samo datum kad je Ministarstvo zaprimilo spis ("datumZaprimanja") — zato za košuljicu obavezno postavi "datumPredajeZalbe": "" i "izvorDatumaZalbe": "", OSIM ako je na samoj košuljici rukom ili štambiljem izričito upisano kad je žalba predana.
+3. Ako dokument JEST sama žalba ili popratni dopis I. stupnja i sadrži prijamni štambilj I. stupnja (Hrvatskih voda), datum predaje pošti ili rečenicu "žalba je zaprimljena/predana dana ...", upiši taj datum u "datumPredajeZalbe" i postavi "izvorDatumaZalbe".
 
 STROGA PRAVILA ZA KLASU ("klasa"):
 - Ako je na pisarničkoj naljepnici košuljice ili u prijamnom štambilju Ministarstva upisana KLASA (npr. UP/II-...), prednost daj toj KLASI.
@@ -179,22 +187,6 @@ PRAVILA ZA PODRUČJE ("podrucje"):
 - "VD" za vodni doprinos (VD),
 - "NZZV" za naknadu za zaštitu voda (NZZV),
 - "Ostalo" za sve ostalo (npr. ako se iz košuljice ne vidi o kojoj je naknadi riječ, ostavi "Ostalo", a rukopisne kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").`;
-
-function normalizeDateToIso(raw: string | undefined | null): string {
-  if (!raw) return '';
-  const trimmed = raw.trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-
-  // Podrška za DD.MM.YYYY. ili DD. MM. YYYY. ili DD/MM/YYYY
-  const match = trimmed.match(/(\d{1,2})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{4})/);
-  if (match) {
-    const day = match[1].padStart(2, '0');
-    const month = match[2].padStart(2, '0');
-    const year = match[3];
-    return `${year}-${month}-${day}`;
-  }
-  return '';
-}
 
 function resolveScanMediaType(fileName: string, providedMime?: string): string {
   if (providedMime && providedMime !== 'application/octet-stream') return providedMime;
@@ -290,6 +282,7 @@ export async function extractCaseInfoFromScan(formData: FormData) {
 
     const parsed = JSON.parse(cleaned);
     const datumZaprimanja = normalizeDateToIso(parsed.datumZaprimanja);
+    const datumPredajeZalbe = normalizeDateToIso(parsed.datumPredajeZalbe);
     const rukopisnaNapomena = (parsed.rukopisnaNapomena || '').trim();
     const baseNapomena = (parsed.napomena || '').trim();
     const combinedNapomena =
@@ -306,6 +299,8 @@ export async function extractCaseInfoFromScan(formData: FormData) {
         stranka: (parsed.stranka || '').trim(),
         datumZaprimanja,
         izvorDatuma: (parsed.izvorDatuma || '').trim(),
+        datumPredajeZalbe,
+        izvorDatumaZalbe: datumPredajeZalbe ? (parsed.izvorDatumaZalbe || '').trim() : '',
         podrucje: (['NUV', 'VD', 'NZZV', 'Ostalo'].includes(parsed.podrucje)
           ? parsed.podrucje
           : 'Ostalo') as PredmetPodrucje,
@@ -329,6 +324,8 @@ export async function createPredmet(formData: FormData) {
   const urbroj = ((formData.get('urbroj') as string) || '').trim();
   const stranka = (formData.get('stranka') as string)?.trim();
   const datum = (formData.get('datum_primitka') as string)?.trim();
+  const datumPredajeZalbe = ((formData.get('datum_predaje_zalbe') as string) || '').trim();
+  const datumPredajeZalbeIzvor = ((formData.get('datum_predaje_zalbe_izvor') as string) || '').trim();
   const podrucje = ((formData.get('podrucje') as string) || 'NUV') as PredmetPodrucje;
   const napomena = ((formData.get('napomena') as string) || '').trim();
   const sluzbenik_id = ((formData.get('sluzbenik_id') as string) || '').trim();
@@ -364,6 +361,12 @@ export async function createPredmet(formData: FormData) {
       podrucje,
       faza: sluzbenik_ime ? 'U radu' : 'Novo',
       napomena,
+      ...(datumPredajeZalbe
+        ? {
+            datum_predaje_zalbe: datumPredajeZalbe,
+            datum_predaje_zalbe_izvor: datumPredajeZalbeIzvor || 'ručno',
+          }
+        : {}),
       ...(sluzbenik_id ? { sluzbenik_id } : {}),
       ...(sluzbenik_ime ? { sluzbenik_ime, datum_dodjele: today } : {}),
       ...(interni_rok ? { interni_rok } : {}),
@@ -425,6 +428,8 @@ export async function updatePredmet(
     urbroj: string;
     stranka: string;
     datum_zaprimanja: string;
+    datum_predaje_zalbe?: string;
+    datum_predaje_zalbe_izvor?: string;
     podrucje: PredmetPodrucje;
     faza?: PredmetFaza;
     ishod?: PredmetIshod;
@@ -461,6 +466,14 @@ export async function updatePredmet(
       ...(payload.faza ? { faza: payload.faza } : {}),
       ...(payload.ishod ? { ishod: payload.ishod } : {}),
       napomena: (payload.napomena || '').trim(),
+      ...(payload.datum_predaje_zalbe !== undefined
+        ? {
+            datum_predaje_zalbe: payload.datum_predaje_zalbe.trim(),
+            datum_predaje_zalbe_izvor: payload.datum_predaje_zalbe.trim()
+              ? payload.datum_predaje_zalbe_izvor || 'ručno'
+              : '',
+          }
+        : {}),
       ...(payload.sluzbenik_id !== undefined ? { sluzbenik_id: payload.sluzbenik_id } : {}),
       ...(payload.sluzbenik_ime !== undefined ? { sluzbenik_ime: payload.sluzbenik_ime } : {}),
       ...(payload.datum_dodjele !== undefined ? { datum_dodjele: payload.datum_dodjele } : {}),
@@ -477,6 +490,37 @@ export async function updatePredmet(
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Greška pri spremanju izmjena predmeta.' };
+  }
+}
+
+/**
+ * Brzi upis ili ažuriranje datuma kada je žalitelj predao žalbu (početak zakonskog roka 60 dana po čl. 121. ZUP-a).
+ */
+export async function updateDatumPredajeZalbeAction(
+  id: string,
+  datumPredajeZalbe: string,
+  izvor = 'ručno'
+) {
+  if (!id) return { error: 'ID predmeta je obavezan.' };
+  const cleanedDate = normalizeDateToIso(datumPredajeZalbe) || datumPredajeZalbe.trim();
+  try {
+    await upsertPredmetMeta(id, {
+      datum_predaje_zalbe: cleanedDate,
+      datum_predaje_zalbe_izvor: cleanedDate ? izvor : '',
+    });
+
+    revalidatePath('/');
+    revalidatePath('/arhiva');
+    revalidatePath('/izvjestaji');
+    revalidatePath(`/predmeti/${id}`);
+    return { success: true, datum_predaje_zalbe: cleanedDate };
+  } catch (err: unknown) {
+    return {
+      error:
+        err instanceof Error
+          ? err.message
+          : 'Greška pri spremanju datuma predaje žalbe.',
+    };
   }
 }
 
