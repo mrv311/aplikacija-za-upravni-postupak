@@ -295,12 +295,14 @@ export default function MainDashboardView({
         return; // Izuzmi uklonjene iz aktivnih brojača
       }
 
-      if (s.isPresudeno) presudeni++;
+      if (s.isPresudeno && !s.cekaAktPoPresudi) presudeni++;
       else uTijeku++;
 
       if (s.isSutnjaUprave) sutnjaUprave++;
 
-      if (!s.isPresudeno && ['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost)) {
+      const isHitno = ['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost);
+      const isPendingAction = !s.isPresudeno ? !s.isOdgovoreno : !!s.cekaAktPoPresudi;
+      if (isHitno && isPendingAction) {
         hitni++;
       }
 
@@ -402,9 +404,10 @@ export default function MainDashboardView({
       if (s.isDismissed) return false;
 
       if (statusFilter === 'u_radu') {
-        if (s.isPresudeno) return false;
+        if (s.isPresudeno && !s.cekaAktPoPresudi) return false;
       } else if (statusFilter === 'hitno') {
-        if (!['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost)) return false;
+        const isPending = !s.isPresudeno ? !s.isOdgovoreno : !!s.cekaAktPoPresudi;
+        if (!isPending || !['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost)) return false;
       } else if (statusFilter === 'sutnja') {
         if (!s.isSutnjaUprave) return false;
       } else if (statusFilter === 'troskovi' || statusFilter === 'troskovi_zuto') {
@@ -430,7 +433,7 @@ export default function MainDashboardView({
       } else if (statusFilter === 'troskovi_sve') {
         if (!s.troskoviInfo?.imaTroskova) return false;
       } else if (statusFilter === 'rijeseno') {
-        if (!s.isPresudeno) return false;
+        if (!s.isPresudeno || s.cekaAktPoPresudi) return false;
       }
 
       return true;
@@ -469,7 +472,14 @@ export default function MainDashboardView({
   // Radar disputes (bez uklonjenih)
   const radarSporovi = useMemo(() => {
     return sporovi
-      .filter((s) => !s.isDismissed && ['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost) && !s.isPresudeno)
+      .filter((s) => {
+        if (s.isDismissed) return false;
+        if (!['isteklo', 'danas', 'kriticno', 'hitno', 'u_roku'].includes(s.hitnost)) return false;
+        if (s.isPresudeno) {
+          return !!s.cekaAktPoPresudi;
+        }
+        return !s.isOdgovoreno;
+      })
       .sort((a, b) => (a.danaDoRoka ?? 999) - (b.danaDoRoka ?? 999));
   }, [sporovi]);
 
@@ -858,8 +868,8 @@ export default function MainDashboardView({
                     onChange={(e) => setStatusFilter(e.target.value as any)}
                     className="px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium"
                   >
-                    <option value="u_radu">U radu / Bez presude ({stats.uTijeku})</option>
-                    <option value="hitno">Hitni rokovi odgovora ({stats.hitni})</option>
+                    <option value="u_radu">U radu / Aktivni postupci ({stats.uTijeku})</option>
+                    <option value="hitno">Hitni rokovi (odgovori i rješenja) ({stats.hitni})</option>
                     <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Čeka nalog ({stats.troskoviZuto})</option>
                     <option value="troskovi_rijeseno">🟢 Nalog poslan - plaćeno ({stats.troskoviRijeseno})</option>
                     <option value="troskovi_sve">💰 Svi dosuđeni troškovi ({stats.troskoviUkupno})</option>
@@ -923,7 +933,7 @@ export default function MainDashboardView({
                         <th className="py-3 px-3">Tužitelj</th>
                         <th className="py-3 px-3">Predmet / Pobijani akt</th>
                         <th className="py-3 px-3">Rješavatelj</th>
-                        <th className="py-3 px-3">Rok / Status odgovora</th>
+                        <th className="py-3 px-3">Rok / Radnja</th>
                         <th className="py-3 px-3">Presuda & Troškovi</th>
                         <th className="py-3 px-3 text-right">Radnja</th>
                       </tr>
@@ -1007,6 +1017,36 @@ export default function MainDashboardView({
                                 <td className="py-3 px-3">
                                   {spor.isDismissed ? (
                                     <span className="text-2xs text-slate-400 italic">Uklonjeno iz aktivnih</span>
+                                  ) : spor.cekaAktPoPresudi ? (
+                                    <div className="space-y-1">
+                                      <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 shadow-2xs">
+                                        <div className="flex items-center gap-1 text-2xs font-bold text-rose-700 dark:text-rose-300">
+                                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse shrink-0" />
+                                          <span>ROK ZA RJEŠENJE PO PRESUDI:</span>
+                                        </div>
+                                        <p className="text-xs font-black text-rose-900 dark:text-rose-100 mt-0.5">
+                                          {spor.rokDatum || 'Hitno'}{' '}
+                                          <span className="text-2xs font-bold">
+                                            {spor.danaDoRoka === 0
+                                              ? '(DANAS ISTJEČE!)'
+                                              : spor.danaDoRoka !== null && spor.danaDoRoka !== undefined && spor.danaDoRoka < 0
+                                              ? `(ISTEKLO prije ${Math.abs(spor.danaDoRoka)} d)`
+                                              : spor.danaDoRoka !== null && spor.danaDoRoka !== undefined
+                                              ? `(još ${spor.danaDoRoka} d)`
+                                              : ''}
+                                          </span>
+                                        </p>
+                                      </div>
+                                      <p className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title={spor.fazaOpis}>
+                                        {spor.aktUpIiPoPresudi ? `Zabilješka: ${spor.aktUpIiPoPresudi}` : 'Čeka se donošenje rješenja'}
+                                      </p>
+                                      {spor.isOdgovoreno && (
+                                        <span className="inline-flex items-center gap-1 text-2xs text-emerald-700 dark:text-emerald-400 font-medium">
+                                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                          Odgovor na tužbu predan sudu
+                                        </span>
+                                      )}
+                                    </div>
                                   ) : (
                                     <>
                                       {spor.hitnost === 'isteklo' && (
@@ -1081,11 +1121,16 @@ export default function MainDashboardView({
 
                                   {spor.presudaTroskovi ? (
                                     <div>
-                                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate" title={spor.presudaTroskovi}>
+                                      <p className="font-medium text-slate-800 dark:text-slate-200 text-xs" title={spor.presudaTroskovi}>
                                         {spor.presudaTroskovi}
                                       </p>
                                       {spor.datumZapPresude && (
                                         <p className="text-2xs text-slate-400">Zaprimljeno: {spor.datumZapPresude}</p>
+                                      )}
+                                      {spor.cekaAktPoPresudi && (
+                                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-2xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300">
+                                          ⏳ Čeka se novo rješenje
+                                        </span>
                                       )}
                                     </div>
                                   ) : !spor.troskoviInfo?.imaTroskova ? (
@@ -1363,30 +1408,89 @@ export default function MainDashboardView({
                                           </div>
                                         </div>
                                       ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                                          {/* Kartica 1: Tužba i rokovi */}
-                                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
-                                            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                              <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                                              Tužba & Rok suda
-                                            </p>
-                                            <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                                              <p><span className="text-slate-400">Preuzeto s e-Kom:</span> <strong>{spor.tuzbaPreuzeta || '-'}</strong></p>
-                                              <p><span className="text-slate-400">Rok suda:</span> <strong className={spor.rokDatum ? 'text-rose-600 dark:text-rose-400' : ''}>{spor.rokDatum || 'Nema određenog roka'}</strong></p>
-                                              <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
-                                              <div className="pt-2">
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setOdgovorModalSpor(spor);
-                                                  }}
-                                                  className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
-                                                >
-                                                  <FileText className="w-3.5 h-3.5" />
-                                                  <span>📄 Sastavi odgovor na tužbu (.docx)</span>
-                                                </button>
+                                        <div className="space-y-3">
+                                          {/* HITNO UPOZORENJE ZA PREDMETE GDJE MINISTARSTVO MORA DONIJETI RJEŠENJE PO PRESUDI */}
+                                          {spor.cekaAktPoPresudi && (
+                                            <div className="p-4 rounded-xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 dark:from-rose-950/40 dark:via-amber-950/30 dark:to-rose-950/40 border-2 border-rose-400 dark:border-rose-700 space-y-2 shadow-xs">
+                                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="p-1.5 rounded-lg bg-rose-600 text-white shadow-xs">
+                                                    <AlertTriangle className="w-5 h-5 animate-pulse" />
+                                                  </span>
+                                                  <div>
+                                                    <span className="text-xs font-black text-rose-950 dark:text-rose-100 uppercase tracking-wide">
+                                                      Obveza donošenja drugostupanjskog rješenja po presudi suda
+                                                    </span>
+                                                    <p className="text-2xs text-rose-800 dark:text-rose-300">
+                                                      {spor.sud} — Poslovni broj: <strong>{spor.poslovniBroj}</strong>
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                  <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                                                    spor.hitnost === 'danas'
+                                                      ? 'bg-rose-600 text-white animate-pulse shadow-xs'
+                                                      : spor.hitnost === 'isteklo'
+                                                      ? 'bg-rose-100 text-rose-900 border border-rose-400 dark:bg-rose-950 dark:text-rose-200'
+                                                      : 'bg-amber-500 text-white'
+                                                  }`}>
+                                                    {spor.hitnost === 'danas'
+                                                      ? '⚠️ ROK ISTJEČE DANAS!'
+                                                      : spor.hitnost === 'isteklo'
+                                                      ? `⚠️ ROK ISTEKAO PRIJE ${Math.abs(spor.danaDoRoka!)} DANA`
+                                                      : `⏳ PREOSTALO JOŠ ${spor.danaDoRoka} DANA`}
+                                                  </span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => startEditingSpor(spor)}
+                                                    className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg font-bold bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 hover:bg-indigo-50 shadow-2xs transition-colors cursor-pointer"
+                                                  >
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                    <span>Evidentiraj doneseno rješenje</span>
+                                                  </button>
+                                                </div>
                                               </div>
+                                              <div className="text-xs text-slate-800 dark:text-slate-200 bg-white/70 dark:bg-slate-900/60 p-2.5 rounded-lg border border-rose-200/80 dark:border-rose-900/40">
+                                                <p>
+                                                  Sud je presudom naložio: <strong className="text-slate-950 dark:text-white">&ldquo;{spor.presudaTroskovi}&rdquo;</strong> (presuda zaprimljena <strong>{spor.datumZapPresude || '-'}</strong>).
+                                                </p>
+                                                <p className="mt-1">
+                                                  Krajnji rok za donošenje i otpremu drugostupanjskog rješenja: <strong className="text-rose-700 dark:text-rose-300 underline text-sm">{spor.rokDatum || 'Hitno'}</strong> {spor.danaDoRoka === 0 ? '(danas je zadnji dan roka!)' : ''}.
+                                                </p>
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                                            {/* Kartica 1: Tužba i odgovor */}
+                                            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
+                                              <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                                                Tužba & Odgovor sudu
+                                              </p>
+                                              <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                                                <p><span className="text-slate-400">Preuzeto s e-Kom:</span> <strong>{spor.tuzbaPreuzeta || '-'}</strong></p>
+                                                {!spor.isPresudeno ? (
+                                                  <p><span className="text-slate-400">Rok suda:</span> <strong className={spor.rokDatum ? 'text-rose-600 dark:text-rose-400' : ''}>{spor.rokDatum || 'Nema određenog roka'}</strong></p>
+                                                ) : (
+                                                  <p><span className="text-slate-400">Faza tužbe:</span> <span className="font-semibold text-emerald-700 dark:text-emerald-400">Dovršeno presudom suda</span></p>
+                                                )}
+                                                <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
+                                                {!spor.isPresudeno && !spor.isOdgovoreno && (
+                                                  <div className="pt-2">
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOdgovorModalSpor(spor);
+                                                      }}
+                                                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
+                                                    >
+                                                      <FileText className="w-3.5 h-3.5" />
+                                                      <span>📄 Sastavi odgovor na tužbu (.docx)</span>
+                                                    </button>
+                                                  </div>
+                                                )}
                                               {spor.isSutnjaUprave && (
                                                 <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
                                                   <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
@@ -1476,20 +1580,50 @@ export default function MainDashboardView({
                                           <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs space-y-2">
                                             <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                                               <FileText className="w-3.5 h-3.5 text-blue-500" />
-                                              Presuda & Ishod
+                                              Presuda & Obveza Ministarstva
                                             </p>
                                             <div className="space-y-1 text-slate-700 dark:text-slate-300">
                                               <p><span className="text-slate-400">Odluka suda:</span> <strong>{spor.presudaTroskovi || 'Još nema presude (u radu)'}</strong></p>
                                               <p><span className="text-slate-400">Datum zaprimanja:</span> <strong>{spor.datumZapPresude || '-'}</strong></p>
                                               <p><span className="text-slate-400">Žalba / VUSRH:</span> <strong>{spor.visokiUpravniSud || spor.zalbaPresuda || 'Nije podnesena / Pravomoćno'}</strong></p>
-                                              <p>
+                                              {spor.cekaAktPoPresudi && (
+                                                <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 my-1 text-2xs space-y-0.5">
+                                                  <p className="text-slate-500 dark:text-slate-400 font-semibold">Rok za drugostupanjsko rješenje:</p>
+                                                  <p className="text-xs font-black text-rose-700 dark:text-rose-300">
+                                                    {spor.rokDatum || 'Hitno'}{' '}
+                                                    <span>
+                                                      {spor.danaDoRoka === 0
+                                                        ? '(DANAS ISTJEČE ROK!)'
+                                                        : spor.danaDoRoka !== null && spor.danaDoRoka !== undefined && spor.danaDoRoka < 0
+                                                        ? `(ISTEKLO prije ${Math.abs(spor.danaDoRoka)} d)`
+                                                        : spor.danaDoRoka !== null && spor.danaDoRoka !== undefined
+                                                        ? `(još ${spor.danaDoRoka} dana)`
+                                                        : ''}
+                                                    </span>
+                                                  </p>
+                                                </div>
+                                              )}
+                                              <div>
                                                 <span className="text-slate-400">Akt UP/II po presudi:</span>{' '}
-                                                {spor.aktUpIiPoPresudi ? (
+                                                {spor.cekaAktPoPresudi ? (
+                                                  <div className="mt-1 flex items-center justify-between gap-1 flex-wrap">
+                                                    <span className="px-2 py-0.5 rounded text-2xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300">
+                                                      ⏳ Čeka donošenje rješenja {spor.aktUpIiPoPresudi ? `(${spor.aktUpIiPoPresudi})` : ''}
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => startEditingSpor(spor)}
+                                                      className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                                                    >
+                                                      + Unesi rješenje
+                                                    </button>
+                                                  </div>
+                                                ) : spor.aktUpIiPoPresudi ? (
                                                   <strong className="text-emerald-700 dark:text-emerald-400">{spor.aktUpIiPoPresudi}</strong>
                                                 ) : (
                                                   <span className="text-slate-400 italic">Nije evidentirano</span>
                                                 )}
-                                              </p>
+                                              </div>
                                             </div>
                                           </div>
 
@@ -1511,8 +1645,9 @@ export default function MainDashboardView({
                                             </div>
                                           </div>
                                         </div>
-                                      )}
-                                    </div>
+                                      </div>
+                                    )}
+                                  </div>
                                   </td>
                                 </tr>
                               )}
@@ -1634,7 +1769,24 @@ export default function MainDashboardView({
                       </div>
 
                       <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl">
-                        <p><strong>Evidencija:</strong> {spor.odgovorNaTuzbu || spor.aktUpIiPoPresudi || '-'}</p>
+                        {spor.cekaAktPoPresudi ? (
+                          <>
+                            <p className="text-rose-900 dark:text-rose-200 font-bold flex items-center gap-1.5">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                              <span>Obveza: Donošenje drugostupanjskog rješenja</span>
+                            </p>
+                            <p><strong>Nalog presude:</strong> {spor.presudaTroskovi}</p>
+                            <p>
+                              <strong>Rok za rješenje:</strong>{' '}
+                              <span className="font-extrabold text-rose-600 dark:text-rose-400">
+                                {spor.rokDatum || 'Hitno'}
+                              </span>
+                              {spor.datumZapPresude && ` (zaprimljeno: ${spor.datumZapPresude})`}
+                            </p>
+                          </>
+                        ) : (
+                          <p><strong>Evidencija:</strong> {spor.odgovorNaTuzbu || spor.aktUpIiPoPresudi || '-'}</p>
+                        )}
                         <p><strong>Rješavatelj:</strong> {spor.rjesavatelj || '-'}</p>
                         {spor.upIiRjesenje && <p><strong>Spis:</strong> {spor.upIiRjesenje}</p>}
                       </div>
@@ -1646,21 +1798,37 @@ export default function MainDashboardView({
                               setSporoviSubTab('tablica');
                               setSelectedSpor(spor);
                             }}
-                            className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                            className="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                           >
                             Prikaži u tablici →
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOdgovorModalSpor(spor);
-                            }}
-                            className="flex items-center gap-1 text-2xs px-2 py-0.5 rounded font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-colors cursor-pointer"
-                          >
-                            <FileText className="w-3 h-3" />
-                            <span>📄 Odgovor (.docx)</span>
-                          </button>
+                          {spor.cekaAktPoPresudi ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSporoviSubTab('tablica');
+                                setSelectedSpor(spor);
+                                startEditingSpor(spor);
+                              }}
+                              className="flex items-center gap-1 text-2xs px-2 py-0.5 rounded font-semibold bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3 h-3 text-amber-700 dark:text-amber-300" />
+                              <span>✏️ Unesi doneseno rješenje</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOdgovorModalSpor(spor);
+                              }}
+                              className="flex items-center gap-1 text-2xs px-2 py-0.5 rounded font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-colors cursor-pointer"
+                            >
+                              <FileText className="w-3 h-3" />
+                              <span>📄 Odgovor (.docx)</span>
+                            </button>
+                          )}
                         </div>
                         <button
                           type="button"

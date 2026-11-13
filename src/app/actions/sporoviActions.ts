@@ -76,7 +76,7 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         continue; // Discard from active stats
       }
 
-      if (s.isPresudeno) {
+      if (s.isPresudeno && !s.cekaAktPoPresudi) {
         stats.presudeni++;
       } else {
         stats.uTijeku++;
@@ -86,15 +86,14 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
         stats.sutnjaUprave++;
       }
 
-      if (!s.isPresudeno) {
+      const isHitno = ['isteklo', 'danas', 'kriticno', 'hitno'].includes(s.hitnost);
+      const isPendingAction = !s.isPresudeno ? !s.isOdgovoreno : !!s.cekaAktPoPresudi;
+      if (isHitno && isPendingAction) {
+        stats.hitni++;
         if (s.hitnost === 'isteklo') {
           stats.istekli++;
-          stats.hitni++;
         } else if (s.hitnost === 'danas' || s.hitnost === 'kriticno') {
           stats.danasIKriticno++;
-          stats.hitni++;
-        } else if (s.hitnost === 'hitno') {
-          stats.hitni++;
         }
       }
 

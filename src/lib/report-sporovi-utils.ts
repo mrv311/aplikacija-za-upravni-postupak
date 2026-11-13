@@ -148,9 +148,9 @@ export function filterSporovi(
 
     // 4. Status spora
     if (filters.status === 'u_tijeku') {
-      if (spor.isPresudeno || spor.presudaTroskovi) return false;
+      if ((spor.isPresudeno || spor.presudaTroskovi) && !spor.cekaAktPoPresudi) return false;
     } else if (filters.status === 'rijeseno') {
-      if (!spor.isPresudeno && !spor.presudaTroskovi) return false;
+      if ((!spor.isPresudeno && !spor.presudaTroskovi) || spor.cekaAktPoPresudi) return false;
     } else if (filters.status === 'hitno') {
       if (spor.hitnost !== 'isteklo' && spor.hitnost !== 'danas' && spor.hitnost !== 'kriticno' && spor.hitnost !== 'hitno') {
         return false;
@@ -263,10 +263,11 @@ export function calculateSporoviReportMetrics(sporovi: UpravniSpor[]): SporoviRe
   for (const spor of sporovi) {
     // Presuda / rješenje
     const isCompleted = Boolean(
-      spor.isPresudeno ||
+      (spor.isPresudeno ||
         (spor.presudaTroskovi && spor.presudaTroskovi.trim() !== '') ||
         spor.fazaOpis === 'Pravomoćno' ||
-        spor.fazaOpis === 'Presuđeno'
+        spor.fazaOpis === 'Presuđeno') &&
+      !spor.cekaAktPoPresudi
     );
 
     if (isCompleted) {

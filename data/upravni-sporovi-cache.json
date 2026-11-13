@@ -1,6 +1,6 @@
 {
-  "fileMtime": "2026-11-09T14:58:41.000Z",
-  "savedAt": "2026-11-10T11:02:35.792Z",
+  "fileMtime": "2026-11-11T11:20:07.000Z",
+  "savedAt": "2026-11-13T08:26:01.118Z",
   "count": 327,
   "sporovi": [
     {
@@ -34,7 +34,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-6",
@@ -61,13 +64,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/15-01/1645, URBROJ: 517-18-10 od 12. veljače 2018.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-7",
@@ -94,13 +100,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/17-01/60, URBROJ: 517-09-2-1-1-19-11 od 9. svibnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-8",
@@ -133,7 +142,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-9",
@@ -166,7 +178,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-10",
@@ -199,7 +214,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-11",
@@ -232,7 +250,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-12",
@@ -265,7 +286,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-13",
@@ -298,7 +322,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-14",
@@ -331,7 +358,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-15",
@@ -364,7 +394,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-16",
@@ -397,7 +430,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-17",
@@ -430,7 +466,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-18",
@@ -464,6 +503,10 @@
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema",
+      "rokOpis": "Odgovor na tužbu sudu (rok: 20. lipnja 2018.)",
       "isDismissed": true,
       "dismissedReason": "Zastario predmet bez evidentiranog ishoda (rok istekao 2018.)",
       "hasManualOverride": true
@@ -493,13 +536,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08/12-01/528, URBROJ: 517-07-2-2-19-19 od 14. svibnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-20",
@@ -526,13 +572,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/16-01/843, URBROJ: 517-07-2-2-18-13 od 23. studenog 2018.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-21",
@@ -559,13 +608,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/16-01/842, URBROJ: 517-07-2-2-18-10 od 11. rujna 2018.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-22",
@@ -598,7 +650,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-23",
@@ -631,7 +686,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-24",
@@ -658,19 +716,22 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2.500,00kn",
         "status": "neplaceno",
         "rokPlacanja": "2.500,00kn trošak spora KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2018-01-17T23:00:00.000Z",
-        "danaDoRoka": -3218,
+        "danaDoRoka": -3221,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 2.500,00kn (rok: 2.500,00kn trošak spora KLASA: UP/II-325-08/15-01/570, URBROJ: 517-18-9 od 18. siječnja 2018.  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-25",
@@ -703,7 +764,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-26",
@@ -730,13 +794,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje ISN 23.3.18.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-27",
@@ -769,7 +836,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-28",
@@ -802,7 +872,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-29",
@@ -829,13 +902,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08/15-01/752, URBROJ: 525-12-18-9 od 24. travnja 2018.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-30",
@@ -868,7 +944,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-31",
@@ -901,7 +980,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-32",
@@ -934,7 +1016,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-33",
@@ -967,7 +1052,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-34",
@@ -990,17 +1078,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "6.7.2018.",
+      "rokDatumObj": "2018-07-05T22:00:00.000Z",
+      "danaDoRoka": -3052,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 6.7.2018.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2018.)"
     },
     {
       "id": "spor-35",
@@ -1027,7 +1119,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje otpremljeno 19.3.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
@@ -1037,7 +1129,10 @@
         "opis": "6.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-36",
@@ -1071,6 +1166,9 @@
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema",
       "isDismissed": true,
       "dismissedReason": "Ručno uklonjeno iz evidencije aktivnih sporova",
       "hasManualOverride": true
@@ -1106,7 +1204,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-38",
@@ -1139,7 +1240,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-39",
@@ -1172,7 +1276,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-40",
@@ -1199,13 +1306,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/16-01/250, URBROJ: 517-07-2-2-19-11 od 13. ožujka 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-41",
@@ -1232,13 +1342,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/16-01/48, URBROJ: 517-17-8 od 19. prosinca 2017.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-42",
@@ -1271,7 +1384,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-43",
@@ -1304,7 +1420,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-44",
@@ -1337,7 +1456,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-45",
@@ -1370,7 +1492,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-46",
@@ -1403,7 +1528,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-47",
@@ -1430,13 +1558,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje ISN 6.6.19.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-48",
@@ -1469,7 +1600,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-49",
@@ -1502,7 +1636,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-50",
@@ -1535,7 +1672,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-51",
@@ -1568,7 +1708,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-52",
@@ -1601,7 +1744,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-53",
@@ -1634,7 +1780,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-54",
@@ -1667,7 +1816,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-56",
@@ -1694,13 +1846,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje ISN 4.9.19.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-57",
@@ -1733,7 +1888,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-58",
@@ -1766,7 +1924,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-59",
@@ -1799,7 +1960,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-60",
@@ -1838,7 +2002,10 @@
         "opis": "10.156,25kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-61",
@@ -1865,13 +2032,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje ISN 14.1.20.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-62",
@@ -1904,7 +2074,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-63",
@@ -1937,7 +2110,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-64",
@@ -1970,7 +2146,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-65",
@@ -1997,13 +2176,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08/17-03/48, URBROJ: 517-07-2-2-19-9 od 6. lipnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-66",
@@ -2030,13 +2212,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08/15-01/1256, URBROJ: 517-07-2-2-19-12 od 28. lipnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-67",
@@ -2069,7 +2254,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-68",
@@ -2096,7 +2284,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/16-01/1683, URBROJ: 517-07-2-2-19-11 od 26. kolovoza 2019.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1.250,00 kn",
@@ -2108,7 +2296,10 @@
         "opis": "1.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-69",
@@ -2135,13 +2326,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/18-04/76, URBROJ: 517-07-2-2-20-8 od 14. travnja 2020.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-70",
@@ -2174,7 +2368,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-71",
@@ -2207,7 +2404,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-72",
@@ -2240,7 +2440,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-73",
@@ -2273,7 +2476,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-74",
@@ -2306,7 +2512,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-75",
@@ -2333,13 +2542,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08/17-03/49, URBROJ: 517-07-2-2-19-7 od 6. lipnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-76",
@@ -2376,7 +2588,10 @@
         "opis": "2.812,5 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-77",
@@ -2409,7 +2624,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-78",
@@ -2442,7 +2660,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-79",
@@ -2475,7 +2696,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-80",
@@ -2508,7 +2732,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-81",
@@ -2541,7 +2768,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-82",
@@ -2574,7 +2804,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-83",
@@ -2601,13 +2834,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 12.6.2020. IG",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-84",
@@ -2634,19 +2870,22 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 4.1.2021. IG",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "neplaceno",
         "rokPlacanja": "troškovi spora 3.125,00 kn 4.1.2021. IG  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2021-01-03T23:00:00.000Z",
-        "danaDoRoka": -2136,
+        "danaDoRoka": -2139,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: troškovi spora 3.125,00 kn 4.1.2021. IG  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-85",
@@ -2679,7 +2918,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-86",
@@ -2702,11 +2944,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "14.8.2020.",
+      "rokDatumObj": "2020-08-13T22:00:00.000Z",
+      "danaDoRoka": -2282,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (čeka se spis)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00kn",
@@ -2716,7 +2958,11 @@
         "opis": "3.125,00kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 14.8.2020.)"
     },
     {
       "id": "spor-87",
@@ -2743,18 +2989,21 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 12.6.2020. IG",
       "troskoviInfo": {
         "imaTroskova": true,
         "status": "neplaceno",
         "rokPlacanja": "troškovi spora 12.6.2020. IG  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2020-06-11T22:00:00.000Z",
-        "danaDoRoka": -2342,
+        "danaDoRoka": -2345,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi spora (rok: troškovi spora 12.6.2020. IG  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-88",
@@ -2781,13 +3030,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08-15-01/1256, URBROJ: 517-07-2-2-19-12 od 28. lipnja 2019.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-89",
@@ -2820,7 +3072,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-90",
@@ -2847,7 +3102,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: DOPIS KLASA: UP/II-325-08-15-01/1637, URBROJ: 517-07-2-2-20-8 od 15. travnja 2020.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -2859,7 +3114,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-91",
@@ -2886,7 +3144,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 12.6.2020. IG",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
@@ -2898,7 +3156,10 @@
         "opis": "6.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-92",
@@ -2931,7 +3192,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-93",
@@ -2954,17 +3218,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "21.11.2020.",
+      "rokDatumObj": "2020-11-21T22:00:00.000Z",
+      "danaDoRoka": -2183,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (čeka se spis)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 21.11.2020.)"
     },
     {
       "id": "spor-94",
@@ -2991,13 +3259,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/18-03/98, URBROJ: 517-07-2-2-20-11 od 25. VELJAČE 2020.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-95",
@@ -3020,11 +3291,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "28.12.2020.",
+      "rokDatumObj": "2020-12-27T23:00:00.000Z",
+      "danaDoRoka": -2146,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (čeka se spis)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -3034,7 +3305,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 28.12.2020.)"
     },
     {
       "id": "spor-96",
@@ -3060,14 +3335,17 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "hitnost": "hitno",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (čeka se spis)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi"
     },
     {
       "id": "spor-97",
@@ -3093,14 +3371,17 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "hitnost": "hitno",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (čeka se spis)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi"
     },
     {
       "id": "spor-98",
@@ -3133,7 +3414,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-99",
@@ -3160,13 +3444,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/17-03/430, URBROJ: 517-07-2-2-20-9 od 2. RUJNA 2020.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-100",
@@ -3199,7 +3486,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-101",
@@ -3225,8 +3515,8 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
+      "hitnost": "hitno",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 60 dana)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -3236,7 +3526,10 @@
         "opis": "Dosuđeni troškovi: 3.125,00 kn",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi"
     },
     {
       "id": "spor-102",
@@ -3263,13 +3556,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 12.6.2020. IG",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-103",
@@ -3296,13 +3592,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/19-03/97, URBROJ: 517-07-2-2-20-10 od 15. travnja 2020.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-104",
@@ -3335,7 +3634,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "odgovor_na_tuzbu"
     },
     {
       "id": "spor-106",
@@ -3368,7 +3670,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-107",
@@ -3401,7 +3706,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-108",
@@ -3434,7 +3742,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-109",
@@ -3468,12 +3779,15 @@
         "status": "neplaceno",
         "rokPlacanja": "19.8.2020.",
         "rokPlacanjaDate": "2020-08-18T22:00:00.000Z",
-        "danaDoRoka": -2274,
+        "danaDoRoka": -2277,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 3.125,00kn (rok cca 19.8.2020.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-110",
@@ -3506,7 +3820,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-111",
@@ -3539,7 +3856,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-112",
@@ -3565,14 +3885,17 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
+      "hitnost": "hitno",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 60 dana)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi"
     },
     {
       "id": "spor-113",
@@ -3605,7 +3928,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-114",
@@ -3628,17 +3954,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj. i I rješenje",
+      "rokDatum": "6.8.2021.",
+      "rokDatumObj": "2021-08-05T22:00:00.000Z",
+      "danaDoRoka": -1925,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 6.8.2021.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.8.2021.)"
     },
     {
       "id": "spor-115",
@@ -3671,7 +4001,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-116",
@@ -3698,7 +4031,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/20-02/13, URBROJ: 517-09-2-2-21-22 od 23. KOLOVOZA 2021.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
@@ -3710,7 +4043,10 @@
         "opis": "6.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-117",
@@ -3743,7 +4079,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-118",
@@ -3776,7 +4115,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-119",
@@ -3809,7 +4151,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-120",
@@ -3842,7 +4187,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-121",
@@ -3875,7 +4223,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-122",
@@ -3908,7 +4259,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-123",
@@ -3941,7 +4295,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-124",
@@ -3974,7 +4331,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-125",
@@ -4007,7 +4367,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-126",
@@ -4040,7 +4403,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-127",
@@ -4073,7 +4439,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-128",
@@ -4106,7 +4475,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-129",
@@ -4129,17 +4501,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "29.3.2022.",
+      "rokDatumObj": "2022-03-28T23:00:00.000Z",
+      "danaDoRoka": -1690,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 29.3.2022.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
     {
       "id": "spor-130",
@@ -4172,7 +4548,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-131",
@@ -4205,7 +4584,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-132",
@@ -4238,7 +4620,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-133",
@@ -4271,7 +4656,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-134",
@@ -4304,7 +4692,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-135",
@@ -4337,7 +4728,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-136",
@@ -4370,7 +4764,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-137",
@@ -4397,13 +4794,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: dopisom vraćen spis",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-138",
@@ -4436,7 +4836,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-139",
@@ -4459,17 +4862,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "29.3.2022.",
+      "rokDatumObj": "2022-03-28T23:00:00.000Z",
+      "danaDoRoka": -1690,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 29.3.2022.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
     {
       "id": "spor-140",
@@ -4492,17 +4899,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "29.3.2022.",
+      "rokDatumObj": "2022-03-28T23:00:00.000Z",
+      "danaDoRoka": -1690,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 29.3.2022.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
     {
       "id": "spor-142",
@@ -4535,7 +4946,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-143",
@@ -4568,7 +4982,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-144",
@@ -4602,7 +5019,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-145",
@@ -4635,7 +5055,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-146",
@@ -4659,17 +5082,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "9.5.2022.",
+      "rokDatumObj": "2022-05-08T23:00:00.000Z",
+      "danaDoRoka": -1649,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 9.5.2022.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 9.5.2022.)"
     },
     {
       "id": "spor-147",
@@ -4702,7 +5129,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-148",
@@ -4735,7 +5165,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-149",
@@ -4768,7 +5201,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-150",
@@ -4802,7 +5238,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-151",
@@ -4836,7 +5275,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-152",
@@ -4870,7 +5312,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-153",
@@ -4905,12 +5350,15 @@
         "status": "neplaceno",
         "rokPlacanja": "21.7.2021.",
         "rokPlacanjaDate": "2021-07-20T22:00:00.000Z",
-        "danaDoRoka": -1938,
+        "danaDoRoka": -1941,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1.500,00kn (rok cca 21.7.2021.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-154",
@@ -4944,7 +5392,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-155",
@@ -4978,7 +5429,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-156",
@@ -5006,7 +5460,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: 1.2.2023. - NAKON POŽURNICE IZRAĐENO RJEŠENJE",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5018,7 +5472,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-157",
@@ -5042,11 +5499,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "6.7.2022.",
+      "rokDatumObj": "2022-07-05T22:00:00.000Z",
+      "danaDoRoka": -1591,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (6.7.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5058,7 +5515,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2022.)"
     },
     {
       "id": "spor-158",
@@ -5082,11 +5543,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "6.7.2022.",
+      "rokDatumObj": "2022-07-05T22:00:00.000Z",
+      "danaDoRoka": -1591,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (6.7.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "312,50 kn",
@@ -5098,7 +5559,11 @@
         "opis": "312,50 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2022.)"
     },
     {
       "id": "spor-159",
@@ -5122,11 +5587,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "26.7.2022.",
+      "rokDatumObj": "2022-07-25T22:00:00.000Z",
+      "danaDoRoka": -1571,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 26.7.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5136,7 +5601,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.7.2022.)"
     },
     {
       "id": "spor-160",
@@ -5170,7 +5639,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-161",
@@ -5194,11 +5666,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "7.10.2022.",
+      "rokDatumObj": "2022-10-06T22:00:00.000Z",
+      "danaDoRoka": -1498,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (7.10.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5210,7 +5682,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 7.10.2022.)"
     },
     {
       "id": "spor-162",
@@ -5234,11 +5710,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "28.5.2022.",
+      "rokDatumObj": "2022-05-27T22:00:00.000Z",
+      "danaDoRoka": -1630,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 28.5.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
@@ -5248,7 +5724,11 @@
         "opis": "6.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 28.5.2022.)"
     },
     {
       "id": "spor-163",
@@ -5283,12 +5763,15 @@
         "status": "neplaceno",
         "rokPlacanja": "16.10.2021.",
         "rokPlacanjaDate": "2021-10-15T22:00:00.000Z",
-        "danaDoRoka": -1851,
+        "danaDoRoka": -1854,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 2.500,00kn (rok cca 16.10.2021.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-164",
@@ -5322,7 +5805,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-165",
@@ -5356,7 +5842,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-166",
@@ -5380,11 +5869,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "1.7.2022.",
+      "rokDatumObj": "2022-06-30T22:00:00.000Z",
+      "danaDoRoka": -1596,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 1.7.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "312,50 kn",
@@ -5394,7 +5883,11 @@
         "opis": "312,50 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 1.7.2022.)"
     },
     {
       "id": "spor-167",
@@ -5434,7 +5927,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-168",
@@ -5458,23 +5954,27 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "3.6.2022.",
+      "rokDatumObj": "2022-06-02T22:00:00.000Z",
+      "danaDoRoka": -1624,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (3.6.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
         "status": "neplaceno",
         "rokPlacanja": "troškovi spora 3.125,00 kn 3.6.2022.  Poništeno UP/II rj.",
         "rokPlacanjaDate": "2022-06-02T22:00:00.000Z",
-        "danaDoRoka": -1621,
+        "danaDoRoka": -1624,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 3.125,00 kn (rok: troškovi spora 3.125,00 kn 3.6.2022.  Poništeno UP/II rj.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 3.6.2022.)"
     },
     {
       "id": "spor-169",
@@ -5498,11 +5998,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "7.8.2022.",
+      "rokDatumObj": "2022-08-06T22:00:00.000Z",
+      "danaDoRoka": -1559,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 7.8.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5512,7 +6012,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 7.8.2022.)"
     },
     {
       "id": "spor-170",
@@ -5546,7 +6050,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-171",
@@ -5570,11 +6077,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II rj.",
+      "rokDatum": "19.6.2022.",
+      "rokDatumObj": "2022-06-18T22:00:00.000Z",
+      "danaDoRoka": -1608,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 19.6.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "6.250,00 kn",
@@ -5584,7 +6091,11 @@
         "opis": "6.250,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 19.6.2022.)"
     },
     {
       "id": "spor-172",
@@ -5608,11 +6119,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno dopunsko rješenje",
+      "rokDatum": "26.7.2022.",
+      "rokDatumObj": "2022-07-25T22:00:00.000Z",
+      "danaDoRoka": -1571,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 26.7.2022.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5622,7 +6133,11 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.7.2022.)"
     },
     {
       "id": "spor-173",
@@ -5656,7 +6171,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-174",
@@ -5690,7 +6208,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-175",
@@ -5728,7 +6249,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-176",
@@ -5766,7 +6290,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-177",
@@ -5804,7 +6331,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-178",
@@ -5838,7 +6368,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-179",
@@ -5872,7 +6405,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-180",
@@ -5898,15 +6434,19 @@
       "isPresudeno": false,
       "rokDatum": "24. siječnja 2022.",
       "rokDatumObj": "2022-01-23T23:00:00.000Z",
-      "danaDoRoka": -1751,
+      "danaDoRoka": -1754,
       "hitnost": "isteklo",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "fazaOpis": "Čeka se odgovor na tužbu (rok: 24. siječnja 2022.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "odgovor_na_tuzbu",
+      "rokOpis": "Odgovor na tužbu sudu (rok: 24. siječnja 2022.)"
     },
     {
       "id": "spor-181",
@@ -5944,7 +6484,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-182",
@@ -5982,7 +6525,10 @@
         "opis": "3.125,00kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-183",
@@ -6020,7 +6566,10 @@
         "opis": "3.125,00kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-184",
@@ -6054,7 +6603,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-185",
@@ -6088,7 +6640,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-186",
@@ -6122,7 +6677,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-187",
@@ -6148,15 +6706,19 @@
       "isPresudeno": false,
       "rokDatum": "izrađeno rješenje 30.11.2021.",
       "rokDatumObj": "2021-11-29T23:00:00.000Z",
-      "danaDoRoka": -1806,
+      "danaDoRoka": -1809,
       "hitnost": "isteklo",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "fazaOpis": "Čeka se odgovor na tužbu (rok: izrađeno rješenje 30.11.2021.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "odgovor_na_tuzbu",
+      "rokOpis": "Odgovor na tužbu sudu (rok: izrađeno rješenje 30.11.2021.)"
     },
     {
       "id": "spor-189",
@@ -6196,7 +6758,10 @@
         "opis": "331,8 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-190",
@@ -6236,7 +6801,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-191",
@@ -6276,7 +6844,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-192",
@@ -6310,7 +6881,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-193",
@@ -6344,7 +6918,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-194",
@@ -6382,7 +6959,10 @@
         "opis": "3.125,00 kn — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-195",
@@ -6410,7 +6990,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno UP/II i UP/I",
+      "fazaOpis": "Presuđeno — Akt donesen: dopisom proslijeđeno HV - 13.6.2024.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 eur",
@@ -6422,7 +7002,10 @@
         "opis": "2500 eur — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-196",
@@ -6456,7 +7039,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-197",
@@ -6490,7 +7076,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-198",
@@ -6518,7 +7107,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno I i II - obustavljen postupak - ZASTARA",
+      "fazaOpis": "Presuđeno — Akt donesen: ",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1.244,28 eur",
@@ -6528,7 +7117,10 @@
         "opis": "1.244,28 eur — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-199",
@@ -6568,7 +7160,10 @@
         "opis": "2099,3 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-200",
@@ -6602,7 +7197,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-201",
@@ -6637,12 +7235,15 @@
         "status": "neplaceno",
         "rokPlacanja": "21.6.2023.",
         "rokPlacanjaDate": "2023-06-20T22:00:00.000Z",
-        "danaDoRoka": -1238,
+        "danaDoRoka": -1241,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 233,30 EUR (rok cca 21.6.2023.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-202",
@@ -6676,7 +7277,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-203",
@@ -6704,7 +7308,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: 22.1.2025. izrađeno rješenje",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "414,76 EUR",
@@ -6717,7 +7321,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "18.2.2025.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-204",
@@ -6745,19 +7352,22 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo odlučiti o žalbi od 11.7.2022.",
+      "fazaOpis": "Presuđeno — Akt donesen: 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "622,14 EUR",
         "status": "poslan_nalog",
         "rokPlacanja": "troškovi spora 622,14 EUR - rok 7.10. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  Naloženo odlučiti o žalbi od 11.7.2022.",
         "rokPlacanjaDate": "2023-09-19T22:00:00.000Z",
-        "danaDoRoka": -1147,
-        "hitnost": "isteklo",
+        "danaDoRoka": null,
+        "hitnost": "rijeseno",
         "opis": "Dosuđeni troškovi: 622,14 EUR (rok: troškovi spora 622,14 EUR - rok 7.10. 20.9.23. izrađen zaključak sukladno presudi-predmet vraćen HV  Naloženo odlučiti o žalbi od 11.7.2022.)",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-206",
@@ -6791,7 +7401,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-207",
@@ -6815,17 +7428,20 @@
       "isSutnjaUprave": true,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "15.3.2024.",
-      "rokDatumObj": "2024-03-14T23:00:00.000Z",
-      "danaDoRoka": -970,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje akta po presudi (rok do 15.3.2024. - doneseno rješenje po presudi 26.1.24.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Presuđeno — Akt donesen: rok do 15.3.2024. - doneseno rješenje po presudi 26.1.24.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-208",
@@ -6853,7 +7469,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo odlučiti o žalbi",
+      "fazaOpis": "Presuđeno — Akt donesen: dopisom zatražen spis od HV - 13.9.23.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "250,00 EUR",
@@ -6865,7 +7481,10 @@
         "opis": "250,00 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-209",
@@ -6905,7 +7524,10 @@
         "opis": "622,14 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-210",
@@ -6933,7 +7555,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno I i II rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: dopis 9.7.2024.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "750,00 EUR",
@@ -6946,7 +7568,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "16.8.24.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-211",
@@ -6980,7 +7605,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-212",
@@ -7008,13 +7636,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: 12.11.2024. rješenje IG",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-213",
@@ -7048,7 +7679,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-214",
@@ -7082,7 +7716,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-215",
@@ -7116,7 +7753,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-216",
@@ -7150,7 +7790,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-217",
@@ -7185,12 +7828,15 @@
         "status": "neplaceno",
         "rokPlacanja": "15.12.2023.",
         "rokPlacanjaDate": "2023-12-14T23:00:00.000Z",
-        "danaDoRoka": -1061,
+        "danaDoRoka": -1064,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 497,71 EUR (rok: 15.12.2023.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-218",
@@ -7224,7 +7870,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-219",
@@ -7248,23 +7897,27 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "rokDatum": "30.8.2025.",
+      "rokDatumObj": "2025-08-29T22:00:00.000Z",
+      "danaDoRoka": -440,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 30.8.2025.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "748,87 EUR",
         "status": "neplaceno",
         "rokPlacanja": "31.7.2025.",
         "rokPlacanjaDate": "2025-07-30T22:00:00.000Z",
-        "danaDoRoka": -467,
+        "danaDoRoka": -470,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 748,87 EUR (rok cca 31.7.2025.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.8.2025.)"
     },
     {
       "id": "spor-220",
@@ -7288,17 +7941,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "rokDatum": "30.8.2025.",
+      "rokDatumObj": "2025-08-29T22:00:00.000Z",
+      "danaDoRoka": -440,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 30.8.2025.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.8.2025.)"
     },
     {
       "id": "spor-221",
@@ -7326,19 +7983,22 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: rješenje up/ii 16.4.2025",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
         "status": "neplaceno",
         "rokPlacanja": "8.6.2025.",
         "rokPlacanjaDate": "2025-06-07T22:00:00.000Z",
-        "danaDoRoka": -520,
+        "danaDoRoka": -523,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1250 EUR (rok: 8.6.2025.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-222",
@@ -7373,12 +8033,15 @@
         "status": "neplaceno",
         "rokPlacanja": "15.12.2023.",
         "rokPlacanjaDate": "2023-12-14T23:00:00.000Z",
-        "danaDoRoka": -1061,
+        "danaDoRoka": -1064,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 497,71 EUR (rok: 15.12.2023.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-223",
@@ -7419,7 +8082,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "27.9.24",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-224",
@@ -7453,7 +8119,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-225",
@@ -7487,7 +8156,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-226",
@@ -7521,7 +8193,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-227",
@@ -7555,7 +8230,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-228",
@@ -7589,7 +8267,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-229",
@@ -7623,7 +8304,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-230",
@@ -7657,7 +8341,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-231",
@@ -7691,7 +8378,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-232",
@@ -7725,7 +8415,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-233",
@@ -7753,13 +8446,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 7.11.2024. dopis prema HV",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-234",
@@ -7793,7 +8489,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-235",
@@ -7827,7 +8526,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-236",
@@ -7861,7 +8563,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-237",
@@ -7895,7 +8600,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-238",
@@ -7929,7 +8637,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-239",
@@ -7953,17 +8664,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
+      "rokDatum": "23.8.2024.",
+      "rokDatumObj": "2024-08-22T22:00:00.000Z",
+      "danaDoRoka": -812,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 23.8.2024.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 23.8.2024.)"
     },
     {
       "id": "spor-240",
@@ -7987,11 +8702,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
+      "rokDatum": "23.8.2024.",
+      "rokDatumObj": "2024-08-22T22:00:00.000Z",
+      "danaDoRoka": -812,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 23.8.2024.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 EUR",
@@ -8003,7 +8718,11 @@
         "opis": "2500 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 23.8.2024.)"
     },
     {
       "id": "spor-242",
@@ -8031,13 +8750,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
+      "fazaOpis": "Presuđeno — Akt donesen: 7.11.2024. dopis prema HV",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-243",
@@ -8065,7 +8787,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: 11.11.2024. rješenje IG",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3750,00 EUR",
@@ -8078,7 +8800,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "13.12.24.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-244",
@@ -8112,7 +8837,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-245",
@@ -8150,7 +8878,10 @@
         "opis": "1250 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-246",
@@ -8190,7 +8921,10 @@
         "opis": "1250,00 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-247",
@@ -8224,7 +8958,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-248",
@@ -8258,7 +8995,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-249",
@@ -8292,7 +9032,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-250",
@@ -8326,7 +9069,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-251",
@@ -8354,7 +9100,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo donijeti rješenje po žalbi u roku od 60 dana",
+      "fazaOpis": "Presuđeno — Akt donesen: Izrađeno II rješenje - na znanje Upravnom sudu 8.7.24.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250,00 eura",
@@ -8366,7 +9112,10 @@
         "opis": "1250,00 eura — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-252",
@@ -8400,7 +9149,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-253",
@@ -8441,7 +9193,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "16.8.24.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-254",
@@ -8475,7 +9230,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-255",
@@ -8509,7 +9267,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-256",
@@ -8543,7 +9304,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-257",
@@ -8577,7 +9341,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-258",
@@ -8611,7 +9378,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-259",
@@ -8645,7 +9415,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-260",
@@ -8679,7 +9452,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-261",
@@ -8713,7 +9489,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-262",
@@ -8747,7 +9526,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-263",
@@ -8781,7 +9563,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-264",
@@ -8815,7 +9600,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-265",
@@ -8853,7 +9641,10 @@
         "opis": "2500 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-266",
@@ -8881,7 +9672,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo odlučiti o žalbi",
+      "fazaOpis": "Presuđeno — Akt donesen: Doneseno II rješenje - 4.2.2025.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -8894,7 +9685,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "4.2.2025.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-267",
@@ -8928,7 +9722,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-268",
@@ -8956,7 +9753,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo odlučiti o žalbi",
+      "fazaOpis": "Presuđeno — Akt donesen: Doneseno II rješenje - bez spisa - 22.4.2025",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -8969,7 +9766,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "19.5.2025",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-269",
@@ -9003,7 +9803,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-270",
@@ -9037,7 +9840,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-271",
@@ -9071,7 +9877,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-272",
@@ -9105,7 +9914,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-273",
@@ -9129,17 +9941,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: poništeno i prvostupanjsko i drugostupanjsko rj.",
+      "rokDatum": "15.6.2025.",
+      "rokDatumObj": "2025-06-14T22:00:00.000Z",
+      "danaDoRoka": -516,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 15.6.2025.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 15.6.2025.)"
     },
     {
       "id": "spor-274",
@@ -9173,7 +9989,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-275",
@@ -9199,15 +10018,19 @@
       "isPresudeno": false,
       "rokDatum": "1.1.2025.",
       "rokDatumObj": "2024-12-31T23:00:00.000Z",
-      "danaDoRoka": -678,
+      "danaDoRoka": -681,
       "hitnost": "isteklo",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "fazaOpis": "Čeka se odgovor na tužbu (rok: 1.1.2025.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "odgovor_na_tuzbu",
+      "rokOpis": "Odgovor na tužbu sudu (rok: 1.1.2025.)"
     },
     {
       "id": "spor-276",
@@ -9241,7 +10064,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-277",
@@ -9281,7 +10107,10 @@
         "opis": "1250 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-278",
@@ -9315,7 +10144,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-280",
@@ -9349,7 +10181,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-281",
@@ -9373,11 +10208,11 @@
       "isSutnjaUprave": true,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Usvojen zahtjev za donošenje pojedinačne odluke",
+      "rokDatum": "10.8.2026.",
+      "rokDatumObj": "2026-08-09T22:00:00.000Z",
+      "danaDoRoka": -95,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 10.8.2026.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -9390,7 +10225,11 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "25.8.2026.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 10.8.2026.)"
     },
     {
       "id": "spor-282",
@@ -9424,7 +10263,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-283",
@@ -9458,7 +10300,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-284",
@@ -9482,11 +10327,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "rokDatum": "10.8.2026.",
+      "rokDatumObj": "2026-08-09T22:00:00.000Z",
+      "danaDoRoka": -95,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 10.8.2026.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 EUR",
@@ -9499,7 +10344,11 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "28.8.2026.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 10.8.2026.)"
     },
     {
       "id": "spor-285",
@@ -9533,7 +10382,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-286",
@@ -9567,7 +10419,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-287",
@@ -9601,7 +10456,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-288",
@@ -9635,7 +10493,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-289",
@@ -9669,7 +10530,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-290",
@@ -9697,13 +10561,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno",
+      "fazaOpis": "Presuda: Presuđeno",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-291",
@@ -9731,7 +10598,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno",
+      "fazaOpis": "Presuda: Presuđeno",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 EUR",
@@ -9743,7 +10610,10 @@
         "opis": "2500 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-292",
@@ -9777,7 +10647,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-293",
@@ -9811,7 +10684,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-294",
@@ -9845,7 +10721,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-295",
@@ -9885,7 +10764,10 @@
         "opis": "1250 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-296",
@@ -9926,7 +10808,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "17.4.2026",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-297",
@@ -9960,7 +10845,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-298",
@@ -10001,7 +10889,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "28.8.2026.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-299",
@@ -10035,7 +10926,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-300",
@@ -10059,17 +10953,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno I i II rješenje",
+      "rokDatum": "19.7.2026.",
+      "rokDatumObj": "2026-07-18T22:00:00.000Z",
+      "danaDoRoka": -117,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 19.7.2026.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 19.7.2026.)"
     },
     {
       "id": "spor-301",
@@ -10103,7 +11001,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-302",
@@ -10137,7 +11038,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-303",
@@ -10161,11 +11065,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno I i II rješenje",
+      "rokDatum": "30.12.2025.",
+      "rokDatumObj": "2025-12-29T23:00:00.000Z",
+      "danaDoRoka": -318,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 30.12.2025.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -10177,7 +11081,11 @@
         "opis": "1250 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.12.2025.)"
     },
     {
       "id": "spor-304",
@@ -10205,7 +11113,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno I i II rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: dopis 23.3.2026.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -10218,7 +11126,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "31.2.2026",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-305",
@@ -10252,7 +11163,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-306",
@@ -10286,7 +11200,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-307",
@@ -10327,7 +11244,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "18.9.2026.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-308",
@@ -10368,7 +11288,10 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "17.7.26.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-309",
@@ -10392,11 +11315,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": null,
-      "rokDatumObj": null,
-      "danaDoRoka": null,
-      "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništeno rješenje",
+      "rokDatum": "26.10.2026.",
+      "rokDatumObj": "2026-10-26T22:00:00.000Z",
+      "danaDoRoka": -18,
+      "hitnost": "isteklo",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 26.10.2026.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1875 eur",
@@ -10409,7 +11332,11 @@
         "bojaOznake": "zeleno",
         "nalogDatum": "29.9.2026.",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.10.2026.)"
     },
     {
       "id": "spor-310",
@@ -10437,13 +11364,16 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: naloženo u roku 60 dana donijeti rješenje",
+      "fazaOpis": "Presuđeno — Akt donesen: up/ii 25.9.2025. - obustavljena ovrha",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-311",
@@ -10477,7 +11407,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-312",
@@ -10511,7 +11444,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-313",
@@ -10550,7 +11486,10 @@
         "opis": "1250,00 EUR — Nalog poslan - plaćeno",
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-314",
@@ -10584,7 +11523,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-315",
@@ -10618,7 +11560,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-316",
@@ -10652,7 +11597,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-317",
@@ -10686,7 +11634,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-318",
@@ -10720,7 +11671,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-319",
@@ -10754,7 +11708,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-320",
@@ -10788,7 +11745,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-321",
@@ -10822,7 +11782,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-322",
@@ -10856,7 +11819,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-323",
@@ -10890,7 +11856,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-324",
@@ -10924,7 +11893,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-325",
@@ -10958,7 +11930,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-327",
@@ -10992,7 +11967,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-328",
@@ -11026,7 +12004,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-329",
@@ -11060,7 +12041,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-330",
@@ -11094,7 +12078,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-331",
@@ -11114,27 +12101,31 @@
       "aktUpIiPoPresudi": "rok 13.11.2026",
       "zalbaPresuda": "",
       "visokiUpravniSud": "",
-      "vrijednostNapomena": "1250 eur - rok 1.12.2026.",
+      "vrijednostNapomena": "1250 eur - rok 1.12.2026. - nalog poslan 11.11.2026.",
       "isSutnjaUprave": true,
       "isOdgovoreno": true,
       "isPresudeno": true,
       "rokDatum": "13.11.2026",
       "rokDatumObj": "2026-11-12T23:00:00.000Z",
-      "danaDoRoka": 3,
-      "hitnost": "kriticno",
-      "fazaOpis": "Donošenje akta po presudi (rok 13.11.2026)",
+      "danaDoRoka": 0,
+      "hitnost": "danas",
+      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 13.11.2026)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 eur",
-        "status": "neplaceno",
+        "status": "poslan_nalog",
         "rokPlacanja": "1.12.2026.",
         "rokPlacanjaDate": "2026-11-30T23:00:00.000Z",
-        "danaDoRoka": 21,
-        "hitnost": "u_roku",
-        "opis": "Dosuđeni troškovi: 1250 eur (rok: 1.12.2026.)",
-        "bojaOznake": "zuto",
+        "danaDoRoka": null,
+        "hitnost": "rijeseno",
+        "opis": "1250 eur — Nalog poslan - plaćeno",
+        "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": true,
+      "isAktDone": false,
+      "rokVrsta": "akt_po_presudi",
+      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 13.11.2026)"
     },
     {
       "id": "spor-332",
@@ -11162,19 +12153,22 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Naloženo donošenje rješenja",
+      "fazaOpis": "Presuđeno — Akt donesen: doneseno II rješenje 21.9.2026. - bez spisa",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 eur",
         "status": "neplaceno",
         "rokPlacanja": "15.10.2026.",
         "rokPlacanjaDate": "2026-10-14T22:00:00.000Z",
-        "danaDoRoka": -26,
+        "danaDoRoka": -29,
         "hitnost": "isteklo",
         "opis": "Dosuđeni troškovi: 1250 eur (rok: 15.10.2026.)",
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-333",
@@ -11208,7 +12202,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-334",
@@ -11242,7 +12239,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-335",
@@ -11276,7 +12276,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-336",
@@ -11310,7 +12313,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-337",
@@ -11344,7 +12350,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-338",
@@ -11378,7 +12387,10 @@
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-339",
@@ -11392,7 +12404,7 @@
       "predmet": "nuv",
       "rjesavatelj": "Ivan Graberec",
       "tuzbaPreuzeta": "30. listopada 2026.",
-      "odgovorNaTuzbu": "rok 29.12.2026.",
+      "odgovorNaTuzbu": "rok 29.12.2026. - 10.11.2026. odgovor u KP",
       "presudaTroskovi": "",
       "datumZapPresude": "",
       "aktUpIiPoPresudi": "",
@@ -11400,19 +12412,22 @@
       "visokiUpravniSud": "",
       "vrijednostNapomena": "",
       "isSutnjaUprave": false,
-      "isOdgovoreno": false,
+      "isOdgovoreno": true,
       "isPresudeno": false,
-      "rokDatum": "29.12.2026.",
-      "rokDatumObj": "2026-12-28T23:00:00.000Z",
-      "danaDoRoka": 49,
-      "hitnost": "u_roku",
-      "fazaOpis": "Čeka se odgovor na tužbu",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Odgovor na tužbu poslan — čeka se odluka suda",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
-      }
+      },
+      "cekaAktPoPresudi": false,
+      "isAktDone": false,
+      "rokVrsta": "nema"
     }
   ]
 }

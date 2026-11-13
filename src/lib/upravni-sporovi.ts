@@ -47,6 +47,10 @@ export interface UpravniSpor {
   isSutnjaUprave: boolean;
   isOdgovoreno: boolean;
   isPresudeno: boolean;
+  cekaAktPoPresudi?: boolean;
+  isAktDone?: boolean;
+  rokVrsta?: 'odgovor_na_tuzbu' | 'akt_po_presudi' | 'paricijski_rok' | 'nema';
+  rokOpis?: string;
   rokDatum?: string | null;
   rokDatumObj?: string | null;
   danaDoRoka?: number | null;
@@ -338,67 +342,38 @@ export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, 
       danaDoRoka: null,
       rokDatum: null,
       rokDatumObj: null,
+      rokVrsta: 'nema',
       fazaOpis: ov.dismissedReason ? `Uklonjeno: ${ov.dismissedReason}` : 'Uklonjeno iz aktivnih sporova',
       hasManualOverride: true,
     };
   }
 
-  const aktUpIiPoPresudi = ov.aktUpIiPoPresudi !== undefined ? ov.aktUpIiPoPresudi : spor.aktUpIiPoPresudi;
-  const odgovorNaTuzbu = ov.odgovorNaTuzbu !== undefined ? ov.odgovorNaTuzbu : spor.odgovorNaTuzbu;
-  const presudaTroskovi = ov.presudaTroskovi !== undefined ? ov.presudaTroskovi : spor.presudaTroskovi;
-  const datumZapPresude = ov.datumZapPresude !== undefined ? ov.datumZapPresude : spor.datumZapPresude;
-  const zalbaPresuda = ov.zalbaPresuda !== undefined ? ov.zalbaPresuda : spor.zalbaPresuda;
-  const visokiUpravniSud = ov.visokiUpravniSud !== undefined ? ov.visokiUpravniSud : spor.visokiUpravniSud;
-  const rjesavatelj = ov.rjesavatelj !== undefined ? ov.rjesavatelj : spor.rjesavatelj;
-  const vrijednostNapomena = ov.vrijednostNapomena !== undefined ? ov.vrijednostNapomena : spor.vrijednostNapomena;
-
-  const isPresudeno = !!presudaTroskovi && presudaTroskovi.trim().length > 0;
-  const isOdgovoreno = !!odgovorNaTuzbu && (
-    odgovorNaTuzbu.toLowerCase().includes('odgovor') ||
-    odgovorNaTuzbu.toLowerCase().includes('posl') ||
-    odgovorNaTuzbu.toLowerCase().includes('dostavlj') ||
-    odgovorNaTuzbu.toLowerCase().includes('kp')
-  );
-
-  let fazaOpis = spor.fazaOpis;
-  if (isPresudeno) {
-    if (spor.isSutnjaUprave && aktUpIiPoPresudi) {
-      fazaOpis = `Presuđeno — Akt po presudi: ${aktUpIiPoPresudi}`;
-    } else {
-      fazaOpis = `Dovršeno / Presuđeno: ${presudaTroskovi}`;
-    }
-  } else if (aktUpIiPoPresudi) {
-    fazaOpis = `Donesen akt: ${aktUpIiPoPresudi}`;
-  }
+  const updatedBase: UpravniSpor = {
+    ...spor,
+    aktUpIiPoPresudi: ov.aktUpIiPoPresudi !== undefined ? ov.aktUpIiPoPresudi : spor.aktUpIiPoPresudi,
+    odgovorNaTuzbu: ov.odgovorNaTuzbu !== undefined ? ov.odgovorNaTuzbu : spor.odgovorNaTuzbu,
+    presudaTroskovi: ov.presudaTroskovi !== undefined ? ov.presudaTroskovi : spor.presudaTroskovi,
+    datumZapPresude: ov.datumZapPresude !== undefined ? ov.datumZapPresude : spor.datumZapPresude,
+    zalbaPresuda: ov.zalbaPresuda !== undefined ? ov.zalbaPresuda : spor.zalbaPresuda,
+    visokiUpravniSud: ov.visokiUpravniSud !== undefined ? ov.visokiUpravniSud : spor.visokiUpravniSud,
+    rjesavatelj: ov.rjesavatelj !== undefined ? ov.rjesavatelj : spor.rjesavatelj,
+    vrijednostNapomena: ov.vrijednostNapomena !== undefined ? ov.vrijednostNapomena : spor.vrijednostNapomena,
+    hasManualOverride: true,
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const troskoviInfo = parseTroskoviInfo(
-    presudaTroskovi,
-    aktUpIiPoPresudi,
-    zalbaPresuda,
-    vrijednostNapomena,
-    datumZapPresude,
+    updatedBase.presudaTroskovi,
+    updatedBase.aktUpIiPoPresudi,
+    updatedBase.zalbaPresuda,
+    updatedBase.vrijednostNapomena,
+    updatedBase.datumZapPresude,
     today,
     spor.troskoviInfo?.bojaOznake ? { M: spor.troskoviInfo.bojaOznake } : undefined
   );
 
-  return {
-    ...spor,
-    aktUpIiPoPresudi,
-    odgovorNaTuzbu,
-    presudaTroskovi,
-    datumZapPresude,
-    zalbaPresuda,
-    visokiUpravniSud,
-    rjesavatelj,
-    vrijednostNapomena,
-    isPresudeno,
-    isOdgovoreno,
-    fazaOpis,
-    troskoviInfo,
-    hasManualOverride: true,
-  };
+  return enrichSporCalculations({ ...updatedBase, troskoviInfo }, today);
 }
 
 const MONTHS_HR: Record<string, number> = {
@@ -684,6 +659,261 @@ export function parseTroskoviInfo(
   };
 }
 
+export function isAktDone(aktText?: string, presudaText?: string): boolean {
+  if (!aktText && !presudaText) return false;
+  const l = (aktText || '').toLowerCase().trim();
+  const p = (presudaText || '').toLowerCase().trim();
+
+  if (p.includes('obustavljen postupak') || p.includes('obustava')) {
+    return true; // sud obustavio postupak
+  }
+
+  if (!l) return false;
+
+  const isOnlyRokOrWaiting =
+    (l.startsWith('rok') || l.includes('rok do') || l.includes('čeka se spis') || l.includes('ceka se spis')) &&
+    !l.includes('doneseno') &&
+    !l.includes('izrađen') &&
+    !l.includes('izraden') &&
+    !l.includes('poslan') &&
+    !l.includes('otpremljen') &&
+    !l.includes('klasa:') &&
+    !l.includes('urbroj:') &&
+    !l.includes('rješenje') &&
+    !l.includes('rjesenje') &&
+    !l.includes('dopis');
+  if (isOnlyRokOrWaiting) return false;
+
+  return (
+    l.includes('doneseno') ||
+    l.includes('donesen') ||
+    l.includes('izrađen') ||
+    l.includes('izraden') ||
+    l.includes('poslan') ||
+    l.includes('otpremljen') ||
+    l.includes('vraćen hv') ||
+    l.includes('vracen hv') ||
+    l.includes('prema hv') ||
+    l.includes('prosl') ||
+    l.includes('dopis') ||
+    l.includes('rješenje') ||
+    l.includes('rjesenje') ||
+    l.includes('zaključak') ||
+    l.includes('zakljucak') ||
+    l.includes('klasa:') ||
+    l.includes('urbroj:') ||
+    l.includes('isn ') ||
+    l.includes(' isn') ||
+    l.includes('up/ii') ||
+    /\b\d{1,2}\.\d{1,2}\.\d{2,4}\.?\s+(ig|dm|is|kp)\b/i.test(l)
+  );
+}
+
+export function isDutyToIssueAct(presuda?: string, isSutnjaUprave?: boolean, aktPoPresudi?: string): boolean {
+  const pLower = (presuda || '').toLowerCase();
+  const aLower = (aktPoPresudi || '').toLowerCase();
+
+  if (aLower.includes('rok') || aLower.includes('čeka se spis') || aLower.includes('ceka se spis')) {
+    return true;
+  }
+
+  if (
+    pLower.includes('naloženo') ||
+    pLower.includes('nalozeno') ||
+    pLower.includes('donijeti rješenje') ||
+    pLower.includes('donijeti rjesenje') ||
+    pLower.includes('odlučiti o žalbi') ||
+    pLower.includes('odluciti o zalbi') ||
+    pLower.includes('poništeno') ||
+    pLower.includes('ponisteno') ||
+    pLower.includes('poništava') ||
+    pLower.includes('ponistava') ||
+    pLower.includes('usvojen') ||
+    pLower.includes('uvažen') ||
+    pLower.includes('uvazen') ||
+    pLower.includes('vraćen na ponov') ||
+    pLower.includes('vracen na ponov')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date()): UpravniSpor {
+  const normToday = new Date(today);
+  normToday.setHours(0, 0, 0, 0);
+
+  if (spor.isDismissed) {
+    return {
+      ...spor,
+      hitnost: 'rijeseno',
+      danaDoRoka: null,
+      rokDatum: null,
+      rokDatumObj: null,
+      rokVrsta: 'nema',
+      fazaOpis: spor.dismissedReason ? `Uklonjeno: ${spor.dismissedReason}` : 'Uklonjeno iz aktivnih sporova',
+    };
+  }
+
+  const presuda = (spor.presudaTroskovi || '').trim();
+  const aktPoPresudi = (spor.aktUpIiPoPresudi || '').trim();
+  const odgovor = (spor.odgovorNaTuzbu || '').trim();
+  const datumZapPresude = (spor.datumZapPresude || '').trim();
+  const tuziteljRaw = (spor.tuzitelj || '').trim();
+  const upIi = (spor.upIiRjesenje || '').trim();
+  const predmet = (spor.predmet || '').trim();
+
+  const isSutnja =
+    spor.isSutnjaUprave ||
+    upIi.toLowerCase().includes('šutnja') ||
+    tuziteljRaw.toLowerCase().includes('šutnja') ||
+    predmet.toLowerCase().includes('šutnja');
+
+  const isPresudeno = !!(presuda || datumZapPresude || (aktPoPresudi && isAktDone(aktPoPresudi, presuda)));
+
+  const isOdgovoreno =
+    odgovor.toLowerCase().includes('odgovor') ||
+    odgovor.toLowerCase().includes('poslan') ||
+    odgovor.toLowerCase().includes('odg.') ||
+    odgovor.toLowerCase().includes('kp');
+
+  const aktDone = isAktDone(aktPoPresudi, presuda);
+  const dutyToIssueAct = isDutyToIssueAct(presuda, isSutnja, aktPoPresudi);
+  const cekaAktPoPresudi = isPresudeno && dutyToIssueAct && !aktDone;
+
+  let rokDatumObj: Date | null = null;
+  let rokDatumStr: string | null = null;
+  let rokVrsta: UpravniSpor['rokVrsta'] = 'nema';
+  let fazaOpis = 'Čeka se odgovor na tužbu';
+
+  if (cekaAktPoPresudi) {
+    rokVrsta = 'akt_po_presudi';
+    const actDeadline = extractDeadline(aktPoPresudi);
+    if (actDeadline.deadlineDate) {
+      rokDatumObj = actDeadline.deadlineDate;
+      rokDatumStr = actDeadline.deadlineStr;
+    } else if (datumZapPresude) {
+      const zapDate = parseCroatianDate(datumZapPresude);
+      if (zapDate) {
+        const pLower = presuda.toLowerCase();
+        const days = pLower.includes('30 dana') || pLower.includes('30 d') ? 30 : 60;
+        const target = new Date(zapDate.getTime() + days * 24 * 60 * 60 * 1000);
+        rokDatumObj = target;
+        rokDatumStr = `${target.getDate()}.${target.getMonth() + 1}.${target.getFullYear()}.`;
+      }
+    }
+
+    fazaOpis = `Donošenje drugostupanjskog rješenja po presudi (${aktPoPresudi || (rokDatumStr ? `rok ${rokDatumStr}` : 'rok 60 dana')})`;
+  } else if (isPresudeno) {
+    fazaOpis = aktDone
+      ? `Presuđeno — Akt donesen: ${aktPoPresudi}`
+      : `Presuda: ${presuda || 'Presuđeno'}`;
+  } else if (isOdgovoreno) {
+    fazaOpis = 'Odgovor na tužbu poslan — čeka se odluka suda';
+  } else {
+    rokVrsta = 'odgovor_na_tuzbu';
+    const dInfo = extractDeadline(odgovor);
+    rokDatumObj = dInfo.deadlineDate;
+    rokDatumStr = dInfo.deadlineStr;
+    fazaOpis = dInfo.deadlineStr ? `Čeka se odgovor na tužbu (rok: ${dInfo.deadlineStr})` : 'Čeka se odgovor na tužbu';
+  }
+
+  let danaDoRoka: number | null = null;
+  let hitnost: UpravniSpor['hitnost'] = 'nepoznato';
+
+  if (cekaAktPoPresudi) {
+    if (rokDatumObj) {
+      const target = new Date(rokDatumObj);
+      target.setHours(0, 0, 0, 0);
+      const diffMs = target.getTime() - normToday.getTime();
+      danaDoRoka = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (danaDoRoka < 0) hitnost = 'isteklo';
+      else if (danaDoRoka === 0) hitnost = 'danas';
+      else if (danaDoRoka <= 3) hitnost = 'kriticno';
+      else if (danaDoRoka <= 10) hitnost = 'hitno';
+      else hitnost = 'u_roku';
+    } else {
+      hitnost = 'hitno';
+    }
+  } else if (isPresudeno) {
+    hitnost = 'rijeseno';
+    danaDoRoka = null;
+  } else if (isOdgovoreno) {
+    hitnost = 'rijeseno';
+    danaDoRoka = null;
+  } else if (rokDatumObj) {
+    const target = new Date(rokDatumObj);
+    target.setHours(0, 0, 0, 0);
+    const diffMs = target.getTime() - normToday.getTime();
+    danaDoRoka = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (danaDoRoka < 0) hitnost = 'isteklo';
+    else if (danaDoRoka === 0) hitnost = 'danas';
+    else if (danaDoRoka <= 3) hitnost = 'kriticno';
+    else if (danaDoRoka <= 10) hitnost = 'hitno';
+    else hitnost = 'u_roku';
+  }
+
+  let rokOpis: string | undefined;
+  if (cekaAktPoPresudi && rokDatumStr) {
+    rokOpis = `Donošenje drugostupanjskog rješenja po presudi suda (rok: ${rokDatumStr})`;
+  } else if (!isPresudeno && !isOdgovoreno && rokDatumStr) {
+    rokOpis = `Odgovor na tužbu sudu (rok: ${rokDatumStr})`;
+  }
+
+  // Rekalkulacija troskoviInfo tako da ne ovisi o starom vremenu spremanja cache-a
+  let troskoviInfo = spor.troskoviInfo;
+  if (troskoviInfo && troskoviInfo.imaTroskova) {
+    if (
+      troskoviInfo.status === 'poslan_nalog' ||
+      troskoviInfo.status === 'placeno' ||
+      troskoviInfo.bojaOznake === 'smedje' ||
+      troskoviInfo.bojaOznake === 'zeleno'
+    ) {
+      troskoviInfo = {
+        ...troskoviInfo,
+        hitnost: 'rijeseno',
+        danaDoRoka: null,
+      };
+    } else if (troskoviInfo.rokPlacanjaDate) {
+      const tTarget = new Date(troskoviInfo.rokPlacanjaDate);
+      tTarget.setHours(0, 0, 0, 0);
+      const tDiffMs = tTarget.getTime() - normToday.getTime();
+      const tDana = Math.round(tDiffMs / (1000 * 60 * 60 * 24));
+      let tHitnost: TroskoviInfo['hitnost'] = 'u_roku';
+      if (tDana < 0) tHitnost = 'isteklo';
+      else if (tDana === 0) tHitnost = 'danas';
+      else if (tDana <= 5) tHitnost = 'kriticno';
+      else if (tDana <= 15) tHitnost = 'hitno';
+
+      troskoviInfo = {
+        ...troskoviInfo,
+        danaDoRoka: tDana,
+        hitnost: tHitnost,
+      };
+    }
+  }
+
+  return {
+    ...spor,
+    isSutnjaUprave: isSutnja,
+    isPresudeno,
+    isOdgovoreno,
+    cekaAktPoPresudi,
+    isAktDone: aktDone,
+    rokVrsta,
+    rokOpis,
+    rokDatum: rokDatumStr,
+    rokDatumObj: rokDatumObj ? rokDatumObj.toISOString() : null,
+    danaDoRoka,
+    hitnost,
+    fazaOpis,
+    troskoviInfo,
+  };
+}
+
 export function parseExcelSporovi(
   forceRefresh = false,
   providedOverrides?: Record<string, SporOverride>,
@@ -745,7 +975,10 @@ export function parseExcelSporovi(
       const hasModernCosts = sample && sample.troskoviInfo?.bojaOznake;
       if (hasModernCosts && (!canReadLive || cached.fileMtime === fileMtime)) {
         const merged = mergeWithCustom(cached.sporovi || []);
-        return { sporovi: merged, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const refreshed = merged.map((s) => enrichSporCalculations(s, today));
+        return { sporovi: refreshed, lastModified: cached.fileMtime || new Date().toISOString(), source: 'cache' };
       }
     } catch {
       // continue to parse
@@ -755,7 +988,10 @@ export function parseExcelSporovi(
   if (!canReadLive && fs.existsSync(cachePath)) {
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
     const merged = mergeWithCustom(cached.sporovi || []);
-    return { sporovi: merged, lastModified: cached.fileMtime || '', source: 'cache' };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const refreshed = merged.map((s) => enrichSporCalculations(s, today));
+    return { sporovi: refreshed, lastModified: cached.fileMtime || '', source: 'cache' };
   }
 
   if (!canReadLive) {
@@ -948,7 +1184,7 @@ export function parseExcelSporovi(
         cellColors
       );
 
-      sporovi.push({
+      const baseSpor: UpravniSpor = {
         id: `spor-${rowNum}`,
         rbr,
         rowNum,
@@ -976,7 +1212,9 @@ export function parseExcelSporovi(
         hitnost,
         fazaOpis,
         troskoviInfo,
-      });
+      };
+
+      sporovi.push(enrichSporCalculations(baseSpor, today));
     }
 
     const finalSporovi = mergeWithCustom(sporovi);
