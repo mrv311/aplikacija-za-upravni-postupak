@@ -42,6 +42,7 @@ import {
 } from '@/app/actions/sporoviActions';
 import type { UpravniSpor } from '@/lib/upravni-sporovi';
 import type { ExtractedCourtCase } from '@/lib/court-packet-parser';
+import SporDualAnnulmentInfo from '@/components/SporDualAnnulmentInfo';
 
 interface UpravniSporoviModalProps {
   isOpen: boolean;
@@ -1034,6 +1035,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                           ⏳ Čeka se novo rješenje
                                         </span>
                                       )}
+                                      {!spor.cekaAktPoPresudi && spor.isPonistenoPrvoIDrugo && (
+                                        <SporDualAnnulmentInfo spor={spor} variant="badge" />
+                                      )}
                                     </div>
                                   ) : !spor.troskoviInfo?.imaTroskova ? (
                                     <span className="text-slate-400 text-2xs">U tijeku</span>
@@ -1490,6 +1494,8 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                                       + Unesi rješenje
                                                     </button>
                                                   </div>
+                                                ) : spor.isPonistenoPrvoIDrugo ? (
+                                                  <SporDualAnnulmentInfo spor={spor} variant="card" onEdit={() => startEditingSpor(spor)} />
                                                 ) : spor.aktUpIiPoPresudi ? (
                                                   <strong className="text-emerald-700 dark:text-emerald-400">{spor.aktUpIiPoPresudi}</strong>
                                                 ) : (

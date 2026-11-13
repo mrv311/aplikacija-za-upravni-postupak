@@ -49,6 +49,7 @@ export interface UpravniSpor {
   isPresudeno: boolean;
   cekaAktPoPresudi?: boolean;
   isAktDone?: boolean;
+  isPonistenoPrvoIDrugo?: boolean;
   rokVrsta?: 'odgovor_na_tuzbu' | 'akt_po_presudi' | 'paricijski_rok' | 'nema';
   rokOpis?: string;
   rokDatum?: string | null;
@@ -705,11 +706,63 @@ export function isAktDone(aktText?: string, presudaText?: string): boolean {
     l.includes('isn ') ||
     l.includes(' isn') ||
     l.includes('up/ii') ||
+    /^\d{1,2}\.\d{1,2}\.\d{2,4}\.?$/.test(l) ||
     /\b\d{1,2}\.\d{1,2}\.\d{2,4}\.?\s+(ig|dm|is|kp)\b/i.test(l)
   );
 }
 
-export function isDutyToIssueAct(presuda?: string, isSutnjaUprave?: boolean, aktPoPresudi?: string): boolean {
+/**
+ * Provjerava je li sud poništio i prvostupanjsko (I. / UP/I / HV) i drugostupanjsko (II. / UP/II) rješenje.
+ * U toj situaciji Ministarstvo nema obvezu donošenja drugostupanjskog rješenja,
+ * već je dužno dopisom vratiti predmet na prvi stupanj radi postupanja sukladno presudi.
+ */
+export function isBothInstancesAnnulled(
+  presuda?: string,
+  datumZapPresude?: string,
+  visokiUpravniSud?: string
+): boolean {
+  const combinedLower = `${presuda || ''} ${datumZapPresude || ''}`
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (combinedLower) {
+    const hasAnnulmentContext =
+      /poni[sš]t/.test(combinedLower) ||
+      /prvostup\w*.*drugostup\w*|drugostup\w*.*prvostup\w*/.test(combinedLower);
+
+    if (hasAnnulmentContext) {
+      if (/prvostup\w*.*drugostup\w*|drugostup\w*.*prvostup\w*/.test(combinedLower)) return true;
+      if (/sud\s+poni[sš]tio\s+i\s+prvostup/.test(combinedLower)) return true;
+      if (/(?:up\/?ii\s+i\s+up\/?i|up\/?i\s+i\s+up\/?ii)/.test(combinedLower)) return true;
+      if (/poni[sš]ten[oa]?\s+(?:up\/?ii|drugostup\w*)\b.*\b(?:i|te)\s+(?:i\.?\s*(?:stup\w*\s*)?rje|up\/?i\b|prvostup)/.test(combinedLower)) return true;
+      if (/poni[sš]ten[oa]?\s+i\.?\s+i\s+(?:dijelom\s+)?ii\.?(?:\s|$|[-–,])/.test(combinedLower)) return true;
+    }
+  }
+
+  const vusLower = (visokiUpravniSud || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  if (
+    vusLower &&
+    /poni[sš]t/.test(vusLower) &&
+    /ministarstva\s+i\s+(?:hv|hrvatskih\s+voda|grad)/.test(vusLower)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isDutyToIssueAct(
+  presuda?: string,
+  isSutnjaUprave?: boolean,
+  aktPoPresudi?: string,
+  datumZapPresude?: string,
+  visokiUpravniSud?: string
+): boolean {
+  if (isBothInstancesAnnulled(presuda, datumZapPresude, visokiUpravniSud)) {
+    return false;
+  }
+
   const pLower = (presuda || '').toLowerCase();
   const aLower = (aktPoPresudi || '').toLowerCase();
 
@@ -744,9 +797,22 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
   const normToday = new Date(today);
   normToday.setHours(0, 0, 0, 0);
 
+  const presuda = (spor.presudaTroskovi || '').trim();
+  const aktPoPresudi = (spor.aktUpIiPoPresudi || '').trim();
+  const odgovor = (spor.odgovorNaTuzbu || '').trim();
+  const datumZapPresude = (spor.datumZapPresude || '').trim();
+  const tuziteljRaw = (spor.tuzitelj || '').trim();
+  const upIi = (spor.upIiRjesenje || '').trim();
+  const predmet = (spor.predmet || '').trim();
+  const visokiUpravniSud = (spor.visokiUpravniSud || '').trim();
+  const napomena = (spor.vrijednostNapomena || '').trim();
+  const ponistenoPrvoIDrugo = isBothInstancesAnnulled(presuda, datumZapPresude, visokiUpravniSud);
+
   if (spor.isDismissed) {
     return {
       ...spor,
+      isPonistenoPrvoIDrugo: ponistenoPrvoIDrugo,
+      cekaAktPoPresudi: false,
       hitnost: 'rijeseno',
       danaDoRoka: null,
       rokDatum: null,
@@ -755,14 +821,6 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
       fazaOpis: spor.dismissedReason ? `Uklonjeno: ${spor.dismissedReason}` : 'Uklonjeno iz aktivnih sporova',
     };
   }
-
-  const presuda = (spor.presudaTroskovi || '').trim();
-  const aktPoPresudi = (spor.aktUpIiPoPresudi || '').trim();
-  const odgovor = (spor.odgovorNaTuzbu || '').trim();
-  const datumZapPresude = (spor.datumZapPresude || '').trim();
-  const tuziteljRaw = (spor.tuzitelj || '').trim();
-  const upIi = (spor.upIiRjesenje || '').trim();
-  const predmet = (spor.predmet || '').trim();
 
   const isSutnja =
     spor.isSutnjaUprave ||
@@ -779,8 +837,8 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
     odgovor.toLowerCase().includes('kp');
 
   const aktDone = isAktDone(aktPoPresudi, presuda);
-  const dutyToIssueAct = isDutyToIssueAct(presuda, isSutnja, aktPoPresudi);
-  const cekaAktPoPresudi = isPresudeno && dutyToIssueAct && !aktDone;
+  const dutyToIssueAct = isDutyToIssueAct(presuda, isSutnja, aktPoPresudi, datumZapPresude, visokiUpravniSud);
+  const cekaAktPoPresudi = isPresudeno && !ponistenoPrvoIDrugo && dutyToIssueAct && !aktDone;
 
   let rokDatumObj: Date | null = null;
   let rokDatumStr: string | null = null;
@@ -806,9 +864,19 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
 
     fazaOpis = `Donošenje drugostupanjskog rješenja po presudi (${aktPoPresudi || (rokDatumStr ? `rok ${rokDatumStr}` : 'rok 60 dana')})`;
   } else if (isPresudeno) {
-    fazaOpis = aktDone
-      ? `Presuđeno — Akt donesen: ${aktPoPresudi}`
-      : `Presuda: ${presuda || 'Presuđeno'}`;
+    if (ponistenoPrvoIDrugo) {
+      const vracenSpis =
+        aktDone ||
+        napomena.toLowerCase().includes('spis vraćen') ||
+        napomena.toLowerCase().includes('spis vracen');
+      fazaOpis = vracenSpis
+        ? `Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (${aktPoPresudi || napomena})`
+        : 'Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)';
+    } else {
+      fazaOpis = aktDone
+        ? `Presuđeno — Akt donesen: ${aktPoPresudi}`
+        : `Presuda: ${presuda || 'Presuđeno'}`;
+    }
   } else if (isOdgovoreno) {
     fazaOpis = 'Odgovor na tužbu poslan — čeka se odluka suda';
   } else {
@@ -903,6 +971,7 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
     isOdgovoreno,
     cekaAktPoPresudi,
     isAktDone: aktDone,
+    isPonistenoPrvoIDrugo: ponistenoPrvoIDrugo,
     rokVrsta,
     rokOpis,
     rokDatum: rokDatumStr,

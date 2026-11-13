@@ -1,6 +1,6 @@
 {
   "fileMtime": "2026-11-11T11:20:07.000Z",
-  "savedAt": "2026-11-13T08:26:01.118Z",
+  "savedAt": "2026-11-13T09:01:16.268Z",
   "count": 327,
   "sporovi": [
     {
@@ -37,6 +37,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -73,6 +74,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -109,6 +111,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -145,6 +148,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -181,6 +185,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -217,6 +222,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -253,6 +259,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -289,6 +296,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -325,6 +333,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -361,6 +370,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -397,6 +407,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -433,6 +444,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -469,6 +481,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -505,6 +518,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema",
       "rokOpis": "Odgovor na tužbu sudu (rok: 20. lipnja 2018.)",
       "isDismissed": true,
@@ -545,6 +559,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -581,6 +596,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -617,6 +633,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -653,6 +670,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -689,6 +707,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -731,6 +750,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -767,6 +787,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -803,6 +824,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -839,6 +861,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -866,7 +889,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Odbijena tužba",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -875,6 +898,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -911,6 +935,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -947,6 +972,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -983,6 +1009,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1019,6 +1046,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1055,6 +1083,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1091,6 +1120,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2018.)"
     },
@@ -1132,6 +1162,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1168,6 +1199,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema",
       "isDismissed": true,
       "dismissedReason": "Ručno uklonjeno iz evidencije aktivnih sporova",
@@ -1207,6 +1239,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1243,6 +1276,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1279,6 +1313,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1315,6 +1350,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1351,6 +1387,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1387,6 +1424,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1423,6 +1461,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1459,6 +1498,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1495,6 +1535,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1531,6 +1572,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1567,6 +1609,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1603,6 +1646,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1639,6 +1683,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1675,6 +1720,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1711,6 +1757,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1747,6 +1794,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1783,6 +1831,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1819,6 +1868,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1855,6 +1905,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1891,6 +1942,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1927,6 +1979,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -1963,6 +2016,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2005,6 +2059,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2041,6 +2096,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2077,6 +2133,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2113,6 +2170,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2149,6 +2207,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2185,6 +2244,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2221,6 +2281,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2257,6 +2318,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2299,6 +2361,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2335,6 +2398,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2371,6 +2435,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2407,6 +2472,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2443,6 +2509,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2479,6 +2546,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2515,6 +2583,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2551,6 +2620,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2591,6 +2661,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2627,6 +2698,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2663,6 +2735,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2699,6 +2772,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2735,6 +2809,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2771,6 +2846,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2807,6 +2883,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2843,6 +2920,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2885,6 +2963,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2921,6 +3000,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -2961,6 +3041,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 14.8.2020.)"
     },
@@ -3003,6 +3084,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3039,6 +3121,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3075,6 +3158,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3117,6 +3201,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3159,6 +3244,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3195,6 +3281,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3231,6 +3318,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 21.11.2020.)"
     },
@@ -3268,6 +3356,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3308,6 +3397,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 28.12.2020.)"
     },
@@ -3345,6 +3435,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi"
     },
     {
@@ -3381,6 +3472,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi"
     },
     {
@@ -3417,6 +3509,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3444,7 +3537,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: KLASA: UP/II-325-08/17-03/430, URBROJ: 517-07-2-2-20-9 od 2. RUJNA 2020.",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (KLASA: UP/II-325-08/17-03/430, URBROJ: 517-07-2-2-20-9 od 2. RUJNA 2020.)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -3453,6 +3546,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -3489,6 +3583,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3515,8 +3610,8 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "hitno",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 60 dana)",
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -3527,9 +3622,10 @@
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-102",
@@ -3565,6 +3661,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3601,6 +3698,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3637,6 +3735,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "odgovor_na_tuzbu"
     },
     {
@@ -3673,6 +3772,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3709,6 +3809,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3745,6 +3846,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3772,7 +3874,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Odbijena tužba",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00kn",
@@ -3787,6 +3889,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -3823,6 +3926,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3859,6 +3963,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3885,17 +3990,18 @@
       "rokDatum": null,
       "rokDatumObj": null,
       "danaDoRoka": null,
-      "hitnost": "hitno",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 60 dana)",
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-113",
@@ -3931,6 +4037,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -3954,21 +4061,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": "6.8.2021.",
-      "rokDatumObj": "2021-08-05T22:00:00.000Z",
-      "danaDoRoka": -1925,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 6.8.2021.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.8.2021.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-115",
@@ -4004,6 +4111,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4046,6 +4154,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4082,6 +4191,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4118,6 +4228,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4154,6 +4265,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4190,6 +4302,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4226,6 +4339,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4262,6 +4376,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4298,6 +4413,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4334,6 +4450,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4370,6 +4487,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4406,6 +4524,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4442,6 +4561,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4478,6 +4598,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4514,6 +4635,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
@@ -4551,6 +4673,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4587,6 +4710,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4623,6 +4747,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4659,6 +4784,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4695,6 +4821,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4731,6 +4858,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4767,6 +4895,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4803,6 +4932,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4839,6 +4969,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4875,6 +5006,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
@@ -4912,6 +5044,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 29.3.2022.)"
     },
@@ -4949,6 +5082,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -4985,6 +5119,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5022,6 +5157,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5058,6 +5194,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5095,6 +5232,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 9.5.2022.)"
     },
@@ -5132,6 +5270,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5168,6 +5307,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5204,6 +5344,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5241,6 +5382,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5278,6 +5420,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5315,6 +5458,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5358,6 +5502,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5395,6 +5540,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5432,6 +5578,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5475,6 +5622,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5499,11 +5647,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": "6.7.2022.",
-      "rokDatumObj": "2022-07-05T22:00:00.000Z",
-      "danaDoRoka": -1591,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (6.7.2022.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Presuđeno — Akt donesen: 6.7.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5516,10 +5664,10 @@
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
-      "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2022.)"
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-158",
@@ -5543,11 +5691,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": "6.7.2022.",
-      "rokDatumObj": "2022-07-05T22:00:00.000Z",
-      "danaDoRoka": -1591,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (6.7.2022.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Presuđeno — Akt donesen: 6.7.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "312,50 kn",
@@ -5560,10 +5708,10 @@
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
-      "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 6.7.2022.)"
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-159",
@@ -5604,6 +5752,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.7.2022.)"
     },
@@ -5642,6 +5791,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5666,11 +5816,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": "7.10.2022.",
-      "rokDatumObj": "2022-10-06T22:00:00.000Z",
-      "danaDoRoka": -1498,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (7.10.2022.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Presuđeno — Akt donesen: 7.10.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5683,10 +5833,10 @@
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
-      "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 7.10.2022.)"
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-162",
@@ -5727,6 +5877,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 28.5.2022.)"
     },
@@ -5771,6 +5922,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5808,6 +5960,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5845,6 +5998,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5886,6 +6040,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 1.7.2022.)"
     },
@@ -5915,7 +6070,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništena točka II rješenja",
+      "fazaOpis": "Presuđeno — Akt donesen: 10.10.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5929,7 +6084,8 @@
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
       "cekaAktPoPresudi": false,
-      "isAktDone": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -5954,11 +6110,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": false,
       "isPresudeno": true,
-      "rokDatum": "3.6.2022.",
-      "rokDatumObj": "2022-06-02T22:00:00.000Z",
-      "danaDoRoka": -1624,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (3.6.2022.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Presuđeno — Akt donesen: 3.6.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -5971,10 +6127,10 @@
         "bojaOznake": "zuto",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
-      "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 3.6.2022.)"
+      "cekaAktPoPresudi": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-169",
@@ -6015,6 +6171,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 7.8.2022.)"
     },
@@ -6053,6 +6210,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6094,6 +6252,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 19.6.2022.)"
     },
@@ -6136,6 +6295,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.7.2022.)"
     },
@@ -6174,6 +6334,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6211,6 +6372,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6252,6 +6414,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6293,6 +6456,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6334,6 +6498,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6371,6 +6536,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6408,6 +6574,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6445,6 +6612,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "odgovor_na_tuzbu",
       "rokOpis": "Odgovor na tužbu sudu (rok: 24. siječnja 2022.)"
     },
@@ -6487,6 +6655,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6528,6 +6697,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6569,6 +6739,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6606,6 +6777,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6643,6 +6815,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6680,6 +6853,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6717,6 +6891,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "odgovor_na_tuzbu",
       "rokOpis": "Odgovor na tužbu sudu (rok: izrađeno rješenje 30.11.2021.)"
     },
@@ -6761,6 +6936,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6789,7 +6965,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništena točka II rješenja i vraćeno na ponovni postupak",
+      "fazaOpis": "Presuđeno — Akt donesen: 23.6.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -6803,7 +6979,8 @@
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
       "cekaAktPoPresudi": false,
-      "isAktDone": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6832,7 +7009,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništena točka II rješenja i vraćeno na ponovni postupak",
+      "fazaOpis": "Presuđeno — Akt donesen: 27.6.2022.",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "3.125,00 kn",
@@ -6846,7 +7023,8 @@
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
       "cekaAktPoPresudi": false,
-      "isAktDone": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6884,6 +7062,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6921,6 +7100,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6962,6 +7142,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -6990,7 +7171,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: dopisom proslijeđeno HV - 13.6.2024.",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (dopisom proslijeđeno HV - 13.6.2024.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 eur",
@@ -7005,6 +7186,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -7042,6 +7224,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7079,6 +7262,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7107,7 +7291,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: ",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (TROŠKOVI SPORA 1.244,28 eur PLAĆENO)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1.244,28 eur",
@@ -7120,6 +7304,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -7163,6 +7348,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7200,6 +7386,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7243,6 +7430,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7280,6 +7468,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7324,6 +7513,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7367,6 +7557,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7404,6 +7595,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7441,6 +7633,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7484,6 +7677,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7527,6 +7721,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7555,7 +7750,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: dopis 9.7.2024.",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (dopis 9.7.2024.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "750,00 EUR",
@@ -7571,6 +7766,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -7608,6 +7804,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7645,6 +7842,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7682,6 +7880,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7719,6 +7918,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7756,6 +7956,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7793,6 +7994,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7836,6 +8038,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7873,6 +8076,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -7916,6 +8120,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.8.2025.)"
     },
@@ -7954,6 +8159,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.8.2025.)"
     },
@@ -7998,6 +8204,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8041,6 +8248,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8085,6 +8293,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8122,6 +8331,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8159,6 +8369,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8196,6 +8407,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8233,6 +8445,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8270,6 +8483,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8307,6 +8521,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8344,6 +8559,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8381,6 +8597,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8418,6 +8635,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8446,7 +8664,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: 7.11.2024. dopis prema HV",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (7.11.2024. dopis prema HV)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -8455,6 +8673,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -8492,6 +8711,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8529,6 +8749,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8566,6 +8787,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8603,6 +8825,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8640,6 +8863,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8664,21 +8888,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "23.8.2024.",
-      "rokDatumObj": "2024-08-22T22:00:00.000Z",
-      "danaDoRoka": -812,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 23.8.2024.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 23.8.2024.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-240",
@@ -8702,11 +8926,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "23.8.2024.",
-      "rokDatumObj": "2024-08-22T22:00:00.000Z",
-      "danaDoRoka": -812,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 23.8.2024.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "2500 EUR",
@@ -8719,10 +8943,10 @@
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 23.8.2024.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-242",
@@ -8750,7 +8974,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: 7.11.2024. dopis prema HV",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (7.11.2024. dopis prema HV)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -8759,6 +8983,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -8803,6 +9028,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8840,6 +9066,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8881,6 +9108,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8924,6 +9152,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8961,6 +9190,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -8998,6 +9228,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9035,6 +9266,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9063,7 +9295,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Odbijena tužba",
+      "fazaOpis": "Presuđeno — Akt donesen: 5.6.2025.",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -9071,7 +9303,8 @@
         "opis": "Nema dosuđenih troškova spora"
       },
       "cekaAktPoPresudi": false,
-      "isAktDone": false,
+      "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9115,6 +9348,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9152,6 +9386,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9196,6 +9431,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9233,6 +9469,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9270,6 +9507,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9307,6 +9545,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9344,6 +9583,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9381,6 +9621,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9418,6 +9659,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9455,6 +9697,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9492,6 +9735,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9529,6 +9773,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9566,6 +9811,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9603,6 +9849,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9644,6 +9891,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9688,6 +9936,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9725,6 +9974,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9769,6 +10019,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9806,6 +10057,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9843,6 +10095,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9880,6 +10133,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9917,6 +10171,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -9941,21 +10196,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "15.6.2025.",
-      "rokDatumObj": "2025-06-14T22:00:00.000Z",
-      "danaDoRoka": -516,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 15.6.2025.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 15.6.2025.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-274",
@@ -9992,6 +10247,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10029,6 +10285,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "odgovor_na_tuzbu",
       "rokOpis": "Odgovor na tužbu sudu (rok: 1.1.2025.)"
     },
@@ -10067,6 +10324,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10110,6 +10368,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10147,6 +10406,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10184,6 +10444,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10228,6 +10489,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 10.8.2026.)"
     },
@@ -10266,6 +10528,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10303,6 +10566,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10347,6 +10611,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 10.8.2026.)"
     },
@@ -10385,6 +10650,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10422,6 +10688,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10459,6 +10726,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10496,6 +10764,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10533,6 +10802,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10570,6 +10840,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10613,6 +10884,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10650,6 +10922,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10687,6 +10960,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10724,6 +10998,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10767,6 +11042,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10811,6 +11087,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10848,6 +11125,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10892,6 +11170,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -10920,7 +11199,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuda: Poništen I i dijelom II rješenje",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
@@ -10929,6 +11208,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -10953,21 +11233,21 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "19.7.2026.",
-      "rokDatumObj": "2026-07-18T22:00:00.000Z",
-      "danaDoRoka": -117,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 19.7.2026.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": false,
         "status": "nema_troskova",
         "hitnost": "nema",
         "opis": "Nema dosuđenih troškova spora"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 19.7.2026.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-301",
@@ -11004,6 +11284,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11041,6 +11322,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11065,11 +11347,11 @@
       "isSutnjaUprave": false,
       "isOdgovoreno": true,
       "isPresudeno": true,
-      "rokDatum": "30.12.2025.",
-      "rokDatumObj": "2025-12-29T23:00:00.000Z",
-      "danaDoRoka": -318,
-      "hitnost": "isteklo",
-      "fazaOpis": "Donošenje drugostupanjskog rješenja po presudi (rok 30.12.2025.)",
+      "rokDatum": null,
+      "rokDatumObj": null,
+      "danaDoRoka": null,
+      "hitnost": "rijeseno",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vratiti spis I. stupnju (nema obveze II. rješenja)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -11082,10 +11364,10 @@
         "bojaOznake": "zeleno",
         "izvorPolje": "Stupac O (Razno / Napomena)"
       },
-      "cekaAktPoPresudi": true,
+      "cekaAktPoPresudi": false,
       "isAktDone": false,
-      "rokVrsta": "akt_po_presudi",
-      "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 30.12.2025.)"
+      "isPonistenoPrvoIDrugo": true,
+      "rokVrsta": "nema"
     },
     {
       "id": "spor-304",
@@ -11113,7 +11395,7 @@
       "rokDatumObj": null,
       "danaDoRoka": null,
       "hitnost": "rijeseno",
-      "fazaOpis": "Presuđeno — Akt donesen: dopis 23.3.2026.",
+      "fazaOpis": "Poništeno I. i II. rješenje — dopisom vraćeno I. stupnju (dopis 23.3.2026.)",
       "troskoviInfo": {
         "imaTroskova": true,
         "iznos": "1250 EUR",
@@ -11129,6 +11411,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": true,
       "rokVrsta": "nema"
     },
     {
@@ -11166,6 +11449,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11203,6 +11487,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11247,6 +11532,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11291,6 +11577,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11335,6 +11622,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 26.10.2026.)"
     },
@@ -11373,6 +11661,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11410,6 +11699,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11447,6 +11737,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11489,6 +11780,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11526,6 +11818,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11563,6 +11856,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11600,6 +11894,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11637,6 +11932,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11674,6 +11970,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11711,6 +12008,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11748,6 +12046,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11785,6 +12084,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11822,6 +12122,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11859,6 +12160,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11896,6 +12198,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11933,6 +12236,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -11970,6 +12274,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12007,6 +12312,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12044,6 +12350,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12081,6 +12388,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12124,6 +12432,7 @@
       },
       "cekaAktPoPresudi": true,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "akt_po_presudi",
       "rokOpis": "Donošenje drugostupanjskog rješenja po presudi suda (rok: 13.11.2026)"
     },
@@ -12168,6 +12477,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": true,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12205,6 +12515,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12242,6 +12553,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12279,6 +12591,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12316,6 +12629,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12353,6 +12667,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12390,6 +12705,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     },
     {
@@ -12427,6 +12743,7 @@
       },
       "cekaAktPoPresudi": false,
       "isAktDone": false,
+      "isPonistenoPrvoIDrugo": false,
       "rokVrsta": "nema"
     }
   ]

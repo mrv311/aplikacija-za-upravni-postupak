@@ -33,6 +33,7 @@ import type { ExtractedCourtCase } from '@/lib/court-packet-parser';
 import PredmetiTable from '@/components/PredmetiTable';
 import NewPredmetButton from '@/components/NewPredmetButton';
 import OdgovorNaTuzbuModal from '@/components/OdgovorNaTuzbuModal';
+import SporDualAnnulmentInfo from '@/components/SporDualAnnulmentInfo';
 import {
   getUpravniSporoviAction,
   analyzeCourtPacketAction,
@@ -1132,6 +1133,9 @@ export default function MainDashboardView({
                                           ⏳ Čeka se novo rješenje
                                         </span>
                                       )}
+                                      {!spor.cekaAktPoPresudi && spor.isPonistenoPrvoIDrugo && (
+                                        <SporDualAnnulmentInfo spor={spor} variant="badge" />
+                                      )}
                                     </div>
                                   ) : !spor.troskoviInfo?.imaTroskova ? (
                                     <span className="text-slate-400 text-2xs">U tijeku</span>
@@ -1618,6 +1622,8 @@ export default function MainDashboardView({
                                                       + Unesi rješenje
                                                     </button>
                                                   </div>
+                                                ) : spor.isPonistenoPrvoIDrugo ? (
+                                                  <SporDualAnnulmentInfo spor={spor} variant="card" onEdit={() => startEditingSpor(spor)} />
                                                 ) : spor.aktUpIiPoPresudi ? (
                                                   <strong className="text-emerald-700 dark:text-emerald-400">{spor.aktUpIiPoPresudi}</strong>
                                                 ) : (
