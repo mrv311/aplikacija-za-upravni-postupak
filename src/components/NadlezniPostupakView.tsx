@@ -359,30 +359,31 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       {/* KLASA / Područje / Napomena */}
-                      <td className="px-4 py-3.5 align-top">
-                        <div className="flex items-center gap-2 flex-wrap">
+                      <td className="px-3 py-3 align-top">
+                        <div className="flex items-center gap-1.5 flex-nowrap">
                           <Link
                             href={`/predmeti/${predmet.id}`}
-                            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="font-mono font-bold tabular-nums whitespace-nowrap text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
                           >
                             {predmet.klasa}
                           </Link>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          <span className="text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             {predmet.podrucje}
                           </span>
                         </div>
                         {predmet.napomena && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400 italic mt-1 line-clamp-1 max-w-xs">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 italic mt-0.5 line-clamp-1 max-w-[200px]">
                             „{predmet.napomena}”
                           </p>
                         )}
                       </td>
 
                       {/* Stranka */}
-                      <td className="px-4 py-3.5 align-top">
+                      <td className="px-3 py-3 align-top min-w-[130px] max-w-[210px]">
                         <Link
                           href={`/predmeti/${predmet.id}`}
-                          className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 block max-w-56 truncate"
+                          title={predmet.stranka || '-'}
+                          className="font-semibold text-[13px] leading-snug text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 line-clamp-2 whitespace-normal break-words"
                         >
                           {predmet.stranka || '-'}
                         </Link>

@@ -226,7 +226,7 @@ function renderInlineNodes(text: string): React.ReactNode[] {
       return (
         <code
           key={i}
-          className="px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200/80 text-amber-900 font-mono text-[0.82em]"
+          className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-mono text-[0.82em]"
         >
           {part.slice(1, -1)}
         </code>
@@ -234,21 +234,21 @@ function renderInlineNodes(text: string): React.ReactNode[] {
     }
     if (part.startsWith('***') && part.endsWith('***') && part.length > 6) {
       return (
-        <strong key={i} className="font-semibold italic text-slate-900">
+        <strong key={i} className="font-semibold italic text-slate-900 dark:text-white">
           {part.slice(3, -3)}
         </strong>
       );
     }
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       return (
-        <strong key={i} className="font-semibold text-slate-900">
+        <strong key={i} className="font-semibold text-slate-900 dark:text-white">
           {part.slice(2, -2)}
         </strong>
       );
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
       return (
-        <em key={i} className="italic text-slate-800">
+        <em key={i} className="italic text-slate-800 dark:text-slate-200">
           {part.slice(1, -1)}
         </em>
       );
@@ -275,7 +275,7 @@ export function LegalMarkdown({ content }: { content: string }) {
 
     // Horizontalna crta
     if (/^---+$/.test(trimmed) || /^\*\*\*+$/.test(trimmed)) {
-      blocks.push(<hr key={keyCounter++} className="my-3 border-slate-200" />);
+      blocks.push(<hr key={keyCounter++} className="my-3.5 border-slate-200 dark:border-slate-800" />);
       i++;
       continue;
     }
@@ -294,22 +294,22 @@ export function LegalMarkdown({ content }: { content: string }) {
       if (parsedRows.length > 0) {
         const [header, ...body] = parsedRows;
         blocks.push(
-          <div key={keyCounter++} className="my-3 overflow-x-auto rounded-lg border border-slate-200">
-            <table className="min-w-full text-xs border-collapse">
-              <thead className="bg-slate-100 text-slate-700">
+          <div key={keyCounter++} className="my-3.5 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table className="min-w-full text-xs border-collapse font-sans">
+              <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                 <tr>
                   {header.map((cell, cIdx) => (
-                    <th key={cIdx} className="px-3 py-2 text-left font-semibold border-b border-slate-200">
+                    <th key={cIdx} className="px-3 py-2 text-left font-semibold border-b border-slate-200 dark:border-slate-700">
                       {renderInlineNodes(cell)}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
                 {body.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-slate-50/70">
+                  <tr key={rIdx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
                     {row.map((cell, cIdx) => (
-                      <td key={cIdx} className="px-3 py-2 text-slate-700 align-top">
+                      <td key={cIdx} className="px-3 py-2 text-slate-700 dark:text-slate-300 align-top">
                         {renderInlineNodes(cell)}
                       </td>
                     ))}
@@ -329,10 +329,10 @@ export function LegalMarkdown({ content }: { content: string }) {
       const level = headingMatch[1].length;
       const text = headingMatch[2];
       const classes: Record<number, string> = {
-        1: 'text-base font-bold text-slate-900 mt-4 mb-2 pb-1 border-b border-slate-200 first:mt-0',
-        2: 'text-[15px] font-bold text-slate-900 mt-3.5 mb-1.5 first:mt-0',
-        3: 'text-sm font-bold text-slate-800 mt-3 mb-1 first:mt-0',
-        4: 'text-xs font-bold uppercase tracking-wide text-slate-600 mt-2.5 mb-1 first:mt-0',
+        1: 'text-base font-bold font-sans text-slate-900 dark:text-white mt-4 mb-2 pb-1.5 border-b border-slate-200 dark:border-slate-800 first:mt-0',
+        2: 'text-[15px] font-bold font-sans text-slate-900 dark:text-white mt-3.5 mb-1.5 first:mt-0',
+        3: 'text-sm font-bold font-sans text-slate-800 dark:text-slate-100 mt-3 mb-1 first:mt-0',
+        4: 'text-xs font-bold font-sans uppercase tracking-wide text-slate-600 dark:text-slate-400 mt-2.5 mb-1 first:mt-0',
       };
       blocks.push(
         <div key={keyCounter++} className={classes[level] || classes[3]}>
@@ -353,7 +353,7 @@ export function LegalMarkdown({ content }: { content: string }) {
       blocks.push(
         <blockquote
           key={keyCounter++}
-          className="my-2.5 pl-3.5 pr-3 py-2 border-l-3 border-blue-500 bg-blue-50/50 rounded-r-lg text-slate-700 italic text-[13.5px] leading-relaxed space-y-1"
+          className="my-3 pl-4 pr-3.5 py-2.5 border-l-3 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/30 rounded-r-lg text-slate-700 dark:text-slate-300 font-serif italic text-[14px] leading-relaxed space-y-1"
         >
           {quoteLines.map((ql, qIdx) => (
             <p key={qIdx}>{renderInlineNodes(ql)}</p>
@@ -371,7 +371,7 @@ export function LegalMarkdown({ content }: { content: string }) {
         i++;
       }
       blocks.push(
-        <ul key={keyCounter++} className="my-2 pl-5 list-disc space-y-1.5 text-slate-700 leading-relaxed">
+        <ul key={keyCounter++} className="my-2 pl-5 list-disc space-y-1.5 text-slate-700 dark:text-slate-200 leading-relaxed">
           {items.map((it, idx) => (
             <li key={idx} className="pl-0.5">
               {renderInlineNodes(it)}
@@ -391,10 +391,10 @@ export function LegalMarkdown({ content }: { content: string }) {
         i++;
       }
       blocks.push(
-        <ol key={keyCounter++} className="my-2 space-y-1.5 text-slate-700 leading-relaxed">
+        <ol key={keyCounter++} className="my-2 space-y-1.5 text-slate-700 dark:text-slate-200 leading-relaxed">
           {items.map((it, idx) => (
             <li key={idx} className="flex gap-2 items-baseline">
-              <span className="font-semibold text-slate-800 shrink-0 min-w-5">{it.num}</span>
+              <span className="font-semibold font-mono text-xs text-slate-800 dark:text-slate-200 shrink-0 min-w-5">{it.num}</span>
               <span className="flex-1">{renderInlineNodes(it.text)}</span>
             </li>
           ))}
@@ -419,11 +419,11 @@ export function LegalMarkdown({ content }: { content: string }) {
       i++;
     }
     blocks.push(
-      <p key={keyCounter++} className="my-1.5 text-slate-800 leading-relaxed">
+      <p key={keyCounter++} className="my-2 text-slate-800 dark:text-slate-200 leading-[1.68]">
         {renderInlineNodes(paraLines.join(' '))}
       </p>
     );
   }
 
-  return <div className="space-y-1 text-[13.5px]">{blocks}</div>;
+  return <div className="space-y-1.5 text-[14px] font-serif">{blocks}</div>;
 }

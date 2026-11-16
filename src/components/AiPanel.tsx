@@ -766,7 +766,7 @@ export function AiPanel({
                 </div>
 
                 {/* Kartica odgovora s Markdownom i Pravnim inspektorom */}
-                <div className="w-full p-4 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <div className="w-full p-4.5 rounded-2xl rounded-tl-xs legal-document-sheet border border-slate-200/90 dark:border-slate-800 border-t-3 border-t-blue-600/80 dark:border-t-blue-500/80">
                   {textContent ? (
                     <LegalMarkdown content={textContent} />
                   ) : (

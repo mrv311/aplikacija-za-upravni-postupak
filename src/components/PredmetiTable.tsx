@@ -633,7 +633,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                <th className="pl-4 pr-2 py-3.5 w-9">
+                <th className="pl-3 pr-1.5 py-3 w-8">
                   <input
                     type="checkbox"
                     checked={
@@ -644,22 +644,22 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3.5">KLASA / Područje</th>
-                <th className="px-4 py-3.5">Stranka / Žalitelj</th>
-                <th className="px-4 py-3.5">Obrađivač & Parafi</th>
-                <th className="px-4 py-3.5">Spis</th>
+                <th className="px-2.5 py-3">KLASA / Područje</th>
+                <th className="px-2.5 py-3">Stranka / Žalitelj</th>
+                <th className="px-2.5 py-3">Obrađivač & Parafi</th>
+                <th className="px-2 py-3">Spis</th>
                 {type === 'aktivni' ? (
                   <>
-                    <th className="px-4 py-3.5">Zaprimanje & ZUP rok</th>
-                    <th className="px-4 py-3.5">Faza rada</th>
+                    <th className="px-2.5 py-3">Zaprimanje & ZUP rok</th>
+                    <th className="px-2.5 py-3">Faza rada</th>
                   </>
                 ) : (
                   <>
-                    <th className="px-4 py-3.5">Ishod rješavanja</th>
-                    <th className="px-4 py-3.5">Arhivirano</th>
+                    <th className="px-2.5 py-3">Ishod rješavanja</th>
+                    <th className="px-2.5 py-3">Arhivirano</th>
                   </>
                 )}
-                <th className="px-4 py-3.5 text-right">Akcije</th>
+                <th className="pl-2 pr-3 py-3 text-right">Akcije</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-sm">
@@ -709,7 +709,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                         selectedIds.has(predmet.id) ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
                       }`}
                     >
-                      <td className="pl-4 pr-2 py-3.5 align-top pt-4">
+                      <td className="pl-3 pr-1.5 py-3 align-top pt-3.5">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(predmet.id)}
@@ -719,51 +719,55 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       </td>
 
                       {/* KLASA, URBROJ, Područje i Napomena */}
-                      <td className="px-4 py-3.5 align-top">
-                        <div className="flex items-center gap-2 flex-wrap">
+                      <td className="px-2.5 py-3 align-top">
+                        <div className="flex items-center gap-1.5 flex-nowrap">
                           <Link
                             href={`/predmeti/${predmet.id}`}
-                            className="font-bold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="font-mono font-bold tabular-nums whitespace-nowrap text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
                           >
                             {predmet.klasa}
                           </Link>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          <span className="text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded bg-blue-50/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/70">
                             {predmet.podrucje}
                           </span>
                         </div>
                         {predmet.urbroj && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          <p className="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
                             Urbroj: {predmet.urbroj}
                           </p>
                         )}
                         {predmet.napomena && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400 italic mt-1 line-clamp-1 max-w-xs">
+                          <p
+                            className="text-[11px] text-slate-600 dark:text-slate-400 italic mt-0.5 line-clamp-1 max-w-[190px]"
+                            title={predmet.napomena}
+                          >
                             „{predmet.napomena}”
                           </p>
                         )}
                         {predmet.nadlezni_postupak_status === 'vraceno' && (
-                          <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] font-semibold">
-                            <RotateCcw className="w-2.5 h-2.5" />
+                          <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] font-semibold whitespace-nowrap">
+                            <RotateCcw className="w-2.5 h-2.5 shrink-0" />
                             Vraćeno s I. stupnja
                             {predmet.nadlezni_postupak_datum_slanja
-                              ? ` (poslano ${formatIsoDateHr(predmet.nadlezni_postupak_datum_slanja)})`
+                              ? ` (${formatIsoDateHr(predmet.nadlezni_postupak_datum_slanja)})`
                               : ''}
                           </span>
                         )}
                       </td>
 
-                      {/* Stranka */}
-                      <td className="px-4 py-3.5 align-top">
+                      {/* Stranka (slobodno ide u 2 reda kako tablica ne bi trebala horizontalni scroll) */}
+                      <td className="px-2.5 py-3 align-top min-w-[130px] max-w-[200px]">
                         <Link
                           href={`/predmeti/${predmet.id}`}
-                          className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 block max-w-52 truncate"
+                          title={predmet.stranka || '-'}
+                          className="font-semibold text-[13px] leading-snug text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 line-clamp-2 whitespace-normal break-words"
                         >
                           {predmet.stranka || '-'}
                         </Link>
                       </td>
 
                       {/* Obrađivač (Delegirani službenik) & Parafiranje */}
-                      <td className="px-4 py-3.5 align-top">
+                      <td className="px-2.5 py-3 align-top">
                         <ObradjivacParafCell
                           predmet={predmet}
                           onOpenModal={(tab) => {
@@ -774,20 +778,20 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       </td>
 
                       {/* Dokumenti u spisu */}
-                      <td className="px-4 py-3.5 align-top whitespace-nowrap">
+                      <td className="px-2 py-3 align-top whitespace-nowrap">
                         {predmet.broj_dokumenata > 0 ? (
                           <Link
                             href={`/predmeti/${predmet.id}`}
                             title={`Učitano: ${predmet.vrste_dokumenata.join(', ')}`}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/70 hover:bg-blue-100/80 text-blue-800 border border-blue-200/80 text-xs font-semibold transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50/70 hover:bg-blue-100/80 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-semibold transition-colors"
                           >
-                            <FileText className="w-3.5 h-3.5 text-blue-600" />
+                            <FileText className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
                             {predmet.broj_dokumenata} dok.
                           </Link>
                         ) : (
                           <Link
                             href={`/predmeti/${predmet.id}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold"
                           >
                             Prazan spis
                           </Link>
@@ -797,8 +801,8 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       {type === 'aktivni' ? (
                         <>
                           {/* Primitak u Ministarstvu, predaja žalbe & ZUP rok 60 dana */}
-                          <td className="px-4 py-3.5 align-top whitespace-nowrap">
-                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                          <td className="px-2.5 py-3 align-top whitespace-nowrap">
+                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium tabular-nums">
                               <span className="text-[10px] text-slate-400 mr-1">Min.:</span>
                               {predmet.datum_zaprimanja
                                 ? new Date(predmet.datum_zaprimanja).toLocaleDateString('hr-HR')
@@ -806,47 +810,67 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                             </p>
                             {predmet.datum_predaje_zalbe ? (
                               <>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 tabular-nums">
                                   <span className="text-[10px] text-slate-400 mr-1">Žalba:</span>
                                   {/^\d{4}-\d{2}-\d{2}$/.test(predmet.datum_predaje_zalbe)
                                     ? `${predmet.datum_predaje_zalbe.split('-').reverse().join('.')}.`
                                     : new Date(predmet.datum_predaje_zalbe).toLocaleDateString('hr-HR')}
                                 </p>
                                 {deadline && (
-                                  <span
-                                    title={`Zakonski rok (60 dana od predaje žalbe, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
-                                    className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                                      deadline.urgency === 'overdue'
-                                        ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                        : deadline.urgency === 'warning'
-                                        ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    }`}
-                                  >
-                                    <Clock className="w-3 h-3" />
-                                    {deadline.label}
-                                  </span>
+                                  <div className="mt-1 space-y-1 max-w-[130px]">
+                                    <span
+                                      title={`Zakonski rok (60 dana od predaje žalbe, čl. 121. ZUP-a) istječe: ${deadline.deadlineDateFormatted}`}
+                                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tabular-nums border ${
+                                        deadline.urgency === 'overdue'
+                                          ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                                          : deadline.urgency === 'warning'
+                                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                          : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                      }`}
+                                    >
+                                      <Clock className="w-2.5 h-2.5 shrink-0" />
+                                      {deadline.label}
+                                    </span>
+                                    {/* Mini vizualna traka napretka zakonskog roka od 60 dana */}
+                                    <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all ${
+                                          deadline.urgency === 'overdue'
+                                            ? 'bg-rose-500'
+                                            : deadline.urgency === 'warning'
+                                            ? 'bg-amber-500'
+                                            : 'bg-emerald-500'
+                                        }`}
+                                        style={{
+                                          width: `${Math.min(
+                                            100,
+                                            Math.max(8, Math.round(((60 - deadline.daysRemaining) / 60) * 100))
+                                          )}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 )}
                               </>
                             ) : (
                               <span
                                 title="Zakonski rok od 60 dana počinje teći od predaje žalbe (ne od zaprimanja u Ministarstvu)"
-                                className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                                className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                               >
-                                <Clock className="w-3 h-3 text-slate-400" />
+                                <Clock className="w-2.5 h-2.5 text-slate-400" />
                                 Čeka datum žalbe
                               </span>
                             )}
                           </td>
 
                           {/* Radna faza (brzi odabir) */}
-                          <td className="px-4 py-3.5 align-top whitespace-nowrap">
+                          <td className="px-2.5 py-3 align-top whitespace-nowrap">
                             <select
                               value={predmet.faza}
                               onChange={(e) =>
                                 handleFazaChange(predmet.id, e.target.value as PredmetFaza)
                               }
-                              className={`text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${fazaObj.badgeClass}`}
+                              className={`text-[11px] font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${fazaObj.badgeClass}`}
                             >
                               {PREDMET_FAZE.map((f) => (
                                 <option key={f.value} value={f.value} className="bg-white text-slate-800">
@@ -859,10 +883,10 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       ) : (
                         <>
                           {/* Ishod rješavanja u Arhivi */}
-                          <td className="px-4 py-3.5 align-top">
+                          <td className="px-2.5 py-3 align-top">
                             <div className="flex flex-col items-start gap-1">
                               <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap ${
                                   ishodObj
                                     ? ishodObj.badgeClass
                                     : 'bg-slate-100 text-slate-700 border-slate-200'
@@ -871,7 +895,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                                 {predmet.ishod || 'Arhivirano (A/A)'}
                               </span>
                               {predmet.poslano_u_praksu && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full whitespace-nowrap">
                                   <Landmark className="w-2.5 h-2.5" />
                                   U Bazi prakse
                                 </span>
@@ -880,7 +904,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           </td>
 
                           {/* Datum A/A */}
-                          <td className="px-4 py-3.5 align-top whitespace-nowrap text-xs text-slate-600">
+                          <td className="px-2.5 py-3 align-top whitespace-nowrap text-xs text-slate-600 dark:text-slate-400 tabular-nums">
                             {predmet.datum_rjesavanja
                               ? new Date(predmet.datum_rjesavanja).toLocaleDateString('hr-HR')
                               : predmet.datum_zaprimanja
@@ -891,11 +915,11 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                       )}
 
                       {/* Akcije */}
-                      <td className="px-4 py-3.5 align-top text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5 justify-end">
+                      <td className="pl-2 pr-3 py-3 align-top text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1 justify-end">
                           <Link
                             href={`/predmeti/${predmet.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200/80 dark:border-blue-800 rounded-lg transition-colors"
                             title="Otvori spis i AI analizu"
                           >
                             <span>Spis</span>
@@ -908,7 +932,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                               setParafModalItem(predmet);
                               setParafModalTab('paraf');
                             }}
-                            className="p-1.5 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 rounded-lg transition-colors cursor-pointer"
                             title="Parafiranje dopisa/rješenja i delegiranje službeniku"
                           >
                             <Stamp className="w-3.5 h-3.5" />
@@ -918,7 +942,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                             <button
                               type="button"
                               onClick={() => setNadlezniModalItem(predmet)}
-                              className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-transparent hover:border-amber-200 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-amber-600 dark:text-amber-400 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/50 border border-transparent hover:border-amber-200 dark:hover:border-amber-800 rounded-lg transition-colors cursor-pointer"
                               title="Žalba poslana izravno Ministarstvu — prebaci u Na nadležnom postupku"
                             >
                               <Send className="w-3.5 h-3.5" />
@@ -928,7 +952,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           <button
                             type="button"
                             onClick={() => setEditingItem({ ...predmet })}
-                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 rounded-lg transition-colors cursor-pointer"
                             title="Uredi podatke predmeta"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -940,9 +964,9 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                               onClick={() => openArchiveModal(predmet)}
                               disabled={isRowLoading}
                               title="Riješi i spremi u arhivu (A/A)"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 rounded-lg transition-colors cursor-pointer"
                             >
-                              <Archive className="w-3.5 h-3.5 text-amber-600" />
+                              <Archive className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                               <span>A/A</span>
                             </button>
                           ) : (
@@ -951,12 +975,12 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                               onClick={() => handleUnarchive(predmet)}
                               disabled={isRowLoading}
                               title="Vrati predmet u aktivne"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors cursor-pointer"
                             >
                               {isRowLoading ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <Loader2 className="w-3 h-3 animate-spin" />
                               ) : (
-                                <ArchiveRestore className="w-3.5 h-3.5 text-emerald-600" />
+                                <ArchiveRestore className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                               )}
                               <span>Aktiviraj</span>
                             </button>
@@ -965,7 +989,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           <button
                             type="button"
                             onClick={() => setDeletingIds([predmet.id])}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 rounded-lg transition-colors cursor-pointer"
                             title="Trajno obriši predmet i njegove skenove"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

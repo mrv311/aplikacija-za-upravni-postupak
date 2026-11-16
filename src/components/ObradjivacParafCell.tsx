@@ -60,7 +60,7 @@ export function ObradjivacParafCell({ predmet, onOpenModal }: ObradjivacParafCel
     : null;
 
   return (
-    <div className="flex flex-col items-start gap-1.5">
+    <div className="flex flex-col items-start gap-1">
       {/* Zaduženi službenik */}
       {predmet.sluzbenik_ime ? (
         <div className="flex flex-col items-start gap-0.5">
@@ -72,16 +72,16 @@ export function ObradjivacParafCell({ predmet, onOpenModal }: ObradjivacParafCel
                 ? `Uputa: ${predmet.uputa_voditelja}`
                 : 'Kliknite za izmjenu zaduženog službenika ili upute'
             }
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-xs font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer"
           >
             <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
               {getInitials(predmet.sluzbenik_ime)}
             </span>
-            <span className="truncate max-w-36">{predmet.sluzbenik_ime}</span>
+            <span className="truncate max-w-32">{predmet.sluzbenik_ime}</span>
           </button>
           {predmet.interni_rok && (
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 pl-0.5">
-              Interni rok: {formatIsoDateHr(predmet.interni_rok)}
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 pl-0.5 whitespace-nowrap tabular-nums">
+              Rok: {formatIsoDateHr(predmet.interni_rok)}
             </span>
           )}
         </div>
@@ -89,16 +89,16 @@ export function ObradjivacParafCell({ predmet, onOpenModal }: ObradjivacParafCel
         <button
           type="button"
           onClick={() => onOpenModal('delegiranje')}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer"
           title="Delegiraj predmet službeniku u rad"
         >
-          <UserCheck className="w-3 h-3" />
+          <UserCheck className="w-3 h-3 shrink-0" />
           <span>Delegiraj u rad</span>
         </button>
       )}
 
       {/* Zadnji paraf ili gumb za parafiranje */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1">
         {latestParaf && latestParafStatus ? (
           <button
             type="button"
@@ -108,10 +108,10 @@ export function ObradjivacParafCell({ predmet, onOpenModal }: ObradjivacParafCel
             ).toLocaleDateString('hr-HR')})${
               latestParaf.napomena ? ` — ${latestParaf.napomena}` : ''
             }`}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:opacity-85 transition-opacity ${latestParafStatus.badgeClass}`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap cursor-pointer hover:opacity-85 transition-opacity ${latestParafStatus.badgeClass}`}
           >
             <Stamp className="w-2.5 h-2.5 shrink-0" />
-            <span className="truncate max-w-44">
+            <span className="truncate max-w-36">
               {latestParaf.status === 'Parafirano'
                 ? 'Paraf:'
                 : latestParaf.status === 'Parafirano uz izmjene'
@@ -127,10 +127,10 @@ export function ObradjivacParafCell({ predmet, onOpenModal }: ObradjivacParafCel
           <button
             type="button"
             onClick={() => onOpenModal('paraf')}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold whitespace-nowrap transition-colors cursor-pointer"
             title="Evidentiraj paraf dopisa ili rješenja u ovom predmetu"
           >
-            <Stamp className="w-2.5 h-2.5" />
+            <Stamp className="w-2.5 h-2.5 shrink-0" />
             <span>+ Evidentiraj paraf</span>
           </button>
         )}

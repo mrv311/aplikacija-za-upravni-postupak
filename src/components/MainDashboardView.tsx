@@ -624,62 +624,80 @@ export default function MainDashboardView({
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:px-6 sm:py-6 w-full max-w-[1600px] mx-auto space-y-6">
       {/* GLAVNA NAVIGACIJSKA TRAKA: PREDMETI (ZUP) vs SPOROVI (ZUS) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 w-fit">
-          <button
-            onClick={() => setMainView('zup')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all ${
-              mainView === 'zup'
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
-            }`}
-          >
-            <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Drugostupanjski predmeti (ZUP)</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">
-              {initialPredmeti.length}
-            </span>
-            {zaPoslatiCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/70">
-                {zaPoslatiCount} za poslati
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 w-fit">
+            <button
+              onClick={() => setMainView('zup')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all cursor-pointer ${
+                mainView === 'zup'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+              }`}
+            >
+              <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>Drugostupanjski predmeti (ZUP)</span>
+              <span className="ml-0.5 px-2 py-0.5 rounded-full text-xs tabular-nums bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200/60 dark:border-blue-800/60">
+                {initialPredmeti.length}
               </span>
-            )}
-          </button>
+              {zaPoslatiCount > 0 && (
+                <span
+                  className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                  title={`${zaPoslatiCount} predmeta čeka slanje na nadležni postupak`}
+                />
+              )}
+            </button>
 
-          <button
-            onClick={() => setMainView('sporovi')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all ${
-              mainView === 'sporovi'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
-            }`}
-          >
-            <Scale className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>Upravni sporovi (ZUS)</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold">
-              {sporovi.length}
-            </span>
-            {radarSporovi.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
-                {radarSporovi.length} hitno
+            <button
+              onClick={() => setMainView('sporovi')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all cursor-pointer ${
+                mainView === 'sporovi'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold'
+              }`}
+            >
+              <Scale className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>Upravni sporovi (ZUS)</span>
+              <span className="ml-0.5 px-2 py-0.5 rounded-full text-xs tabular-nums bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200/60 dark:border-indigo-800/60">
+                {sporovi.length}
               </span>
-            )}
-            {stats.troskoviZaPlacanje > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800 flex items-center gap-1">
-                <span>💰</span>
-                <span>Troškovi sporova {stats.troskoviZaPlacanje}</span>
-              </span>
-            )}
-          </button>
+              {radarSporovi.length > 0 && (
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-2xs font-bold tabular-nums bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800 flex items-center gap-1"
+                  title="Hitni rokovi u upravnim sporovima"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  {radarSporovi.length} hitno
+                </span>
+              )}
+            </button>
+          </div>
+
+          {stats.troskoviZaPlacanje > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setMainView('sporovi');
+                setSporoviSubTab('tablica');
+                setStatusFilter('troskovi_zuto');
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 hover:bg-amber-100/80 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/90 dark:border-amber-800/80 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              title="Prikaži upravne sporove s dosuđenim troškovima koji čekaju nalog za plaćanje"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              <span>Troškovi sporova:</span>
+              <strong className="font-mono tabular-nums">{stats.troskoviZaPlacanje}</strong>
+            </button>
+          )}
         </div>
 
         {mainView === 'sporovi' && (
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSporoviSubTab(sporoviSubTab === 'uvoz' ? 'tablica' : 'uvoz')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors shadow-2xs ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer ${
                 sporoviSubTab === 'uvoz'
                   ? 'bg-slate-800 hover:bg-slate-900 text-white'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -717,7 +735,7 @@ export default function MainDashboardView({
               <p className="text-2xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                 U radu / Bez presude
               </p>
-              <p className="text-2xl font-bold text-blue-950 dark:text-blue-100 mt-1">{stats.uTijeku}</p>
+              <p className="text-2xl font-bold tabular-nums text-blue-950 dark:text-blue-100 mt-1">{stats.uTijeku}</p>
               <p className="text-2xs text-blue-500/80 mt-0.5">aktivni postupci</p>
             </div>
 
@@ -735,7 +753,7 @@ export default function MainDashboardView({
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                 Radar rokova
               </p>
-              <p className="text-2xl font-bold text-rose-950 dark:text-rose-100 mt-1">{radarSporovi.length}</p>
+              <p className="text-2xl font-bold tabular-nums text-rose-950 dark:text-rose-100 mt-1">{radarSporovi.length}</p>
               <p className="text-2xs text-rose-600 mt-0.5">
                 {radarSporovi.length === 1 ? 'hitna radnja' : 'hitne radnje'}
               </p>
@@ -753,24 +771,25 @@ export default function MainDashboardView({
               }`}
             >
               <div className="flex items-center justify-between">
-                <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                  <span>🟡</span>
+                <p className="text-2xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                   Troškovi spora
                 </p>
                 {stats.hitniTroskovi > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                  <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold tabular-nums bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
                     {stats.hitniTroskovi} hitno
                   </span>
                 )}
               </div>
               <div className="flex items-baseline gap-2 mt-1">
-                <p className="text-2xl font-bold text-amber-950 dark:text-amber-100">{stats.troskoviZuto}</p>
-                <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                  Čeka nalog (žuto)
+                <p className="text-2xl font-bold tabular-nums text-amber-950 dark:text-amber-100">{stats.troskoviZuto}</p>
+                <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                  Čeka nalog
                 </span>
               </div>
               <p className="text-2xs text-emerald-700 dark:text-emerald-400 mt-1 flex items-center gap-1.5 font-medium">
-                <span>🟢 {stats.troskoviRijeseno} nalog poslan - plaćeno</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span>{stats.troskoviRijeseno} nalog poslan / plaćeno</span>
               </p>
             </div>
 
@@ -788,7 +807,7 @@ export default function MainDashboardView({
               <p className="text-2xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                 Šutnja uprave
               </p>
-              <p className="text-2xl font-bold text-amber-950 dark:text-amber-100 mt-1">{stats.sutnjaUprave}</p>
+              <p className="text-2xl font-bold tabular-nums text-amber-950 dark:text-amber-100 mt-1">{stats.sutnjaUprave}</p>
               <p className="text-2xs text-amber-600/80 mt-0.5">čl. 24. ZUS</p>
             </div>
 
@@ -806,7 +825,7 @@ export default function MainDashboardView({
               <p className="text-2xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                 Presuđeno / Dovršeno
               </p>
-              <p className="text-2xl font-bold text-emerald-950 dark:text-emerald-100 mt-1">{stats.presudeni}</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-950 dark:text-emerald-100 mt-1">{stats.presudeni}</p>
               <p className="text-2xs text-emerald-600/80 mt-0.5">arhivirani sporovi</p>
             </div>
 
@@ -822,7 +841,7 @@ export default function MainDashboardView({
               }`}
             >
               <p className="text-2xs font-semibold text-slate-500 uppercase tracking-wider">Svi sporovi</p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
+              <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
               <p className="text-2xs text-slate-400 mt-0.5">
                 {stats.uklonjeni > 0 ? `${stats.uklonjeni} uklonjeno` : 'aktivna evidencija'}
               </p>
@@ -898,13 +917,13 @@ export default function MainDashboardView({
                   >
                     <option value="u_radu">U radu / Aktivni postupci ({stats.uTijeku})</option>
                     <option value="hitno">Hitni rokovi (odgovori i rješenja) ({stats.hitni})</option>
-                    <option value="troskovi_zuto">🟡 Troškovi za plaćanje / Čeka nalog ({stats.troskoviZuto})</option>
-                    <option value="troskovi_rijeseno">🟢 Nalog poslan - plaćeno ({stats.troskoviRijeseno})</option>
-                    <option value="troskovi_sve">💰 Svi dosuđeni troškovi ({stats.troskoviUkupno})</option>
+                    <option value="troskovi_zuto">Troškovi za plaćanje / Čeka nalog ({stats.troskoviZuto})</option>
+                    <option value="troskovi_rijeseno">Nalog poslan - plaćeno ({stats.troskoviRijeseno})</option>
+                    <option value="troskovi_sve">Svi dosuđeni troškovi ({stats.troskoviUkupno})</option>
                     <option value="sutnja">Šutnja uprave ({stats.sutnjaUprave})</option>
                     <option value="rijeseno">Presuđeno / Završeno ({stats.presudeni})</option>
                     {stats.uklonjeni > 0 && (
-                      <option value="uklonjeno">🗑️ Uklonjeni predmeti ({stats.uklonjeni})</option>
+                      <option value="uklonjeno">Uklonjeni predmeti ({stats.uklonjeni})</option>
                     )}
                     <option value="sve">Svi sporovi ({stats.total})</option>
                   </select>
@@ -984,34 +1003,37 @@ export default function MainDashboardView({
                                   isSelected ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-medium' : ''
                                 } ${spor.isDismissed ? 'opacity-60 bg-slate-50/50 dark:bg-slate-900/40' : ''}`}
                               >
-                                <td className="py-3 px-3 text-center text-slate-500 font-mono text-2xs font-bold">
+                                <td className="py-3 px-3 text-center text-slate-500 font-mono tabular-nums text-2xs font-bold">
                                   {index + 1}
                                 </td>
 
-                                <td className="py-3 px-3 font-medium text-slate-900 dark:text-slate-100">
+                                <td className="py-3 px-2.5 font-medium text-slate-900 dark:text-slate-100">
                                   <div className="flex flex-col">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                    <div className="flex items-center gap-1.5 flex-nowrap">
+                                      <span className="font-mono font-bold tabular-nums whitespace-nowrap text-xs px-1.5 py-0.5 rounded bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/70">
                                         {spor.poslovniBroj || 'Bez broja'}
                                       </span>
                                       {spor.isDismissed && (
-                                        <span className="px-1.5 py-0.2 rounded text-3xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                        <span className="px-1.5 py-0.2 rounded text-3xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap">
                                           Uklonjeno
                                         </span>
                                       )}
                                     </div>
-                                    <span className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
+                                    <span className="text-2xs text-slate-500 dark:text-slate-400 truncate max-w-[160px] mt-0.5">
                                       {spor.sud}
                                     </span>
                                   </div>
                                 </td>
 
-                                <td className="py-3 px-3">
-                                  <div className="font-medium text-slate-900 dark:text-slate-200">
+                                <td className="py-3 px-2.5 max-w-[200px]">
+                                  <div
+                                    className="font-medium text-slate-900 dark:text-slate-200 leading-snug line-clamp-2 whitespace-normal break-words"
+                                    title={spor.tuzitelj}
+                                  >
                                     {spor.tuzitelj}
                                   </div>
                                   {spor.oib && (
-                                    <div className="text-2xs text-slate-400 font-mono">OIB: {spor.oib}</div>
+                                    <div className="text-2xs text-slate-400 font-mono tabular-nums mt-0.5">OIB: {spor.oib}</div>
                                   )}
                                 </td>
 
@@ -1124,7 +1146,8 @@ export default function MainDashboardView({
                                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
                                           title={spor.troskoviInfo.opis}
                                         >
-                                          ✓ {spor.troskoviInfo.nalogDatum
+                                          <Check className="w-3 h-3 shrink-0" />
+                                          {spor.troskoviInfo.nalogDatum
                                             ? `Nalog poslan ${spor.troskoviInfo.nalogDatum} - plaćeno`
                                             : spor.troskoviInfo.status === 'poslan_nalog' || spor.troskoviInfo.bojaOznake === 'smedje'
                                             ? 'Nalog poslan - plaćeno'
@@ -1133,15 +1156,18 @@ export default function MainDashboardView({
                                         </span>
                                       ) : (
                                         <span
-                                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${
+                                          className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-2xs font-bold ${
                                             ['isteklo', 'danas', 'kriticno'].includes(spor.troskoviInfo.hitnost)
                                               ? 'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-400 animate-pulse'
                                               : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400 shadow-2xs'
                                           }`}
                                           title={spor.troskoviInfo.opis}
                                         >
-                                          🟡 Trošak: {spor.troskoviInfo.iznos || '1.250 EUR'} (ČEKA NALOG)
-                                          {spor.troskoviInfo.rokPlacanja && ` (rok: ${spor.troskoviInfo.rokPlacanja})`}
+                                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                          <span>
+                                            Trošak: {spor.troskoviInfo.iznos || '1.250 EUR'} (ČEKA NALOG)
+                                            {spor.troskoviInfo.rokPlacanja && ` (rok: ${spor.troskoviInfo.rokPlacanja})`}
+                                          </span>
                                         </span>
                                       )}
                                     </div>
@@ -1157,7 +1183,8 @@ export default function MainDashboardView({
                                       )}
                                       {spor.cekaAktPoPresudi && (
                                         <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-2xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300">
-                                          ⏳ Čeka se novo rješenje
+                                          <Clock className="w-3 h-3 shrink-0" />
+                                          Čeka se novo rješenje
                                         </span>
                                       )}
                                       {!spor.cekaAktPoPresudi && spor.isPonistenoPrvoIDrugo && (
@@ -1205,13 +1232,15 @@ export default function MainDashboardView({
                                             </span>
                                           )}
                                           {spor.hasManualOverride && (
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800">
-                                              ✏️ Ručno evidentirano
+                                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800">
+                                              <Pencil className="w-3 h-3" />
+                                              Ručno evidentirano
                                             </span>
                                           )}
                                           {spor.isDismissed && (
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-medium border border-rose-200 dark:border-rose-800">
-                                              🗑️ Uklonjeno iz aktivnih sporova
+                                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-medium border border-rose-200 dark:border-rose-800">
+                                              <Trash2 className="w-3 h-3" />
+                                              Uklonjeno iz aktivnih sporova
                                             </span>
                                           )}
                                         </div>
@@ -1229,7 +1258,7 @@ export default function MainDashboardView({
                                               className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
                                             >
                                               <RotateCcw className="w-3.5 h-3.5" />
-                                              <span>↩️ Vrati u aktivne sporove</span>
+                                              <span>Vrati u aktivne sporove</span>
                                             </button>
                                           ) : (
                                             <button
@@ -1244,7 +1273,7 @@ export default function MainDashboardView({
                                               title="Ukloni ovaj predmet ako je zastario ili nema evidentiran ishod (npr. istekli rok prije više godina)"
                                             >
                                               <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                                              <span>🗑️ Ukloni iz aktivnih</span>
+                                              <span>Ukloni iz aktivnih</span>
                                             </button>
                                           )}
 
@@ -1270,7 +1299,7 @@ export default function MainDashboardView({
                                                 title="Sastavi i preuzmi službeni odgovor na tužbu u Word formatu (.docx)"
                                               >
                                                 <FileText className="w-3.5 h-3.5 text-white" />
-                                                <span>📄 Odgovor na tužbu (.docx)</span>
+                                                <span>Odgovor na tužbu (.docx)</span>
                                               </button>
 
                                               <button

@@ -520,7 +520,7 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
                                           onClick={() => toggleClanak(clanak.id)}
                                           className="flex items-center gap-2.5 flex-wrap cursor-pointer select-none flex-1"
                                         >
-                                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-md shrink-0 border border-slate-200/80 dark:border-slate-700">
+                                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-mono font-bold tabular-nums rounded-md shrink-0 border border-slate-200/80 dark:border-slate-700">
                                             {clanak.clanak_broj}
                                           </span>
                                           {articleTitle && (
@@ -574,18 +574,18 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
                                         </div>
                                       </div>
 
-                                      {/* Tekst članka - potpuno omogućen odabir teksta (select-text) */}
+                                      {/* Tekst članka - "Document Sheet" prikaz sa serifnom tipografijom */}
                                       {isExpanded ? (
                                         <div
                                           onClick={(e) => e.stopPropagation()}
-                                          className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-serif select-text cursor-text"
+                                          className="mt-3 p-4 rounded-xl legal-document-sheet border border-slate-200/80 dark:border-slate-800 border-l-3 border-l-blue-600 dark:border-l-blue-500 text-[13.5px] text-slate-800 dark:text-slate-200 leading-[1.7] whitespace-pre-line font-serif select-text cursor-text"
                                         >
                                           {clanak.tekst}
                                         </div>
                                       ) : (
                                         <p
                                           onClick={() => toggleClanak(clanak.id)}
-                                          className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 cursor-pointer select-none"
+                                          className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 cursor-pointer select-none font-serif leading-relaxed"
                                         >
                                           {preview}
                                         </p>

@@ -28,7 +28,7 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
     predmet.status === 'arhiviran' ? '← Natrag u Arhivu (A/A)' : '← Natrag na aktivne predmete';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="h-[calc(100vh-3px)] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Zaglavlje predmeta s potpunim upravljanjem */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 sm:px-8 py-3.5 shrink-0 transition-colors">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
@@ -44,14 +44,19 @@ export default async function PredmetPage({ params }: { params: Promise<{ id: st
 
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-              {predmet.klasa}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-bold uppercase tracking-wider">
+                KLASA
+              </span>
+              <h1 className="text-xl sm:text-2xl font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 tracking-tight">
+                {predmet.klasa}
+              </h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               {predmet.urbroj && (
                 <>
-                  <span>
-                    <strong>Urbroj:</strong> {predmet.urbroj}
+                  <span className="font-mono tabular-nums text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200/70 dark:border-slate-700">
+                    <strong className="font-sans">Urbroj:</strong> {predmet.urbroj}
                   </span>
                   <span>&bull;</span>
                 </>

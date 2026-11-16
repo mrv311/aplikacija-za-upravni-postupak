@@ -3,6 +3,7 @@ import { PropisiTable, ClanakItem } from './PropisiTable';
 import { readStoredPropisiStatus } from '@/lib/propisi-checker';
 import { PropisiStatusCard } from '@/components/propisi/PropisiStatusCard';
 import structureData from '@/data/propisi-structure.json';
+import { Scale } from 'lucide-react';
 
 export const revalidate = 0; // Onemogućava caching kako bi uvijek vidjeli najnovije podatke
 
@@ -84,14 +85,14 @@ export default async function PropisiPage() {
   const checkStatus = await readStoredPropisiStatus();
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            §
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-2xs shrink-0">
+            <Scale className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Pregled baze propisa</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Pregled baze propisa</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
               Strukturirani zakoni, uredbe i pravilnici iz područja upravnog postupka i vodnog gospodarstva
             </p>

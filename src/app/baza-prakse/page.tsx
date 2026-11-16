@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { BazaPrakseTable } from './BazaPrakseTable';
+import { BookOpen } from 'lucide-react';
 
 export const revalidate = 0; // Onemogućava caching kako bi uvijek vidjeli najnovije podatke
 
@@ -46,14 +47,25 @@ export default async function BazaPraksePage() {
     .sort((a, b) => a.naziv_datoteke.localeCompare(b.naziv_datoteke));
 
   return (
-    <div className="p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Pregled baze prakse</h1>
-        <p className="text-slate-500 mt-1">Informativni pregled učitanih dokumenata u RAG sustav</p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-2xs shrink-0">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Pregled baze prakse
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Anonimizirana drugostupanjska rješenja i presude upravnih sudova RH u RAG sustavu
+            </p>
+          </div>
+        </div>
       </header>
 
       {fetchError ? (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+        <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 p-4 rounded-xl text-sm">
           Greška pri dohvaćanju baze: {fetchError}
         </div>
       ) : (

@@ -407,39 +407,39 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
       {/* Kartice sa statistikom */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Ukupno spisa u bazi</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{items.length}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ukupno spisa u bazi</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">{items.length}</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/60">
             <FileText className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Vektorskih odlomaka (RAG)</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{totalChunks}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Vektorskih odlomaka (RAG)</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">{totalChunks}</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/60">
             <Layers className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Teme i mape</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{Object.keys(nestedGroups).length}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Teme i mape</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">{Object.keys(nestedGroups).length}</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/60">
             <FolderOpen className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Kontrolna traka: Tražilica + Filteri */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -448,12 +448,12 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Pretraži po stranci, pravnom prigovoru (npr. zastara, IM obrazac) ili gradu..."
-              className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -461,7 +461,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium pl-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium pl-1">
               <Filter className="w-3.5 h-3.5" />
               <span>Filteri:</span>
             </div>
@@ -469,7 +469,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             <select
               value={filterPodrucje}
               onChange={(e) => setFilterPodrucje(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="sve">Sva područja</option>
               {podrucjaList.map((p) => (
@@ -482,7 +482,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             <select
               value={filterGodina}
               onChange={(e) => setFilterGodina(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="sve">Sve grupe / godine</option>
               {godineList.map((g) => (
@@ -495,7 +495,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
             <select
               value={filterIshod}
               onChange={(e) => setFilterIshod(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="sve">Svi ishodi</option>
               <option value="ponisteno">Poništena rješenja</option>
@@ -506,21 +506,21 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <div>
-            Prikazano <strong>{filteredDocs.length}</strong> od ukupno <strong>{items.length}</strong> spisa
+            Prikazano <strong className="text-slate-800 dark:text-slate-200">{filteredDocs.length}</strong> od ukupno <strong className="text-slate-800 dark:text-slate-200">{items.length}</strong> spisa
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => toggleAllGroups(true)}
-              className="hover:text-blue-600 font-medium transition-colors"
+              className="hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors cursor-pointer"
             >
               Proširi sve
             </button>
             <span>&bull;</span>
             <button
               onClick={() => toggleAllGroups(false)}
-              className="hover:text-blue-600 font-medium transition-colors"
+              className="hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors cursor-pointer"
             >
               Skupi sve
             </button>
@@ -530,10 +530,10 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
       {/* Popis grupa (Dvorazinska harmonika: Područje -> Godina -> Dokumenti) */}
       {Object.keys(nestedGroups).length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-800">Nema pronađenih spisa</h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+          <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Nema pronađenih spisa</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
             Niti jedan dokument ne odgovara zadanim uvjetima pretrage i filtera.
           </p>
         </div>
@@ -548,25 +548,25 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
               if (a === 'Ostalo') return 1;
               if (b === 'Ostalo') return -1;
               const numA = parseInt(a);
-      const numB = parseInt(b);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numB - numA;
-      }
-      return a.localeCompare(b);
+              const numB = parseInt(b);
+              if (!isNaN(numA) && !isNaN(numB)) {
+                return numB - numA;
+              }
+              return a.localeCompare(b);
             });
 
             return (
               <div
                 key={podrucje}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden transition-all"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden transition-all"
               >
                 {/* RAZINA 1: Glavna tema / područje */}
                 <div
                   onClick={() => togglePodrucje(podrucje)}
-                  className="w-full px-6 py-4.5 bg-slate-50/80 hover:bg-slate-100/90 transition-colors flex items-center justify-between text-left border-b border-slate-200/70 cursor-pointer select-none"
+                  className="w-full px-6 py-4.5 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-100/90 dark:hover:bg-slate-800 transition-colors flex items-center justify-between text-left border-b border-slate-200/70 dark:border-slate-700/60 cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs border border-blue-200/60 dark:border-blue-800/60">
                       {isPodrucjeOpen ? (
                         <FolderOpen className="w-5 h-5" />
                       ) : (
@@ -574,17 +574,17 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                       )}
                     </div>
                     <div>
-                      <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                      <h2 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
                         {podrucje}
                       </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {podrucje.toLowerCase().includes('sud') ? 'Sudska praksa i presude' : 'Zbirka upravnih rješenja'} ({sortedYears.length} {sortedYears.length === 1 ? 'grupa' : 'grupa'})
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-2xs tabular-nums">
                       {allDocsInPodrucje.length} {allDocsInPodrucje.length === 1 ? 'predmet' : 'predmeta'}
                     </span>
 
@@ -594,7 +594,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                       onClick={(e) => handleDeleteFolder(podrucje, allDocsInPodrucje, e)}
                       disabled={isPodrucjeDeleting}
                       title={`Ukloni cijelo područje "${podrucje}" (${allDocsInPodrucje.length} spisa) iz baze`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 rounded-lg transition-all shadow-2xs disabled:opacity-50 cursor-pointer ml-1"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:text-white bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-600 border border-rose-200 dark:border-rose-800/80 rounded-lg transition-all shadow-2xs disabled:opacity-50 cursor-pointer ml-1"
                     >
                       {isPodrucjeDeleting ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -606,7 +606,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
                     <div className="text-slate-400 pl-1">
                       {isPodrucjeOpen ? (
-                        <ChevronDown className="w-5 h-5 text-blue-600" />
+                        <ChevronDown className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       ) : (
                         <ChevronRight className="w-5 h-5" />
                       )}
@@ -616,7 +616,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
                 {/* RAZINA 2: Podmape po godinama (zatvorene po defaultu) */}
                 {isPodrucjeOpen && (
-                  <div className="p-4 bg-slate-50/40 space-y-3">
+                  <div className="p-4 bg-slate-50/40 dark:bg-slate-950/40 space-y-3">
                     {sortedYears.map((godina) => {
                       const yearKey = `${podrucje}:${godina}`;
                       const isYearOpen = !!openGodine[yearKey];
@@ -632,28 +632,28 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                       return (
                         <div
                           key={godina}
-                          className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all"
+                          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden transition-all"
                         >
                           {/* Zaglavlje pojedine godine */}
                           <div
                             onClick={() => toggleGodina(yearKey)}
-                            className="w-full px-5 py-3 hover:bg-slate-50/80 transition-colors flex items-center justify-between text-left cursor-pointer select-none"
+                            className="w-full px-5 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between text-left cursor-pointer select-none"
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                                 {isYearOpen ? (
                                   <FolderOpen className="w-4 h-4" />
                                 ) : (
                                   <Folder className="w-4 h-4" />
                                 )}
                               </div>
-                              <span className="font-semibold text-slate-800 text-sm">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
                                 {yearTitle}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2.5">
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 tabular-nums">
                                 {docsInYear.length} {docsInYear.length === 1 ? 'predmet' : 'predmeta'}
                               </span>
 
@@ -663,7 +663,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                 onClick={(e) => handleDeleteFolder(`${podrucje} - ${yearTitle}`, docsInYear, e)}
                                 disabled={isYearDeleting}
                                 title={`Ukloni godinu ${yearTitle} (${docsInYear.length} spisa) iz baze`}
-                                className="inline-flex items-center gap-1 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-md transition-all cursor-pointer disabled:opacity-50"
+                                className="inline-flex items-center gap-1 p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 rounded-md transition-all cursor-pointer disabled:opacity-50"
                               >
                                 {isYearDeleting ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
@@ -674,7 +674,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
                               <div className="text-slate-400">
                                 {isYearOpen ? (
-                                  <ChevronDown className="w-4 h-4 text-slate-700" />
+                                  <ChevronDown className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                                 ) : (
                                   <ChevronRight className="w-4 h-4" />
                                 )}
@@ -684,54 +684,54 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
 
                           {/* RAZINA 3: Popis spisa unutar odabrane godine */}
                           {isYearOpen && (
-                            <div className="border-t border-slate-100 divide-y divide-slate-100 bg-white">
+                            <div className="border-t border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                               {docsInYear.map((doc, idx) => {
                                 const isDeletingThis = loadingAction === doc.naziv_datoteke;
 
                                 return (
                                   <div
                                     key={idx}
-                                    className="p-4 sm:px-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 group"
+                                    className="p-4 sm:px-5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 group"
                                   >
                                     {/* Lijeva strana: Stranka, ishod, prigovori */}
                                     <div className="space-y-1.5 flex-1 min-w-0">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {/* Ishod bedž */}
                                         {doc.ishod === 'Obustava postupka' && (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/80">
-                                            <Scale className="w-3 h-3 text-purple-600" />
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800">
+                                            <Scale className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                                             Obustava postupka
                                           </span>
                                         )}
                                         {doc.ishod === 'Troškovi postupka' && (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                                            <Scale className="w-3 h-3 text-indigo-600" />
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800">
+                                            <Scale className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                                             Troškovi postupka
                                           </span>
                                         )}
                                         {doc.ishod === 'Poništeno rješenje' && (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
-                                            <RotateCcw className="w-3 h-3 text-amber-600" />
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800">
+                                            <RotateCcw className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                                             Poništeno rješenje
                                           </span>
                                         )}
                                         {doc.ishod === 'Odbijena žalba' && (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                             Odbijena žalba
                                           </span>
                                         )}
 
                                         {/* Lokacija */}
                                         {doc.lokacija && (
-                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/60">
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700">
                                             <MapPin className="w-3 h-3 text-slate-400" />
                                             {doc.lokacija}
                                           </span>
                                         )}
 
                                         {/* Stranka */}
-                                        <h3 className="text-sm font-bold text-slate-900 truncate">
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                                           {doc.stranka}
                                         </h3>
                                       </div>
@@ -742,7 +742,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                           {doc.tagovi.map((tag, tIdx) => (
                                             <span
                                               key={tIdx}
-                                              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50/70 text-blue-700 border border-blue-100/80"
+                                              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50/70 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-100/80 dark:border-blue-900/60"
                                             >
                                               <Tag className="w-2.5 h-2.5 text-blue-400" />
                                               {tag}
@@ -752,7 +752,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                       )}
 
                                       {/* Izvorni naziv datoteke */}
-                                      <div className="flex items-center gap-2 text-xs text-slate-400 font-mono truncate">
+                                      <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-mono truncate">
                                         <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
                                         <span className="truncate">{doc.naziv_datoteke}</span>
                                       </div>
@@ -761,7 +761,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                     {/* Desna strana: Broj RAG chunkova + Gumb za brisanje */}
                                     <div className="shrink-0 flex items-center justify-end gap-2.5">
                                       <span
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/70"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700 tabular-nums"
                                         title="Broj indeksiranih vektorskih dijelova dostupnih AI asistentu"
                                       >
                                         <Layers className="w-3.5 h-3.5 text-slate-400" />
@@ -775,7 +775,7 @@ export function BazaPrakseTable({ documents }: { documents: PraksaDoc[] }) {
                                         onClick={() => handleDeleteDoc(doc)}
                                         disabled={isDeletingThis}
                                         title="Trajno ukloni ovaj spis iz baze prakse"
-                                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 rounded-lg transition-all cursor-pointer disabled:opacity-50"
                                       >
                                         {isDeletingThis ? (
                                           <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
