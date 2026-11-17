@@ -1338,6 +1338,23 @@ export function AiPanel({
 
                   {textContent && (
                     <div className="flex flex-wrap items-center gap-1">
+                      {/* Gumb: Pravna revizija ovog nacrta */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          window.dispatchEvent(
+                            new CustomEvent('trigger-ai-review', {
+                              detail: { draftText: textContent },
+                            })
+                          )
+                        }
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-2xs cursor-pointer"
+                        title="Otvori AI Pravnu reviziju s ovim nacrtom rješenja (provjera svih žalbenih navoda i zakonskih članaka)"
+                      >
+                        <ShieldCheck className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                        <span>Revizija</span>
+                      </button>
+
                       {/* Gumb: Ručno uredi tekst izravno u kartici */}
                       <button
                         type="button"

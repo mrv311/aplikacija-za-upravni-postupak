@@ -57,6 +57,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
 
   const [faza, setFaza] = useState<PredmetFaza>(predmet.faza);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewInitialText, setReviewInitialText] = useState<string | undefined>(undefined);
   const [parafModalOpen, setParafModalOpen] = useState(false);
   const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
   const [nadlezniModalOpen, setNadlezniModalOpen] = useState(false);
@@ -89,7 +90,13 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   React.useEffect(() => {
-    const handleOpenReview = () => setReviewModalOpen(true);
+    const handleOpenReview = (e: Event) => {
+      const custom = e as CustomEvent<{ draftText?: string }>;
+      if (custom.detail?.draftText) {
+        setReviewInitialText(custom.detail.draftText);
+      }
+      setReviewModalOpen(true);
+    };
     window.addEventListener('trigger-ai-review', handleOpenReview);
     return () => window.removeEventListener('trigger-ai-review', handleOpenReview);
   }, []);
@@ -901,6 +908,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         stranka={predmet.stranka}
         isOpen={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}
+        initialActText={reviewInitialText}
         onActSavedToCase={() => {
           startTransition(() => router.refresh());
         }}

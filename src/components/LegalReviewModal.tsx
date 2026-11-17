@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
@@ -23,13 +23,13 @@ import {
 import { LegalMarkdown, copyFormattedLegalText } from '@/components/LegalMarkdown';
 import {
   runLegalReviewAction,
+  getLatestDraftForReviewAction,
   parseReferenceDocumentFile,
   publishReviewedActToPraksa,
 } from '@/app/actions/draftGeneratorActions';
 import { saveDraftToSpis } from '@/app/actions/chatActions';
 import { sendPredmetToSigning } from '@/app/actions/predmetActions';
-import { type PredmetIshod, PREDMET_ISHODI } from '@/lib/predmet-meta';
-import { supabase } from '@/lib/supabase';
+import { type PredmetIshod } from '@/lib/predmet-meta';
 
 interface LegalReviewModalProps {
   predmetId: string;
@@ -38,6 +38,7 @@ interface LegalReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onActSavedToCase?: () => void;
+  initialActText?: string;
 }
 
 export function LegalReviewModal({
@@ -47,6 +48,7 @@ export function LegalReviewModal({
   isOpen,
   onClose,
   onActSavedToCase,
+  initialActText,
 }: LegalReviewModalProps) {
   const router = useRouter();
 
@@ -75,6 +77,23 @@ export function LegalReviewModal({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialActText && initialActText.trim().length > 0) {
+      setActText(initialActText.trim());
+      setUploadedFileName('Nacrt iz AI Pravnog Asistenta');
+      return;
+    }
+    if (!actText.trim()) {
+      getLatestDraftForReviewAction(predmetId).then((res) => {
+        if (res.success && res.draftText) {
+          setActText(res.draftText);
+          setUploadedFileName(res.sourceLabel || 'Nacrt iz AI Pravnog Asistenta');
+        }
+      });
+    }
+  }, [isOpen, initialActText, predmetId]);
+
   if (!isOpen) return null;
 
   const handleFileUpload = async (file: File) => {
@@ -99,32 +118,19 @@ export function LegalReviewModal({
   };
 
   const handleLoadFromCaseDocs = async () => {
+    setErrorMsg(null);
     try {
-      const { data: docs } = await supabase
-        .from('dokumenti')
-        .select('id, tip_dokumenta, raw_text')
-        .eq('predmet_id', predmetId)
-        .neq('tip_dokumenta', '__META__')
-        .neq('tip_dokumenta', '__CHAT__');
-
-      if (docs && docs.length > 0) {
-        const found = docs.find(
-          (d) =>
-            d.tip_dokumenta.toLowerCase().includes('drugostup') ||
-            d.tip_dokumenta.toLowerCase().includes('rješenje') ||
-            (d.raw_text && d.raw_text.toLowerCase().includes('obrazloženje'))
-        );
-        if (found && found.raw_text) {
-          setActText(found.raw_text);
-          setUploadedFileName('Dokument iz spisa');
-        } else {
-          setErrorMsg('U ovom spisu još nema spremljenog drugostupanjskog rješenja.');
-        }
+      const res = await getLatestDraftForReviewAction(predmetId);
+      if (res.success && res.draftText) {
+        setActText(res.draftText);
+        setUploadedFileName(res.sourceLabel || 'Nacrt iz spisa / AI chata');
       } else {
-        setErrorMsg('U spisu nema pronađenih dokumenata.');
+        setErrorMsg(
+          'U ovom predmetu još nema spremljenog drugostupanjskog rješenja niti nacrta u AI Asistentu.'
+        );
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Greška pri učitavanju dokumenata.');
+      setErrorMsg(err.message || 'Greška pri učitavanju nacrta.');
     }
   };
 

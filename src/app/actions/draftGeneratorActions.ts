@@ -7,6 +7,9 @@ import { generateText } from 'ai';
 import {
   searchKnowledge,
   formatZakoni,
+  formatPraksa,
+  buildCaseRetrievalQuery,
+  extractMessageText,
   stitchChunks,
   croatianStem,
   getPraksaCatalog,
@@ -24,7 +27,7 @@ import {
   buildAuthenticAdvisorStructurePrompt,
   detectCompetentAdministrativeCourt,
 } from '@/lib/advisor-blueprint';
-import { saveDraftToSpis } from '@/app/actions/chatActions';
+import { saveDraftToSpis, getPredmetChatHistory } from '@/app/actions/chatActions';
 import { updatePredmetFaza } from '@/app/actions/predmetActions';
 import {
   parseFileBufferWithOcrFallback,
@@ -790,8 +793,77 @@ export async function parseReferenceDocumentFile(formData: FormData): Promise<{
 }
 
 /**
+ * Dohvaća zadnji generirani nacrt rješenja iz AI razgovora u predmetu ili iz spremljenih dokumenata spisa,
+ * kako bi ga modal za pravnu reviziju mogao automatski ponuditi korisniku.
+ */
+export async function getLatestDraftForReviewAction(predmetId: string): Promise<{
+  success: boolean;
+  draftText?: string;
+  sourceLabel?: string;
+}> {
+  if (!predmetId) return { success: false };
+  try {
+    // 1. Provjeri povijest AI razgovora u predmetu (traži zadnju poruku asistenta koja izgleda kao nacrt rješenja)
+    const chatMessages = await getPredmetChatHistory(predmetId);
+    if (Array.isArray(chatMessages) && chatMessages.length > 0) {
+      for (let i = chatMessages.length - 1; i >= 0; i--) {
+        const msg = chatMessages[i];
+        if (msg.role === 'assistant') {
+          const text = extractMessageText(msg).trim();
+          if (
+            text.length > 400 &&
+            (/R\s*J\s*E\s*Š\s*E\s*N\s*J\s*E|O\s*b\s*r\s*a\s*z\s*l\s*o\s*ž\s*e\s*n\s*j\s*e|UPUTA O PRAVNOM LIJEKU/i.test(
+              text
+            ) ||
+              text.toLowerCase().includes('ministarstvo zaštite okoliša'))
+          ) {
+            return {
+              success: true,
+              draftText: text,
+              sourceLabel: 'Zadnji nacrt iz AI Pravnog Asistenta',
+            };
+          }
+        }
+      }
+    }
+
+    // 2. Fallback: provjeri postoji li spremljeno Drugostupanjsko rješenje u dokumentima spisa
+    const { data: docs } = await db
+      .from('dokumenti')
+      .select('tip_dokumenta, raw_text')
+      .eq('predmet_id', predmetId)
+      .neq('tip_dokumenta', META_DOC_TYPE)
+      .neq('tip_dokumenta', CHAT_DOC_TYPE)
+      .neq('tip_dokumenta', SLUZBENICI_DOC_TYPE);
+
+    if (docs && docs.length > 0) {
+      for (let i = docs.length - 1; i >= 0; i--) {
+        const d = docs[i];
+        const parsed = decodeDocLabel(d.tip_dokumenta);
+        if (
+          parsed.vrsta === 'Drugostupanjsko rješenje' &&
+          d.raw_text &&
+          d.raw_text.trim().length > 200
+        ) {
+          return {
+            success: true,
+            draftText: d.raw_text.trim(),
+            sourceLabel: `Spremljeni nacrt u spisu (${parsed.izvorniNaziv || parsed.vrsta})`,
+          };
+        }
+      }
+    }
+
+    return { success: false };
+  } catch {
+    return { success: false };
+  }
+}
+
+/**
  * AI Pravna revizija završenog rješenja:
- * Uspoređuje dostavljeni tekst akta sa žalbom i prvostupanjskim rješenjem iz spisa.
+ * Dijeli ISTI kontekst, puni spis (sve dokumente i kronologiju vraćanja), povijest AI chata,
+ * bazu propisa (<zakoni>), bazu prakse (<praksa>) i autentičnu strukturu savjetnika kao i sam generator nacrta!
  */
 export async function runLegalReviewAction(payload: {
   predmetId: string;
@@ -809,84 +881,197 @@ export async function runLegalReviewAction(payload: {
   }
 
   try {
-    const { predmet, docs, error } = await getDraftingContext(predmetId);
-    if (error || !predmet) {
-      return { success: false, error: error || 'Predmet nije pronađen.' };
+    const [{ data: rawPredmet, error: pError }, { data: rawDocs }, chatMessages] =
+      await Promise.all([
+        db.from('predmeti').select('*').eq('id', predmetId).maybeSingle(),
+        db
+          .from('dokumenti')
+          .select('id, tip_dokumenta, storage_url, raw_text')
+          .eq('predmet_id', predmetId),
+        getPredmetChatHistory(predmetId),
+      ]);
+
+    if (pError || !rawPredmet) {
+      return { success: false, error: 'Predmet nije pronađen u bazi.' };
     }
 
-    // Pronađi dokument žalbe u spisu
-    const zalbaDoc = docs.find((d) => {
-      const meta = decodeDocLabel(d.tip_dokumenta);
-      const v = (meta.vrsta || '').toLowerCase();
+    const metaDoc = (rawDocs || []).find((d: any) => d.tip_dokumenta === META_DOC_TYPE);
+    const meta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+    const casePodrucje = meta.podrucje || 'NUV';
+    const combinedNotes = [meta.napomena, meta.uputa_voditelja].filter(Boolean).join(' | ');
+
+    // Uzmi sve stvarne dokumente spisa (isključujući eventualno već spremljeni identični nacrt kojeg upravo revidiramo,
+    // kako ga model ne bi zamijenio s ranijim rješenjem u spisu)
+    const normalizedActHead = actText.replace(/\s+/g, ' ').trim().slice(0, 260);
+    const validDocs = (rawDocs || []).filter((d: any) => {
+      if (
+        d.tip_dokumenta === META_DOC_TYPE ||
+        d.tip_dokumenta === CHAT_DOC_TYPE ||
+        d.tip_dokumenta === SLUZBENICI_DOC_TYPE ||
+        !d.raw_text ||
+        d.raw_text.trim().length === 0
+      ) {
+        return false;
+      }
+      const docNormHead = d.raw_text.replace(/\s+/g, ' ').trim().slice(0, 260);
+      if (normalizedActHead.length > 120 && docNormHead === normalizedActHead) {
+        return false;
+      }
+      return true;
+    });
+
+    // Izgradi CJELOVITI prikaz spisa (svih dokumenata bez rezanja, baš kao u /api/chat!)
+    let documentsContext = '';
+    if (validDocs.length > 0) {
+      documentsContext = validDocs
+        .map((doc: any, idx: number) => {
+          const parsed = decodeDocLabel(doc.tip_dokumenta);
+          const label = parsed.izvorniNaziv
+            ? `${parsed.vrsta} — ${parsed.izvorniNaziv}`
+            : doc.tip_dokumenta;
+          return `=== DOKUMENT U SPISU #${idx + 1}: ${label} ===\n${doc.raw_text}\n`;
+        })
+        .join('\n');
+    } else {
+      documentsContext =
+        'U spisu nema zasebno učitanih dokumenata — utvrdi činjenice, citiranu žalbu i kronologiju iz samog teksta priloženog nacrta i povijesti razgovora.';
+    }
+
+    // Izvuci sažetak pravne niti i uputa iz AI Chata u ovom predmetu (ako je savjetnik vodio razgovor s AI asistentom)
+    let chatContextThread = '';
+    if (Array.isArray(chatMessages) && chatMessages.length > 0) {
+      const relevantTurns = chatMessages
+        .slice(-8)
+        .map((m: any) => {
+          const roleLabel = m.role === 'user' ? 'UPUTA / PITANJE SAVJETNIKA' : 'ANALIZA / NACRT AI ASISTENTA';
+          const txt = extractMessageText(m).trim();
+          if (!txt) return '';
+          return `[${roleLabel}]:\n${txt.slice(0, 3500)}`;
+        })
+        .filter(Boolean);
+
+      if (relevantTurns.length > 0) {
+        chatContextThread = relevantTurns.join('\n\n---\n\n');
+      }
+    }
+
+    const zalbaDoc = validDocs.find((d: any) => {
+      const docMeta = decodeDocLabel(d.tip_dokumenta);
+      const v = (docMeta.vrsta || '').toLowerCase();
       if (v.includes('košulj')) return false;
-      const n = (meta.izvorniNaziv || '').toLowerCase();
+      const n = (docMeta.izvorniNaziv || '').toLowerCase();
       const raw = (d.tip_dokumenta || '').toLowerCase();
       return v.includes('žalb') || n.includes('žalb') || raw.includes('žalb');
     });
 
-    const tekstZalbe = zalbaDoc?.raw_text ? normalizeExtractedLegalText(zalbaDoc.raw_text) : '';
-    const prvostupanjskoDoc = docs.find((d) => {
-      const meta = decodeDocLabel(d.tip_dokumenta);
-      return (
-        meta.vrsta.toLowerCase().includes('prvostup') ||
-        meta.vrsta.toLowerCase().includes('rješenj')
-      );
+    // Pokreni ISTI hibridni RAG (zakoni + praksa) kakav koristi i generator nacrta u chatu!
+    const semanticQuery = buildCaseRetrievalQuery(
+      actText.slice(0, 2500),
+      validDocs,
+      combinedNotes
+    );
+    const { zakoni, praksa, extractedKeywords } = await searchKnowledge(semanticQuery, {
+      zakoniCount: 10,
+      praksaCount: 8,
+      extraTextForRefs: `${actText}\n\n${documentsContext}`.slice(0, 35000),
+      filterScope: 'sve',
+      napomena: combinedNotes,
+      casePodrucje,
+      zalbaText: zalbaDoc?.raw_text || '',
+      preferAdvisorDecisions: true,
     });
-    const tekstPrvostupanjskog = prvostupanjskoDoc?.raw_text
-      ? normalizeExtractedLegalText(prvostupanjskoDoc.raw_text).slice(0, 10000)
-      : '';
+
+    const nadlezniSudHint = detectCompetentAdministrativeCourt(
+      `${rawPredmet.stranka || ''}\n${actText.slice(0, 2000)}\n${documentsContext.slice(0, 2000)}`
+    );
+    const authenticStructurePrompt = buildAuthenticAdvisorStructurePrompt({
+      citirajCijeluZalbu: true,
+      nadlezniSudHint,
+      podrucje: casePodrucje,
+    });
 
     const modelName =
       modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
 
-    const systemPrompt = `Ti si vrhunski viši upravni savjetnik u drugostupanjskom upravnom postupku u Ministarstvu (Republika Hrvatska).
-Tvoj zadatak je provesti detaljnu, objektivnu i strogu pravnu reviziju (kontrolu kvalitete) ZAVRŠENOG NACRTA RJEŠENJA kojeg je savjetnik pripremio.
+    const predmetMetaText = `KLASA: ${rawPredmet.klasa || 'Nije upisana'} | URBROJ: ${
+      rawPredmet.urbroj || 'Nije upisan'
+    } | STRANKA: ${rawPredmet.stranka || 'Nije upisana'} | PODRUČJE: ${casePodrucje}${
+      combinedNotes ? `\nNAPOMENA / UPUTA VODITELJA O PREDMETU: ${combinedNotes}` : ''
+    }${
+      extractedKeywords.length > 0
+        ? `\nPREPOZNATE KLJUČNE RIJEČI PREDMETA: ${extractedKeywords.join(', ')}`
+        : ''
+    }`;
 
-Nacrt rješenja moraš detaljno usporediti sa ŽALBOM žalitelja i spisom predmeta.
+    const systemPrompt = `Ti si viši upravni savjetnik / sektorski savjetnik u drugostupanjskom upravnom postupku (Ministarstvo zaštite okoliša i zelene tranzicije Republike Hrvatske).
+Tvoj zadatak je provesti stručnu, preciznu i kontekstualno usklađenu PRAVNU REVIZIJU završnog nacrta drugostupanjskog rješenja kojeg je savjetnik pripremio.
 
-Struktura tvog odgovora MORA biti točno ovakva:
+KRITIČNA PRAVILA ZA RAZUMIJEVANJE KONTEKSTA I KRONOLOGIJE PREDMETA:
+1. ISTA PRAVNA NIT KAO GENERATOR RJEŠENJA:
+   - U <povijest_razgovora> vidiš prethodnu pravnu analizu, upute savjetnika i način na koji je nacrt sastavljen u AI Asistentu.
+   - U <spis> vidiš SVE dokumente predmeta u cijelosti.
+   - U <zakoni> i <praksa> vidiš točne članke propisa i praksu ovog savjetnika te upravnih sudova.
+   - Tvoja revizija MORA pratiti istu pravnu nit, činjenični kontekst i autentičnu strukturu ovog savjetnika!
+2. SLOŽENI PREDMETI KOJI SU SE VIŠE PUTA VRAĆALI NA PONOVNI POSTUPAK:
+   - Posebno pazi kod predmeta u kojima postoji više ranijih prvostupanjskih ili drugostupanjskih rješenja, ranija poništenja ili presude upravnih sudova!
+   - NIKADA nemoj pomiješati ranije poništeno rješenje ili staru žalbu s najnovijim pobijanim prvostupanjskim rješenjem i aktivnom žalbom o kojoj se sada odlučuje!
+   - Ako nacrt rješenja u svom tekstu citira aktivnu žalbu (pod navodnicima „...“) i identificira pobijano prvostupanjsko rješenje u izreci i prvom odlomku obrazloženja, a u spisu postoji više dokumenata iz različitih faza postupka, tvoja je dužnost pažljivo rekonstruirati kronologiju i provjeravati nacrt u odnosu na AKTIVNU žalbu i AKTIVNO pobijano rješenje (uz uvažavanje ranijih ukidnih uputa drugostupanjskog tijela ili suda).
+3. POŠTIVANJE AUTENTIČNOG STILA SAVJETNIKA:
+   - Savjetnik piše rješenja bez memoranduma na vrhu (jer ga dodaje uredski sustav), bez numeriranih podnaslova u obrazloženju, s doslovnim citatom žalbe u navodnim znakovima. To je ISPRAVAN službeni format — nikada to ne proglašavaj nedostatkom!
 
-### 1. ODGOVOR NA SVE ŽALBENE NAVODE
-- Navedi taksativno svaki bitan žalbeni navod iz žalbe.
-- Za svaki navod označi: [OBRAĐENO] ili [PROPUŠTENO / NEDOREČENO].
-- UPOZORENJE: Ako ijedan bitan prigovor žalitelja nije jasno i argumentirano otklonjen u obrazloženju, naglasi to kao kritičan propust koji može dovesti do usvajanja tužbe pred Visokim upravnim sudom (povreda prava na obrazloženu odluku).
+${authenticStructurePrompt}
 
-### 2. ZAKONITOST I MATERIJALNO PRAVO
-- Jesu li pravilno pozvani članci Zakona o općem upravnom postupku (čl. 116. za odbijanje, čl. 117. za poništenje/izmjenu, čl. 114. za odbacivanje)?
-- Jesu li pravilno primijenjeni materijalni propisi (Zakon o vodama, Zakon o financiranju vodnoga gospodarstva, odgovarajući Pravilnik)?
-- Postoje li pitanja zastare (OPZ), nadležnosti ili postupovnih rokova?
+Struktura tvog izvješća o reviziji MORA biti točno ovakva:
 
-### 3. USKLAĐENOST IZREKE I OBRAZLOŽENJA
-- Je li izreka (dispozitiv) jasna, nedvosmislena i pravno izvršiva?
-- Podudara li se ishod u izreci u potpunosti s razlozima iznesenim u obrazloženju?
-- Je li uputa o pravnom lijeku točna (upravni spor tužbom nadležnom upravnom sudu u roku od 30 dana)?
+### 1. KRONOLOŠKI KONTEKST I ODGOVOR NA SVE ŽALBENE NAVODE
+- Kratko potvrdi o kojem se pobijanom prvostupanjskom rješenju i kojoj fazi postupka radi (osobito ako je predmet već bio vraćan na ponovni postupak).
+- Navedi taksativno svaki bitan žalbeni navod iz aktivne žalbe.
+- Za svaki navod označi: **[OBRAĐENO]** (uz kratku potvrdu kako je u nacrtu argumentirano odgovoreno) ili **[PROPUŠTENO / NEDOREČENO]**.
+
+### 2. ZAKONITOST, MATERIJALNO PRAVO I USKLAĐENOST S PRAKSOM
+- Provjeri jesu li u nacrtu pravilno primijenjeni članci ZUP-a (čl. 116. kod odbijanja, čl. 117. kod poništavanja/izmjene, čl. 114. kod odbacivanja) te materijalni propisi iz <zakoni> (ZFVG, ZOV, Uredba, Pravilnik, OPZ).
+- Potvrdi je li pravno shvaćanje u nacrtu usklađeno s odlukama iz <praksa>.
+
+### 3. USKLAĐENOST IZREKE, OBRAZLOŽENJA I UPUTE O PRAVNOM LIJEKU
+- Provjeri odgovara li izreka (dispozitiv) u potpunosti razlozima u obrazloženju, identifikaciji pobijanog rješenja i uputi o pravnom lijeku (${nadlezniSudHint}, rok 30 dana).
 
 ### 4. ZAVRŠNA OCJENA I PREPORUKA
-- 🟢 **SPREMNO ZA POTPIS** (ako je rješenje u potpunosti zakonito, potpuno i argumentirano) ILI
-- 🟡 **POTREBNA DORADA PRIJE POTPISA** (navedi točno koje odlomke, rečenice ili članke treba dopuniti).`;
+- 🟢 **SPREMNO ZA POTPIS** (ako je nacrt u potpunosti zakonit, činjenično točan i odgovara na sve žalbene navode — bez izmišljanja umjetnih zamjerki!) ILI
+- 🟡 **POTREBNA DORADA PRIJE POTPISA** (samo ako doista postoji stvarni pravni ili činjenični propust; tada navedi konkretan prijedlog rečenice koju treba dodati ili izmijeniti).`;
 
-    const userPrompt = `SPIS PREDMETA:
-Klasa: ${predmet.klasa}
-Stranka: ${predmet.stranka}
-Područje: ${predmet.podrucje}
+    const userPrompt = `PODACI O PREDMETU:
+${predmetMetaText}
 
-IZVORNA ŽALBA STRANKE:
-„„„
-${tekstZalbe || 'Nema posebnog dokumenta žalbe u spisu — provjeri prema ostalim dokumentima.'}
-„„„
+${
+  chatContextThread
+    ? `PRETHODNA ANALIZA, UPUTE SAVJETNIKA I PRAVNA NIT IZ AI ASISTENTA U OVOM PREDMETU:
+<povijest_razgovora>
+${chatContextThread}
+</povijest_razgovora>\n`
+    : ''
+}
+SVI DOKUMENTI U SPISU PREDMETA (CJELOVITI KONTEKST I KRONOLOGIJA):
+<spis>
+${documentsContext}
+</spis>
 
-POBIJANO PRVOSTUPANJSKO RJEŠENJE (IZVADAK):
-„„„
-${tekstPrvostupanjskog || 'Nema posebnog prvostupanjskog akta u spisu.'}
-„„„
+MJERODAVNI ČLANCI ZAKONA I PODZAKONSKIH PROPISA IZ BAZE:
+<zakoni>
+${formatZakoni(zakoni)}
+</zakoni>
+
+RELEVANTNA UPRAVNA I SUDSKA PRAKSA IZ BAZE:
+<praksa>
+${formatPraksa(praksa)}
+</praksa>
 
 ========================================
-ZAVRŠENI NACRT RJEŠENJA KOJEG JE SAVJETNIK DOSTAVIO NA PREGLED:
+ZAVRŠENI NACRT DRUGOSTUPANJSKOG RJEŠENJA KOJEG JE SAVJETNIK DOSTAVIO NA REVIZIJU:
 ========================================
 ${actText}
 ========================================
 
-Provedi detaljnu pravnu reviziju ovog nacrta po zadanim točkama.`;
+Provedi pravnu reviziju ovog nacrta rješenja prateći istu pravnu nit, punu kronologiju spisa i mjerodavne propise.`;
 
     const { text } = await generateText({
       model: google(modelName),
