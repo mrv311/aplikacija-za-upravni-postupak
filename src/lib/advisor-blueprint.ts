@@ -65,7 +65,13 @@ export function buildAuthenticAdvisorStructurePrompt(opts: {
       ? 'obračuna naknade za zaštitu voda'
       : 'obračuna naknade za uređenje voda';
 
-  return `AUTENTIČNA VIŠEGODIŠNJA STRUKTURA I FRAZEOLOGIJA DRUGOSTUPANJSKIH RJEŠENJA OVOG SAVJETNIKA:
+  return `OBVEZNA UNUTARNJA DVOFAZNA PRIPREMA PRIJE SASTAVLJANJA NACRTA RJEŠENJA (PRIJEDLOG 2 — TIHA ANALIZA):
+Prije nego što ispišeš prvu riječ nacrta rješenja, u svom procesu zaključivanja (bez ispisivanja internih bilješki izvan samog akta) obavezno provedi ove korake:
+1. IDENTIFIKACIJA ČINJENICA IZ SPISA: Iz <spis> točno utvrdi puni naziv i adresu žalitelja (i OIB), nadležni VGI/VGO Hrvatskih voda, točnu KLASU, URBROJ i datum pobijanog prvostupanjskog rješenja, predmet i iznos obveze (površinu u m², tarifni razred, jediničnu cijenu, k.č. i k.o.), datum dostave prvostupanjskog rješenja (iz dostavnice) te datum predaje žalbe.
+2. TAKSATIVNO MAPIRANJE SVIH ŽALBENIH NAVODA: Popiši SVAKI pojedini prigovor kojeg žalitelj iznosi u žalbi (nijedan prigovor ne smije ostati neodgovoren jer to vodi poništenju u upravnom sporu zbog povrede čl. 98. st. 5. i čl. 115. ZUP-a).
+3. POVEZIVANJE S PROPISIMA I PRAKSOM: Za svaki pojedini žalbeni navod odaberi mjerodavni članak iz <zakoni> (ZUP, ZFVG, ZOV, OPZ, Uredba/Pravilnik) i odgovarajuću pravnu argumentaciju iz <praksa> i <ogledno_rjesenje> (uključujući i shvaćanja upravnih sudova / VUSRH te ranija drugostupanjska rješenja ovog savjetnika).
+
+AUTENTIČNA VIŠEGODIŠNJA STRUKTURA I FRAZEOLOGIJA DRUGOSTUPANJSKIH RJEŠENJA OVOG SAVJETNIKA:
 Svako drugostupanjsko rješenje MORA strogo pratiti ovu strukturu, redoslijed odlomaka i pravni izričaj (BEZ izmišljenih podnaslova tipa "I. Prikaz pobijanog rješenja", "II. Žalbeni navodi", "III. Ocjena", BEZ Markdown zvjezdica ** i ljestvi ###):
 
 1. UVOD (odmah na početku, bez zaglavlja/memoranduma jer ga generira uredski sustav):

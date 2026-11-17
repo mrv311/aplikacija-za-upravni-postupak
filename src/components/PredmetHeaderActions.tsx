@@ -23,7 +23,6 @@ import {
   Send,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
 import { LegalReviewModal } from '@/components/LegalReviewModal';
 import { ParafiranjeModal } from '@/components/ParafiranjeModal';
 import { SluzbeniciModal } from '@/components/SluzbeniciModal';
@@ -57,7 +56,6 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const [, startTransition] = useTransition();
 
   const [faza, setFaza] = useState<PredmetFaza>(predmet.faza);
-  const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [parafModalOpen, setParafModalOpen] = useState(false);
   const [parafModalTab, setParafModalTab] = useState<'paraf' | 'delegiranje'>('paraf');
@@ -454,12 +452,12 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         {/* Akcijski gumbi u zaglavlju spisa */}
         <button
           type="button"
-          onClick={() => setDraftModalOpen(true)}
+          onClick={() => window.dispatchEvent(new CustomEvent('open-ai-draft-builder'))}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-          title="Generiraj tekst drugostupanjskog akta (Uvod, Izreka, Obrazloženje temeljem spisa i prakse)"
+          title="Otvori konfigurator nacrta drugostupanjskog rješenja u AI Pravnom Asistentu (Gemini Pro)"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Generiraj nacrt</span>
+          <span>Izradi nacrt rješenja</span>
         </button>
 
         <button
@@ -895,18 +893,6 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           </div>
         </div>
       )}
-
-      {/* Modal: Generator nacrta akta i obrazloženja (Točka 3) */}
-      <DraftGeneratorModal
-        predmetId={predmet.id}
-        klasa={predmet.klasa}
-        stranka={predmet.stranka}
-        isOpen={draftModalOpen}
-        onClose={() => setDraftModalOpen(false)}
-        onDraftSavedToCase={() => {
-          startTransition(() => router.refresh());
-        }}
-      />
 
       {/* Modal: AI Pregled i revizija završenog rješenja kod savjetnika */}
       <LegalReviewModal

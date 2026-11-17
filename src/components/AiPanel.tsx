@@ -37,12 +37,23 @@ import {
   Loader2,
   BookmarkCheck,
   ShieldCheck,
+  Download,
+  Pencil,
+  Wand2,
+  Plus,
+  Search,
+  BookOpen,
+  UploadCloud,
+  Tag,
 } from 'lucide-react';
 import {
+  type ChatDraftConfig,
+  type DraftIshodChoice,
   type LegalUIMessage,
   type PraksaFilterScope,
   type QuickActionTemplate,
   type RagSourcesPayload,
+  DRAFT_ISHOD_OPTIONS,
   PRAKSA_FILTER_OPTIONS,
   CASE_QUICK_ACTIONS,
 } from '@/lib/ai-types';
@@ -54,7 +65,15 @@ import {
   DOKUMENT_VRSTE,
   decodeDocLabel,
 } from '@/lib/predmet-meta';
-import { DraftGeneratorModal } from '@/components/DraftGeneratorModal';
+import {
+  getDraftingContext,
+  searchPraksaForDraft,
+  parseReferenceDocumentFile,
+  type RecommendedPracticeItem,
+  type ManualReferenceAct,
+} from '@/app/actions/draftGeneratorActions';
+import { updatePredmetFaza } from '@/app/actions/predmetActions';
+import { cleanDraftActFormatting } from '@/lib/text-formatter';
 
 interface SpisDokument {
   id: string;
@@ -102,8 +121,32 @@ export function AiPanel({
   const [panelSize, setPanelSize] = useState<PanelSize>('normal');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Modal Generator nacrta (Točka 3)
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  // Jedinstveni ugrađeni Konfigurator nacrta rješenja (Prijedlog 1 + Prijedlog 2)
+  const [isDraftBuilderOpen, setIsDraftBuilderOpen] = useState(false);
+  const [draftIshod, setDraftIshod] = useState<DraftIshodChoice>('odbijanje');
+  const [draftUpute, setDraftUpute] = useState('');
+  const [citirajCijeluZalbu, setCitirajCijeluZalbu] = useState(true);
+  const [showAdvancedSources, setShowAdvancedSources] = useState(false);
+  const [loadingDraftContext, setLoadingDraftContext] = useState(false);
+  const [draftContextLoaded, setDraftContextLoaded] = useState(false);
+  const [recommendedPractice, setRecommendedPractice] = useState<RecommendedPracticeItem[]>([]);
+  const [selectedPracticeNames, setSelectedPracticeNames] = useState<string[]>([]);
+  const [manualReferenceActs, setManualReferenceActs] = useState<ManualReferenceAct[]>([]);
+  const [activeKeywords, setActiveKeywords] = useState<string[]>([]);
+  const [newKeywordInput, setNewKeywordInput] = useState('');
+  const [practiceSearchQuery, setPracticeSearchQuery] = useState('');
+  const [practiceSearchResults, setPracticeSearchResults] = useState<RecommendedPracticeItem[]>([]);
+  const [isSearchingPractice, setIsSearchingPractice] = useState(false);
+  const [uploadingRefFile, setUploadingRefFile] = useState(false);
+  const [refUploadMessage, setRefUploadMessage] = useState<string | null>(null);
+  const refFileInputRef = useRef<HTMLInputElement | null>(null);
+  const practiceSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ručno uređivanje i .docx izvoz pojedine poruke izravno u chatu
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
+  const [editingMsgText, setEditingMsgText] = useState('');
+  const [downloadingDocxId, setDownloadingDocxId] = useState<string | null>(null);
+  const [markAsSigningOnSave, setMarkAsSigningOnSave] = useState(true);
 
   // Status trajnog spremanja razgovora (baza + local)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -283,7 +326,53 @@ export function AiPanel({
     }
   }
 
-  const triggerPrompt = (promptText: string, overrideModel?: 'flash' | 'pro') => {
+  const loadDraftingRecommendations = useCallback(
+    async (customKws?: string[], ishodChoice: DraftIshodChoice = draftIshod) => {
+      setLoadingDraftContext(true);
+      try {
+        const mappedIshod =
+          ishodChoice === 'ai_preporuka' ? undefined : ishodChoice;
+        const res = await getDraftingContext(predmetId, {
+          customKeywords: customKws,
+          preferredIshod: mappedIshod,
+        });
+        if (!res.error) {
+          if (!customKws) {
+            setActiveKeywords(res.extractedKeywords || []);
+          }
+          setRecommendedPractice(res.recommendedPractice || []);
+          setDraftContextLoaded(true);
+        }
+      } finally {
+        setLoadingDraftContext(false);
+      }
+    },
+    [predmetId, draftIshod]
+  );
+
+  const openDraftBuilder = useCallback(() => {
+    setIsDraftBuilderOpen(true);
+    setModelPreference('pro');
+    if (!draftContextLoaded && !loadingDraftContext) {
+      loadDraftingRecommendations();
+    }
+  }, [draftContextLoaded, loadingDraftContext, loadDraftingRecommendations]);
+
+  useEffect(() => {
+    const handleOpenDraftBuilderEvent = () => {
+      openDraftBuilder();
+    };
+    window.addEventListener('open-ai-draft-builder', handleOpenDraftBuilderEvent);
+    return () => {
+      window.removeEventListener('open-ai-draft-builder', handleOpenDraftBuilderEvent);
+    };
+  }, [openDraftBuilder]);
+
+  const triggerPrompt = (
+    promptText: string,
+    overrideModel?: 'flash' | 'pro',
+    draftConfig?: ChatDraftConfig
+  ) => {
     if (!promptText.trim() || isLoading) return;
     const chosenModel = overrideModel || modelPreference;
     if (overrideModel && overrideModel !== modelPreference) {
@@ -297,9 +386,197 @@ export function AiPanel({
           predmetId,
           modelPreference: chosenModel,
           filterScope,
+          ...(draftConfig ? { draftConfig } : {}),
         },
       }
     );
+  };
+
+  const handleLaunchUnifiedDraft = () => {
+    if (isLoading) return;
+    const ishodMeta =
+      DRAFT_ISHOD_OPTIONS.find((o) => o.id === draftIshod) || DRAFT_ISHOD_OPTIONS[1];
+
+    const draftConfig: ChatDraftConfig = {
+      ishod: draftIshod,
+      uputeSavjetnika: draftUpute.trim() || undefined,
+      citirajCijeluZalbu,
+      selectedPracticeNames:
+        selectedPracticeNames.length > 0 ? selectedPracticeNames : undefined,
+      manualReferenceActs:
+        manualReferenceActs.length > 0 ? manualReferenceActs : undefined,
+      customKeywords: activeKeywords.length > 0 ? activeKeywords : undefined,
+    };
+
+    const promptLines = [
+      `Sastavi cjelovit nacrt drugostupanjskog rješenja za ovaj predmet u mojoj višegodišnjoj autentičnoj strukturi i stilu (bez memoranduma na vrhu, bez Markdown podnaslova ### i bez zvjezdica ** u tekstu akta).`,
+      `• Traženi ishod po ZUP-u: ${ishodMeta.title} (${ishodMeta.zupClanak})`,
+      `• Citiranje žalbe: ${
+        citirajCijeluZalbu
+          ? 'Doslovno citiraj cjelokupni tekst žalbe u navodnim znakovima („...“)'
+          : 'Sažeto i vjerno prenesi žalbene navode'
+      }`,
+    ];
+
+    if (draftUpute.trim()) {
+      promptLines.push(`• Posebna uputa / fokus savjetnika: ${draftUpute.trim()}`);
+    }
+    if (selectedPracticeNames.length > 0) {
+      promptLines.push(
+        `• Prikvačeni uzorci iz Baze prakse: ${selectedPracticeNames
+          .map((n) => n.replace(/^\[[^\]]+\]\s*/, ''))
+          .join('; ')}`
+      );
+    }
+    if (manualReferenceActs.length > 0) {
+      promptLines.push(
+        `• Priloženi ogledni akti: ${manualReferenceActs.map((a) => a.title).join('; ')}`
+      );
+    }
+
+    setIsDraftBuilderOpen(false);
+    triggerPrompt(promptLines.join('\n'), 'pro', draftConfig);
+  };
+
+  const handleAddDraftKeyword = () => {
+    const rawParts = newKeywordInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+    if (rawParts.length === 0) return;
+
+    const existingLower = new Set(activeKeywords.map((k) => k.toLowerCase()));
+    const added: string[] = [];
+    for (const part of rawParts) {
+      if (!existingLower.has(part.toLowerCase())) {
+        existingLower.add(part.toLowerCase());
+        added.push(part);
+      }
+    }
+    setNewKeywordInput('');
+    if (added.length === 0) return;
+
+    const nextKeywords = [...activeKeywords, ...added];
+    setActiveKeywords(nextKeywords);
+    loadDraftingRecommendations(nextKeywords, draftIshod);
+  };
+
+  const handleRemoveDraftKeyword = (kwToRemove: string) => {
+    const nextKeywords = activeKeywords.filter((kw) => kw !== kwToRemove);
+    setActiveKeywords(nextKeywords);
+    loadDraftingRecommendations(nextKeywords, draftIshod);
+  };
+
+  const handlePracticeSearchChange = (text: string) => {
+    setPracticeSearchQuery(text);
+    if (practiceSearchTimerRef.current) clearTimeout(practiceSearchTimerRef.current);
+    if (!text.trim()) {
+      setPracticeSearchResults([]);
+      setIsSearchingPractice(false);
+      return;
+    }
+    setIsSearchingPractice(true);
+    practiceSearchTimerRef.current = setTimeout(async () => {
+      const results = await searchPraksaForDraft(text.trim(), 10);
+      setPracticeSearchResults(results);
+      setIsSearchingPractice(false);
+    }, 300);
+  };
+
+  const togglePinnedPractice = (nazivDatoteke: string) => {
+    setSelectedPracticeNames((prev) =>
+      prev.includes(nazivDatoteke)
+        ? prev.filter((n) => n !== nazivDatoteke)
+        : [...prev, nazivDatoteke]
+    );
+  };
+
+  const handleUploadReferenceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingRefFile(true);
+    setRefUploadMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await parseReferenceDocumentFile(formData);
+      if (res.success && res.text) {
+        const newAct: ManualReferenceAct = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          title: res.title || file.name,
+          content: res.text,
+        };
+        setManualReferenceActs((prev) => [...prev, newAct]);
+        setRefUploadMessage(`Uzorak "${newAct.title}" dodan u kontekst.`);
+      } else {
+        setRefUploadMessage(res.error || 'Nije uspjelo čitanje datoteke.');
+      }
+    } catch {
+      setRefUploadMessage('Greška pri učitavanju datoteke.');
+    } finally {
+      setUploadingRefFile(false);
+      if (refFileInputRef.current) refFileInputRef.current.value = '';
+    }
+  };
+
+  const handleDownloadMessageDocx = async (msgId: string, rawText: string) => {
+    if (!rawText.trim() || downloadingDocxId) return;
+    setDownloadingDocxId(msgId);
+    try {
+      const cleanText = cleanDraftActFormatting(rawText);
+      const res = await fetch('/api/alati/export-docx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vrsta: 'rjesenje',
+          nazivTijela: 'Ministarstvo zaštite okoliša i zelene tranzicije',
+          klasa: klasa || 'UP/II-325-08/26-02/01',
+          urbroj: '517-02-26-2',
+          mjesto: 'Zagreb',
+          datum: new Date().toLocaleDateString('hr-HR'),
+          stranka: stranka || 'Žalitelj',
+          predmet: 'Rješavanje po žalbi',
+          pravniOsnov: 'članka 116. Zakona o općem upravnom postupku',
+          izreka: 'Žalba se odbija.',
+          obrazlozenje: cleanText,
+          sluzbenaOsoba: 'Dino Malbaša, dipl. iur.',
+          funkcijaOsobe: 'SEKTORSKI SAVJETNIK',
+          dostaviti: [stranka || 'Žalitelj', 'Hrvatske vode, VGO'],
+          rawFullActText: cleanText,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Greška pri generiranju Word dokumenta');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `RJESENJE_${(klasa || 'nacrt').replace(/[/\\?%*:|"<>]/g, '_')}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(`Greška pri izvozu u Word: ${err?.message || 'Pokušajte ponovno.'}`);
+    } finally {
+      setDownloadingDocxId(null);
+    }
+  };
+
+  const handleSaveEditedMessage = (msgId: string) => {
+    if (!editingMsgText.trim()) return;
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId) return m;
+        const otherParts = (m.parts || []).filter((p) => p.type !== 'text');
+        return {
+          ...m,
+          parts: [...otherParts, { type: 'text' as const, text: editingMsgText }],
+        };
+      })
+    );
+    setEditingMsgId(null);
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -358,10 +635,11 @@ export function AiPanel({
   // Otvara modal za spremanje odgovora kao novog dokumenta/nacrta u spis predmeta
   const handleOpenSaveDraftModal = (msgId: string, text: string) => {
     const todayStr = new Date().toISOString().slice(0, 10);
+    setMarkAsSigningOnSave(true);
     setDraftModalData({
       msgId,
       text,
-      naziv: `Nacrt_obrazlozenja_${todayStr}.txt`,
+      naziv: `Nacrt_rjesenja_${todayStr}.txt`,
       vrsta: 'Drugostupanjsko rješenje',
     });
   };
@@ -379,6 +657,10 @@ export function AiPanel({
       naziv: draftModalData.naziv,
       text: draftModalData.text,
     });
+
+    if (!res.error && markAsSigningOnSave && draftModalData.vrsta === 'Drugostupanjsko rješenje') {
+      await updatePredmetFaza(predmetId, 'Na potpisu');
+    }
 
     setSavingDraft(false);
 
@@ -445,15 +727,23 @@ export function AiPanel({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Gumb za pokretanje Generatora nacrta (Točka 3) */}
+            {/* Jedinstveni gumb za konfiguraciju i izradu nacrta rješenja u chatu */}
             <button
               type="button"
-              onClick={() => setIsGeneratorOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold transition-colors cursor-pointer"
-              title="Pokreni Generator nacrta akta i obrazloženja"
+              onClick={() =>
+                isDraftBuilderOpen ? setIsDraftBuilderOpen(false) : openDraftBuilder()
+              }
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                isDraftBuilderOpen
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+              }`}
+              title="Otvori konfigurator za sastavljanje nacrta drugostupanjskog rješenja (Gemini Pro + puni RAG)"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="hidden sm:inline">Nacrt akta</span>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {isDraftBuilderOpen ? 'Zatvori konfigurator' : 'Izradi nacrt rješenja'}
+              </span>
             </button>
 
             {/* Odabir modela */}
@@ -594,6 +884,344 @@ export function AiPanel({
           )}
         </div>
 
+        {/* 2.5. JEDINSTVENI UGRAĐENI KONFIGURATOR NACRTA RJEŠENJA (Prijedlog 1 + 2) */}
+        {isDraftBuilderOpen && (
+          <div className="p-3.5 bg-blue-50/60 dark:bg-slate-900 border-b-2 border-blue-200 dark:border-blue-900/70 space-y-3 shrink-0 max-h-[56vh] overflow-y-auto animate-in fade-in duration-150">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Izrada nacrta drugostupanjskog rješenja (Gemini Pro)
+                  </h3>
+                  <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    Cijeli spis + Puna baza prakse
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                  AI čita cijeli spis bez skraćivanja, mapira sve žalbene navode na propise i sudsku praksu te sastavlja nacrt u vašoj autentičnoj strukturi.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDraftBuilderOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800 cursor-pointer"
+                title="Zatvori konfigurator"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 1. Odabir ishoda rješavanja po ZUP-u */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide block">
+                1. Odaberite ishod rješavanja po ZUP-u:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+                {DRAFT_ISHOD_OPTIONS.map((opt) => {
+                  const active = draftIshod === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setDraftIshod(opt.id);
+                        if (showAdvancedSources) {
+                          loadDraftingRecommendations(
+                            activeKeywords.length > 0 ? activeKeywords : undefined,
+                            opt.id
+                          );
+                        }
+                      }}
+                      className={`text-left p-2 rounded-xl border transition-all cursor-pointer ${
+                        active
+                          ? 'border-blue-600 bg-white dark:bg-slate-800 shadow-2xs ring-1 ring-blue-600/20'
+                          : 'border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 hover:border-blue-300 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          {opt.shortTitle}
+                        </span>
+                        <span className="text-[10px] font-mono font-semibold text-blue-600 dark:text-blue-400">
+                          {opt.zupClanak.replace(' ZUP-a', '')}
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                        {opt.shortDesc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Kratka uputa / fokus savjetnika + opcija citiranja žalbe */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-start">
+              <div className="sm:col-span-8">
+                <input
+                  type="text"
+                  value={draftUpute}
+                  onChange={(e) => setDraftUpute(e.target.value)}
+                  placeholder="Opcijska uputa za ovaj nacrt (npr. posebno obradi prigovor zastare ili očevidnik komunalne naknade)..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="sm:col-span-4 flex items-center h-full pt-1">
+                <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={citirajCijeluZalbu}
+                    onChange={(e) => setCitirajCijeluZalbu(e.target.checked)}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span>Doslovno citiraj cijelu žalbu („...“)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 3. Opcionalno: Prikvači specifični ogledni akt ili dodaj ključnu riječ */}
+            <div className="pt-1 border-t border-blue-200/70 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !showAdvancedSources;
+                    setShowAdvancedSources(next);
+                    if (next && !draftContextLoaded && !loadingDraftContext) {
+                      loadDraftingRecommendations();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 cursor-pointer"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>
+                    {showAdvancedSources
+                      ? 'Sakrij odabir dodatnih oglednih uzoraka'
+                      : '+ Dodaj ciljani ogledni akt iz baze / datoteku ili ključne riječi (opcijski)'}
+                  </span>
+                  {(selectedPracticeNames.length > 0 || manualReferenceActs.length > 0) && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 text-[10px] font-bold">
+                      {selectedPracticeNames.length + manualReferenceActs.length} prikvačeno
+                    </span>
+                  )}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsDraftBuilderOpen(false)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Odustani
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={handleLaunchUnifiedDraft}
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Sastavi nacrt rješenja (Pro)</span>
+                  </button>
+                </div>
+              </div>
+
+              {showAdvancedSources && (
+                <div className="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  {/* Ključne riječi */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <Tag className="w-3 h-3 text-indigo-600" />
+                        Ključne riječi za pretragu prakse:
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {activeKeywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-[11px] font-semibold"
+                        >
+                          {kw}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDraftKeyword(kw)}
+                            className="text-indigo-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                      <div className="inline-flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={newKeywordInput}
+                          onChange={(e) => setNewKeywordInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddDraftKeyword();
+                            }
+                          }}
+                          placeholder="+ Dodaj pojam (npr. zastara)..."
+                          className="px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 text-[11px] bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 w-44"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddDraftKeyword}
+                          disabled={!newKeywordInput.trim()}
+                          className="p-1 rounded-md bg-indigo-600 text-white disabled:opacity-40 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pretraga i odabir odluka iz Baze prakse + Upload datoteke */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={practiceSearchQuery}
+                        onChange={(e) => handlePracticeSearchChange(e.target.value)}
+                        placeholder="Pretraži 1.600 odluka u bazi prakse..."
+                        className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={refFileInputRef}
+                        type="file"
+                        accept=".pdf,.docx,.doc,.txt,image/*"
+                        onChange={handleUploadReferenceFile}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        disabled={uploadingRefFile}
+                        onClick={() => refFileInputRef.current?.click()}
+                        className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-blue-300 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-950/30 hover:bg-blue-50 text-xs font-semibold text-blue-700 dark:text-blue-300 cursor-pointer"
+                      >
+                        {uploadingRefFile ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Čitam datoteku...</span>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-3.5 h-3.5" />
+                            <span>Priloži ogledni akt (.pdf / .docx)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {refUploadMessage && (
+                    <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                      {refUploadMessage}
+                    </p>
+                  )}
+
+                  {/* Prikvačeni uzorci */}
+                  {(selectedPracticeNames.length > 0 || manualReferenceActs.length > 0) && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selectedPracticeNames.map((name) => (
+                        <span
+                          key={name}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold"
+                        >
+                          <span className="truncate max-w-52">
+                            {name.replace(/^\[[^\]]+\]\s*/, '')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => togglePinnedPractice(name)}
+                            className="text-blue-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {manualReferenceActs.map((act) => (
+                        <span
+                          key={act.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold"
+                        >
+                          <span className="truncate max-w-52">[Datoteka] {act.title}</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setManualReferenceActs((prev) =>
+                                prev.filter((a) => a.id !== act.id)
+                              )
+                            }
+                            className="text-emerald-500 hover:text-rose-600 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Lista preporučenih ili pretraženih odluka */}
+                  <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                    {loadingDraftContext || isSearchingPractice ? (
+                      <div className="py-3 text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                        <span>Tražim najsličnije odluke u bazi prakse...</span>
+                      </div>
+                    ) : (
+                      (practiceSearchQuery.trim()
+                        ? practiceSearchResults
+                        : recommendedPractice
+                      ).map((p) => {
+                        const checked = selectedPracticeNames.includes(p.nazivDatoteke);
+                        return (
+                          <div
+                            key={`${p.id}-${p.nazivDatoteke}`}
+                            onClick={() => togglePinnedPractice(p.nazivDatoteke)}
+                            className={`p-1.5 rounded-lg border text-xs flex items-center justify-between gap-2 cursor-pointer transition-colors ${
+                              checked
+                                ? 'border-blue-400 bg-blue-50/60 dark:bg-blue-950/40'
+                                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {}}
+                                className="rounded border-slate-300 text-blue-600 cursor-pointer shrink-0"
+                              />
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0">
+                                {p.vrsta === 'Sudska presuda' ? 'Presuda' : 'II. st.'}
+                              </span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                                {p.kratkiNaziv}
+                              </span>
+                            </div>
+                            {p.similarity && (
+                              <span className="text-[10px] font-mono font-semibold text-blue-600 dark:text-blue-400 shrink-0">
+                                {Math.round(p.similarity * 100)}%
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 3. PROSTOR RAZGOVORA I REZULTATA */}
         <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/60 dark:bg-slate-950/50">
           {messages.length === 0 && (
@@ -617,7 +1245,7 @@ export function AiPanel({
                 )}
               </div>
 
-              {/* 4 Kartice brzih pravnih radnji */}
+              {/* Kartice brzih pravnih radnji */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl mx-auto w-full">
                 {CASE_QUICK_ACTIONS.map((action) => (
                   <button
@@ -625,15 +1253,15 @@ export function AiPanel({
                     type="button"
                     disabled={isLoading}
                     onClick={() => {
-                      if (action.id === 'case-draft') {
-                        setIsGeneratorOpen(true);
+                      if (action.id === 'nacrt-rjesenja' || action.id === 'case-draft') {
+                        openDraftBuilder();
                       } else if (action.id === 'revizija-nacrta') {
                         window.dispatchEvent(new CustomEvent('trigger-ai-review'));
                       } else {
                         triggerPrompt(action.prompt, action.recommendedModel);
                       }
                     }}
-                    className="text-left p-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs hover:shadow-sm transition-all group flex flex-col justify-between gap-2 disabled:opacity-50"
+                    className="text-left p-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs hover:shadow-sm transition-all group flex flex-col justify-between gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -692,10 +1320,12 @@ export function AiPanel({
               );
             }
 
+            const isEditingThis = editingMsgId === m.id;
+
             return (
               <div key={m.id} className="flex flex-col items-start w-full">
                 {/* Gornja alatna traka odgovora */}
-                <div className="w-full flex items-center justify-between mb-1 px-1">
+                <div className="w-full flex flex-wrap items-center justify-between gap-1.5 mb-1.5 px-1">
                   <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                     <Bot className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     AI Pravni Asistent
@@ -707,8 +1337,30 @@ export function AiPanel({
                   </span>
 
                   {textContent && (
-                    <div className="flex items-center gap-1.5">
-                      {/* Gumb 1: Spremi nacrt izravno kao dokument u spis predmeta */}
+                    <div className="flex flex-wrap items-center gap-1">
+                      {/* Gumb: Ručno uredi tekst izravno u kartici */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditingThis) {
+                            setEditingMsgId(null);
+                          } else {
+                            setEditingMsgId(m.id);
+                            setEditingMsgText(textContent);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer ${
+                          isEditingThis
+                            ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                            : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+                        }`}
+                        title="Ručno uredi ili poravnaj tekst prije kopiranja, preuzimanja u Word ili spremanja u spis"
+                      >
+                        <Pencil className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                        <span>{isEditingThis ? 'Zatvori uređivanje' : 'Uredi tekst'}</span>
+                      </button>
+
+                      {/* Gumb: Spremi nacrt izravno kao dokument u spis predmeta */}
                       <button
                         type="button"
                         onClick={() => handleOpenSaveDraftModal(m.id, textContent)}
@@ -728,7 +1380,23 @@ export function AiPanel({
                         )}
                       </button>
 
-                      {/* Gumb 2: Kopiraj za Word */}
+                      {/* Gumb: Preuzmi Word (.docx) */}
+                      <button
+                        type="button"
+                        disabled={downloadingDocxId === m.id}
+                        onClick={() => handleDownloadMessageDocx(m.id, textContent)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+                        title="Preuzmi tekst kao formatirani Microsoft Word (.docx) dokument"
+                      >
+                        {downloadingDocxId === m.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                        ) : (
+                          <Download className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                        )}
+                        <span>Word (.docx)</span>
+                      </button>
+
+                      {/* Gumb: Kopiraj za Word */}
                       <button
                         type="button"
                         onClick={() => handleCopyMessage(m.id, textContent, 'word')}
@@ -738,7 +1406,7 @@ export function AiPanel({
                         {copiedKey === `${m.id}-word` ? (
                           <>
                             <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-emerald-700 dark:text-emerald-300">Kopirano za Word</span>
+                            <span className="text-emerald-700 dark:text-emerald-300">Kopirano</span>
                           </>
                         ) : (
                           <>
@@ -748,12 +1416,12 @@ export function AiPanel({
                         )}
                       </button>
 
-                      {/* Gumb 3: Kopiraj čisti tekst */}
+                      {/* Gumb: Kopiraj čisti tekst */}
                       <button
                         type="button"
                         onClick={() => handleCopyMessage(m.id, textContent, 'plain')}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Kopiraj čisti neformatirani tekst"
+                        title="Kopiraj čisti neformatirani tekst (za uredski sustav)"
                       >
                         {copiedKey === `${m.id}-plain` ? (
                           <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -765,9 +1433,44 @@ export function AiPanel({
                   )}
                 </div>
 
-                {/* Kartica odgovora s Markdownom i Pravnim inspektorom */}
+                {/* Kartica odgovora s Markdownom / Inline editorom i Pravnim inspektorom */}
                 <div className="w-full p-4.5 rounded-2xl rounded-tl-xs legal-document-sheet border border-slate-200/90 dark:border-slate-800 border-t-3 border-t-blue-600/80 dark:border-t-blue-500/80">
-                  {textContent ? (
+                  {isEditingThis ? (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Ručno uređivanje teksta nacrta:
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditingMsgText((prev) => cleanDraftActFormatting(prev))
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 cursor-pointer"
+                            title="Automatski spoji nepravilno prekinute retke iz PDF-a u tečne odlomke"
+                          >
+                            <Wand2 className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Poravnaj odlomke</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEditedMessage(m.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Spremi izmjene</span>
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        rows={16}
+                        value={editingMsgText}
+                        onChange={(e) => setEditingMsgText(e.target.value)}
+                        className="w-full p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs sm:text-[13.5px] font-serif leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  ) : textContent ? (
                     <LegalMarkdown content={textContent} />
                   ) : (
                     <div className="flex items-center gap-2 py-1 text-xs text-slate-500 dark:text-slate-400">
@@ -818,8 +1521,8 @@ export function AiPanel({
                   type="button"
                   disabled={isLoading}
                   onClick={() => {
-                    if (action.id === 'case-draft') {
-                      setIsGeneratorOpen(true);
+                    if (action.id === 'nacrt-rjesenja' || action.id === 'case-draft') {
+                      openDraftBuilder();
                     } else if (action.id === 'revizija-nacrta') {
                       window.dispatchEvent(new CustomEvent('trigger-ai-review'));
                     } else {
@@ -843,7 +1546,7 @@ export function AiPanel({
               value={input}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="Postavite podpitanje o spisu... (Enter za slanje, Shift+Enter za novi red)"
+              placeholder="Postavite podpitanje ili uputu za doradu nacrta... (Enter za slanje, Shift+Enter za novi red)"
               disabled={isLoading}
               className="flex-1 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 leading-snug bg-slate-50/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
@@ -944,6 +1647,18 @@ export function AiPanel({
                 </div>
               </div>
 
+              {draftModalData.vrsta === 'Drugostupanjsko rješenje' && (
+                <label className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-medium text-emerald-900 dark:text-emerald-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={markAsSigningOnSave}
+                    onChange={(e) => setMarkAsSigningOnSave(e.target.checked)}
+                    className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  />
+                  <span>Automatski prebaci fazu predmeta u „Na potpisu“</span>
+                </label>
+              )}
+
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Pregled teksta za spremanje (prvih nekoliko redaka):
@@ -985,18 +1700,6 @@ export function AiPanel({
           </form>
         </div>
       )}
-
-      {/* Modal: Generator nacrta akta i obrazloženja (Točka 3) */}
-      <DraftGeneratorModal
-        predmetId={predmetId}
-        klasa={klasa}
-        stranka={stranka}
-        isOpen={isGeneratorOpen}
-        onClose={() => setIsGeneratorOpen(false)}
-        onDraftSavedToCase={() => {
-          fetchDocs();
-        }}
-      />
     </>
   );
 }

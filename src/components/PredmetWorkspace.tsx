@@ -43,12 +43,17 @@ export function PredmetWorkspace({
   const [appealDateError, setAppealDateError] = useState<string | null>(null);
 
   React.useEffect(() => {
-    const handleSwitchToAi = () => setMobileTab('ai');
+    const handleSwitchToAi = () => {
+      setMobileTab('ai');
+      setLayoutMode((prev) => (prev === 'focus-docs' ? 'balanced' : prev));
+    };
     window.addEventListener('switch-to-ai-tab', handleSwitchToAi);
     window.addEventListener('trigger-ai-review', handleSwitchToAi);
+    window.addEventListener('open-ai-draft-builder', handleSwitchToAi);
     return () => {
       window.removeEventListener('switch-to-ai-tab', handleSwitchToAi);
       window.removeEventListener('trigger-ai-review', handleSwitchToAi);
+      window.removeEventListener('open-ai-draft-builder', handleSwitchToAi);
     };
   }, []);
 

@@ -15,7 +15,13 @@ import {
   formatPraksa,
   getFullPracticeTextByName,
 } from '@/lib/rag';
-import type { LegalUIMessage, PraksaFilterScope, RagSourcesPayload } from '@/lib/ai-types';
+import {
+  type ChatDraftConfig,
+  type LegalUIMessage,
+  type PraksaFilterScope,
+  type RagSourcesPayload,
+  DRAFT_ISHOD_OPTIONS,
+} from '@/lib/ai-types';
 import {
   META_DOC_TYPE,
   CHAT_DOC_TYPE,
@@ -38,11 +44,13 @@ export async function POST(req: Request) {
       predmetId,
       modelPreference = 'flash',
       filterScope: rawScope = 'sve',
+      draftConfig,
     } = body as {
       messages: LegalUIMessage[];
       predmetId?: string;
       modelPreference?: 'flash' | 'pro';
       filterScope?: PraksaFilterScope;
+      draftConfig?: ChatDraftConfig;
     };
 
     const filterScope: PraksaFilterScope = VALID_SCOPES.has(rawScope) ? rawScope : 'sve';
@@ -196,31 +204,75 @@ ${formatPraksa(praksa)}
     let zakoni: RagSourcesPayload['zakoni'] = [];
     let praksa: RagSourcesPayload['praksa'] = [];
     let extractedKeywords: string[] = [];
-    let fullAdvisorBlueprintText = '';
-    let fullAdvisorBlueprintTitle = '';
+    const fullBlueprintSections: Array<{ title: string; text: string }> = [];
+
+    const mappedPreferredIshod: 'Odbijena žalba' | 'Poništeno rješenje' | undefined =
+      draftConfig?.ishod === 'ponistavanje_vracanje' || draftConfig?.ishod === 'usvajanje_izmjena'
+        ? 'Poništeno rješenje'
+        : draftConfig?.ishod === 'odbijanje' ||
+          draftConfig?.ishod === 'odbacivanje_nepravodobna' ||
+          draftConfig?.ishod === 'odbacivanje_nedopustena'
+        ? 'Odbijena žalba'
+        : undefined;
+
+    const combinedNotesWithDraft = [combinedNotes, draftConfig?.uputeSavjetnika]
+      .filter(Boolean)
+      .join(' | ');
 
     try {
-      const semanticQuery = buildCaseRetrievalQuery(queryText, validDocs, combinedNotes);
+      const semanticQuery = buildCaseRetrievalQuery(
+        queryText,
+        validDocs,
+        combinedNotesWithDraft
+      );
       const ragRes = await searchKnowledge(semanticQuery, {
-        zakoniCount: 9,
+        zakoniCount: 10,
         praksaCount: 8,
         extraTextForRefs: documentsContext.slice(0, 35000),
         filterScope,
-        napomena: combinedNotes,
+        explicitKeywords: draftConfig?.customKeywords,
+        napomena: combinedNotesWithDraft,
         casePodrucje,
         zalbaText: zalbaDoc?.raw_text || '',
+        preferredIshod: mappedPreferredIshod,
         preferAdvisorDecisions: true,
       });
       zakoni = ragRes.zakoni;
       praksa = ragRes.praksa;
       extractedKeywords = ragRes.extractedKeywords;
 
-      // Za potrebe izrade nacrta rješenja ili duboke usporedbe, dohvati CJELOVITI tekst
-      // najsličnijeg drugostupanjskog rješenja savjetnika iz Baze prakse!
-      const topAdvisorDecision = praksa.find((p) => p.vrsta === 'Drugostupanjsko rješenje');
-      if (topAdvisorDecision) {
-        fullAdvisorBlueprintTitle = topAdvisorDecision.naziv_datoteke;
-        fullAdvisorBlueprintText = await getFullPracticeTextByName(topAdvisorDecision.naziv_datoteke);
+      // 1. Ako je savjetnik ručno odabrao konkretne odluke iz Baze prakse u Konfiguratoru nacrta,
+      // dohvati njihov puni tekst (do 3 odluke).
+      const pinnedNames = (draftConfig?.selectedPracticeNames || []).slice(0, 3);
+      for (const name of pinnedNames) {
+        const fullText = await getFullPracticeTextByName(name);
+        if (fullText) {
+          fullBlueprintSections.push({ title: name, text: fullText.slice(0, 8000) });
+        }
+      }
+
+      // 2. Uvijek osiguraj barem jedno cjelovito drugostupanjsko rješenje savjetnika za autentičnu strukturu
+      if (fullBlueprintSections.length === 0) {
+        const topAdvisorDecision = praksa.find((p) => p.vrsta === 'Drugostupanjsko rješenje');
+        if (topAdvisorDecision) {
+          const fullText = await getFullPracticeTextByName(topAdvisorDecision.naziv_datoteke);
+          if (fullText) {
+            fullBlueprintSections.push({
+              title: topAdvisorDecision.naziv_datoteke,
+              text: fullText.slice(0, 7500),
+            });
+          }
+        }
+      }
+
+      // 3. Dodaj i eventualno ručno priložene ogledne akte (učitani PDF/Word ili zalijepljeni tekst)
+      for (const manualAct of draftConfig?.manualReferenceActs || []) {
+        if (manualAct.content?.trim()) {
+          fullBlueprintSections.push({
+            title: `[Priloženi uzorak] ${manualAct.title}`,
+            text: manualAct.content.slice(0, 8000),
+          });
+        }
       }
     } catch (ragError) {
       console.error('RAG Error u predmetu:', ragError);
@@ -229,11 +281,31 @@ ${formatPraksa(praksa)}
     const nadlezniSudHint = detectCompetentAdministrativeCourt(
       `${predmet?.stranka || ''}\n${documentsContext.slice(0, 2500)}`
     );
+    const citirajCijeluZalbu = draftConfig?.citirajCijeluZalbu ?? true;
     const authenticStructurePrompt = buildAuthenticAdvisorStructurePrompt({
-      citirajCijeluZalbu: true,
+      citirajCijeluZalbu,
       nadlezniSudHint,
       podrucje: casePodrucje,
     });
+
+    const ishodOption = draftConfig?.ishod
+      ? DRAFT_ISHOD_OPTIONS.find((o) => o.id === draftConfig.ishod)
+      : undefined;
+
+    const draftInstructionsBlock = draftConfig
+      ? `\nPOSEBNE POSTAVKE SAVJETNIKA ZA OVAJ NACRT RJEŠENJA:
+- Traženi ishod rješavanja: ${ishodOption ? `${ishodOption.title} (${ishodOption.zupClanak})` : 'Prema pravnoj ocjeni spisa'}
+- Pravna uputa za ishod: ${ishodOption?.uputaZaAi || ''}
+- Citiranje žalbe u obrazloženju: ${
+          citirajCijeluZalbu
+            ? 'DOSLOVNO citiraj cjelokupni izvorni tekst žalbe od riječi do riječi u navodnim znakovima („...“)'
+            : 'Sažeto i vjerno prenesi sve žalbene navode'
+        }${
+          draftConfig.uputeSavjetnika?.trim()
+            ? `\n- Dodatna uputa / fokus savjetnika: ${draftConfig.uputeSavjetnika.trim()}`
+            : ''
+        }\n`
+      : '';
 
     const systemPrompt = `Ti si iskusni viši upravni savjetnik / sektorski savjetnik za drugostupanjski upravni postupak u Republici Hrvatskoj (Ministarstvo zaštite okoliša i zelene tranzicije).
 Pomažeš pri analizi spisa, usporedbi sa sličnim predmetima iz Baze prakse, ocjeni žalbenih navoda i izradi nacrta drugostupanjskih rješenja.
@@ -241,8 +313,8 @@ Pomažeš pri analizi spisa, usporedbi sa sličnim predmetima iz Baze prakse, oc
 PODACI O PREDMETU:
 ${predmetMetaText}
 ${extractedKeywords.length > 0 ? `PREPOZNATE KLJUČNE RIJEČI PREDMETA: ${extractedKeywords.join(', ')}` : ''}
-
-DOKUMENTI U SPISU:
+${draftInstructionsBlock}
+DOKUMENTI U SPISU (CJELOVITI TEKST SVIH ISPRAVA):
 <spis>
 ${documentsContext}
 </spis>
@@ -252,26 +324,26 @@ MJERODAVNI ČLANCI ZAKONA I PODZAKONSKIH PROPISA IZ BAZE:
 ${formatZakoni(zakoni)}
 </zakoni>
 
-PRONAĐENI SLIČNI PREDMETI I PRESUDE IZ BAZE PRAKSE (filtar: ${filterScope}):
+PRONAĐENI SLIČNI PREDMETI I SUDSKE PRESUDE IZ BAZE PRAKSE (filtar: ${filterScope}):
 <praksa>
 ${formatPraksa(praksa)}
 </praksa>
 ${
-  fullAdvisorBlueprintText
-    ? `\nCJELOVITI OGLEDNI PRIMJER RJEŠENJA OVOG SAVJETNIKA IZ BAZE PRAKSE (${fullAdvisorBlueprintTitle}):\n<ogledno_rjesenje>\n${fullAdvisorBlueprintText.slice(
-        0,
-        7500
-      )}\n</ogledno_rjesenje>\n`
+  fullBlueprintSections.length > 0
+    ? `\nCJELOVITA OGLEDNA RJEŠENJA OVOG SAVJETNIKA ZA STRUKTURU, STIL I ARGUMENTACIJU:\n<ogledno_rjesenje>\n${fullBlueprintSections
+        .map((b, i) => `=== OGLEDNI AKT #${i + 1}: ${b.title} ===\n${b.text}`)
+        .join('\n\n')}\n</ogledno_rjesenje>\n`
     : ''
 }
 
 PRAVILA RADA I UPRAVNOG STILA:
-1. AKTIVNO KORIŠTENJE BAZE PRAKSE: U <praksa> (i <ogledno_rjesenje>) nalaze se stvarna ranija drugostupanjska rješenja ovog savjetnika i presude upravnih sudova pronađene prema ključnim riječima ovog predmeta. Uvijek se osloni na njihovu pravnu argumentaciju i izričito navedi konkretne srodne odluke iz <praksa> pri analizi spisa!
+1. AKTIVNO KORIŠTENJE BAZE PRAKSE I SUDSKIH PRESUDA: U <praksa> i <ogledno_rjesenje> nalaze se stvarna ranija drugostupanjska rješenja ovog savjetnika te presude upravnih sudova i Visokog upravnog suda RH pronađene prema ključnim riječima ovog predmeta. Uvijek se osloni na njihovu pravnu argumentaciju!
 2. ČINJENIČNA TOČNOST: Utvrđuj činjenice isključivo iz <spis>. Ako neki podatak nedostaje u tekstu spisa, označi ga uglatim zagradama npr. \`[provjeriti datum dostave]\`.
 3. STROGA ZUP TERMINOLOGIJA: Upravno tijelo donosi **rješenje** ili **zaključak** (nikada "presudu"). Pojam **presuda** rabi isključivo za odluke upravnih sudova / VUSRH.
 4. KADA KORISNIK TRAŽI ANALIZU ILI USPOREDBU S PRAKSOM: Piši pregledno koristeći Markdown podnaslove (\`###\`) i grafičke točke te za svaki žalbeni navod poveži odredbu iz <zakoni> i konkretno rješenje/presudu iz <praksa>.
-5. KADA KORISNIK TRAŽI NACRT RJEŠENJA (ILI KLIKNE "PRIPREMI NACRT RJEŠENJA"):
-   STROGO I BEZ IZNIMKE piši rješenje u višegodišnjoj autentičnoj strukturi ovog savjetnika navedenoj ispod i prema uzoru iz <ogledno_rjesenje> — kao ČISTI TEKST bez Markdown zvjezdica (**) i bez naslova s ljestvama (###), s doslovnim citatom žalbe u navodnim znakovima! Ne spominji interne XML oznake (\`<spis>\`, \`<zakoni>\`, \`<praksa>\`, \`<ogledno_rjesenje>\`).
+5. KADA KORISNIK TRAŽI NACRT RJEŠENJA (ILI KORISTI KONFIGURATOR NACRTA RJEŠENJA):
+   - Najprije u sebi provedi dvofaznu provjeru: identificiraj sve činjenice iz <spis> i taksativno mapiraj SVAKI pojedini žalbeni navod iz žalbe na članke u <zakoni> i pravna shvaćanja u <praksa> / <ogledno_rjesenje>, tako da NIJEDAN žalbeni prigovor ne ostane neobrađen.
+   - Zatim STROGO I BEZ IZNIMKE napiši cjelovito rješenje u višegodišnjoj autentičnoj strukturi ovog savjetnika navedenoj ispod i prema uzoru iz <ogledno_rjesenje> — kao ČISTI TEKST bez Markdown zvjezdica (**) i bez naslova s ljestvama (###), s doslovnim citatom žalbe u navodnim znakovima! Ne spominji interne XML oznake (\`<spis>\`, \`<zakoni>\`, \`<praksa>\`, \`<ogledno_rjesenje>\`).
 
 ${authenticStructurePrompt}`;
 
@@ -281,6 +353,7 @@ ${authenticStructurePrompt}`;
       filterScope,
       modelName: aiModelName,
       extractedKeywords,
+      pinnedPracticeTitles: fullBlueprintSections.map((b) => b.title),
     };
 
     const stream = createUIMessageStream<LegalUIMessage>({

@@ -272,6 +272,25 @@ export function SourcesInspector({ sources }: { sources: RagSourcesPayload }) {
           {/* Lista Prakse */}
           {activeTab === 'praksa' && (
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {sources.pinnedPracticeTitles && sources.pinnedPracticeTitles.length > 0 && (
+                <div className="p-2.5 rounded-lg bg-sky-50/80 border border-sky-200/80 space-y-1">
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-sky-900">
+                    <BookOpen className="w-3 h-3 text-sky-600" />
+                    Cjeloviti ogledni uzorak (učitan puni tekst u kontekst):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sources.pinnedPracticeTitles.map((title) => (
+                      <span
+                        key={title}
+                        className="text-[10.5px] font-semibold px-2 py-0.5 rounded bg-white text-sky-900 border border-sky-200 shadow-2xs"
+                      >
+                        {title.replace(/^\[[^\]]+\]\s*/, '')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {sources.extractedKeywords && sources.extractedKeywords.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-2 rounded-lg bg-indigo-50/60 border border-indigo-200/70">
                   <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-800">

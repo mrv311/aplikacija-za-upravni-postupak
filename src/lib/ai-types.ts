@@ -76,7 +76,89 @@ export interface RagSourcesPayload {
   filterScope: PraksaFilterScope;
   modelName: string;
   extractedKeywords?: string[];
+  pinnedPracticeTitles?: string[];
 }
+
+export type DraftIshodChoice =
+  | 'ai_preporuka'
+  | 'odbijanje'
+  | 'ponistavanje_vracanje'
+  | 'odbacivanje_nepravodobna'
+  | 'odbacivanje_nedopustena'
+  | 'usvajanje_izmjena';
+
+export interface ChatDraftConfig {
+  ishod: DraftIshodChoice;
+  uputeSavjetnika?: string;
+  citirajCijeluZalbu?: boolean;
+  selectedPracticeNames?: string[];
+  manualReferenceActs?: Array<{ id: string; title: string; content: string }>;
+  customKeywords?: string[];
+}
+
+export const DRAFT_ISHOD_OPTIONS: Array<{
+  id: DraftIshodChoice;
+  title: string;
+  shortTitle: string;
+  zupClanak: string;
+  shortDesc: string;
+  uputaZaAi: string;
+}> = [
+  {
+    id: 'ai_preporuka',
+    title: 'AI preporuka temeljem spisa i prakse',
+    shortTitle: 'AI procjena',
+    zupClanak: 'čl. 114. / 116. / 117. ZUP-a',
+    shortDesc: 'AI samostalno utvrđuje pravodobnost, dopuštenost i osnovanost žalbe iz spisa i prakse.',
+    uputaZaAi:
+      'Samostalno na temelju cjelokupnog spisa, dostavnice, žalbe, mjerodavnih propisa i baze prakse utvrdi je li žalba pravodobna i dopuštena te treba li je odbiti kao neosnovanu (čl. 116. st. 1. t. 1. ZUP-a), poništiti prvostupanjsko rješenje i vratiti na ponovni postupak (čl. 117. st. 1. t. 1. i st. 2. ZUP-a) ili odbaciti (čl. 114. ZUP-a).',
+  },
+  {
+    id: 'odbijanje',
+    title: 'Odbijanje žalbe kao neosnovane',
+    shortTitle: 'Odbijanje žalbe',
+    zupClanak: 'čl. 116. st. 1. t. 1. ZUP-a',
+    shortDesc: 'Prvostupanjsko rješenje Hrvatskih voda je zakonito, a žalbeni navodi neosnovani.',
+    uputaZaAi:
+      'Žalba se ODBIJA kao neosnovana temeljem članka 116. stavka 1. točke 1. ZUP-a. Prvostupanjsko rješenje Hrvatskih voda je zakonito i pravilno doneseno, a svaki pojedini žalbeni navod sustavno i argumentirano otkloni pozivom na spis, propise i bazu prakse.',
+  },
+  {
+    id: 'ponistavanje_vracanje',
+    title: 'Poništavanje i vraćanje na ponovni postupak',
+    shortTitle: 'Poništavanje i vraćanje',
+    zupClanak: 'čl. 117. st. 1. t. 1. i st. 2. ZUP-a',
+    shortDesc: 'Nepotpuno utvrđeno činjenično stanje ili povreda pravila postupka (čl. 51. ZUP-a).',
+    uputaZaAi:
+      'Pobijano rješenje Hrvatskih voda se PONIŠTAVA (točka 1. izreke) i predmet se VRAĆA prvostupanjskom tijelu na ponovni postupak (točka 2. izreke) temeljem članka 117. stavka 1. točke 1. i stavka 2. ZUP-a. Jasno obrazloži propuste u utvrđivanju činjeničnog stanja ili povredu čl. 51. ZUP-a te daj konkretne upute što Hrvatske vode u ponovnom postupku moraju utvrditi.',
+  },
+  {
+    id: 'odbacivanje_nepravodobna',
+    title: 'Odbacivanje — nepravodobna žalba',
+    shortTitle: 'Odbacivanje (rok)',
+    zupClanak: 'čl. 114. st. 1. ZUP-a',
+    shortDesc: 'Žalba izjavljena nakon proteka zakonskog roka od 15 dana od dostave.',
+    uputaZaAi:
+      'Žalba se ODBACUJE kao nepravodobna temeljem članka 114. stavka 1. ZUP-a. Precizno navedi datum uredne dostave prvostupanjskog rješenja (prema dostavnici u spisu), zadnji dan zakonskog roka od 15 dana te datum predaje žalbe.',
+  },
+  {
+    id: 'odbacivanje_nedopustena',
+    title: 'Odbacivanje — nedopuštena / neovlaštena osoba',
+    shortTitle: 'Odbacivanje (ovlast)',
+    zupClanak: 'čl. 114. st. 1. ZUP-a',
+    shortDesc: 'Nedostatak pravnog interesa, ovlaštenja ili punomoći.',
+    uputaZaAi:
+      'Žalba se ODBACUJE kao nedopuštena ili izjavljena od neovlaštene osobe temeljem članka 114. stavka 1. ZUP-a. Obrazloži nedostatak pravnog interesa odnosno valjane punomoći.',
+  },
+  {
+    id: 'usvajanje_izmjena',
+    title: 'Usvajanje žalbe i izmjena rješenja',
+    shortTitle: 'Izmjena rješenja',
+    zupClanak: 'čl. 117. st. 1. ZUP-a',
+    shortDesc: 'Izmjena pobijanog dijela izravno na temelju nespornih isprava u spisu.',
+    uputaZaAi:
+      'Žalba se UVAŽAVA i pobijano rješenje se MIJENJA u pobijanom dijelu temeljem članka 117. stavka 1. ZUP-a na temelju nespornih isprava u spisu, bez vraćanja na ponovni postupak.',
+  },
+];
 
 export type LegalUIMessage = UIMessage<unknown, { sources: RagSourcesPayload }>;
 
