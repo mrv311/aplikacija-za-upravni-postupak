@@ -180,10 +180,13 @@ STROGA PRAVILA ZA KLASU ("klasa"):
 - Inače uzmi KLASU predmeta navedenu na dopisu/rješenju/košuljici (ako postoje i UP/II i UP/I, prednost daj UP/II, a ako postoji samo UP/I ili osnovna klasifikacijska oznaka, uzmi nju).
 - NE izvlači URBROJ prvostupanjskog tijela (Hrvatskih voda) jer URBROJ Ministarstvo generira tek po izradi drugostupanjskog akta.
 
-STROGA PRAVILA ZA RUKOPISNE NAPOMENE NA KOŠULJICI ("rukopisnaNapomena" i "napomena"):
-1. Vrlo pažljivo pročitaj SAV RUKOPIS na košuljici ili rubovima dokumenta (kemijska olovka, flomaster, grafitna olovka) — korisnik često rukom upisuje ključne pravne bilješke kao što su "zastara", "NKD", "sporno činjenično stanje", "nepravodobna", "čl. ...", "dopuna spisa", "poništiti", "odbiti" itd.
-2. U "rukopisnaNapomena" vjerno i doslovno prepiši SVE rukopisne bilješke bez izostavljanja i bez umjetnog skraćivanja (više bilješki spoji točka-zarezom ili zarezom). Ako rukopisa nema, vrati "".
-3. U "napomena": ako postoji "rukopisnaNapomena", obavezno uvrsti njezin puni sadržaj (ne reži važne pojmove na 95 znakova); ako nema rukopisa, daj sažeti opis predmeta u 1 rečenici.
+STROGA PRAVILA ZA RUKOPISNE NAPOMENE I ZABILJEŠKE NA KOŠULJICI ("rukopisnaNapomena" i "napomena"):
+1. Vrlo pažljivo pročitaj SVE ZABILJEŠKE na košuljici ili rubovima dokumenta — bilo da su pisane rukom (kemijska olovka, flomaster, grafitna olovka, potcrtano/zaokruženo), zalijepljene kao papirić/napomena ili upisane kao naknadna PDF tekstualna bilješka/komentar! Korisnik često upisuje ključne pravne zabilješke kao što su "zastara", "NKD", "sporno činjenično stanje", "nepravodobna", "čl. ...", "dopuna spisa", "poništiti", "odbiti", "šutnja", "žurno", datumi itd.
+2. U "rukopisnaNapomena" vjerno i doslovno prepiši SVE korisnikove zabilješke/rukopisne bilješke bez izostavljanja i bez umjetnog skraćivanja (više bilješki spoji točka-zarezom ili zarezom). Nemoj u "rukopisnaNapomena" prepisivati standardni tiskani tekst pisarničke bar-kod naljepnice (npr. naziv Ministarstva, sam broj KLASE ili tiskanu zaglavnu rubriku). Ako korisnikovih zabilješki/rukopisa nema, vrati "".
+3. U "napomena":
+   - Ako postoji "rukopisnaNapomena", obavezno uvrsti njezin puni sadržaj (ne reži važne pojmove na 95 znakova).
+   - Ako je dokument "Košuljica spisa" i NEMA nikakvih korisnikovih zabilješki ni rukopisa ("rukopisnaNapomena": ""), za "napomena" OBAVEZNO vrati "".
+   - Za ostale dokumente (popratni dopis, žalba, rješenje) kada nema rukopisa, daj sažeti opis predmeta u 1 rečenici.
 
 PRAVILA ZA PODRUČJE ("podrucje"):
 - "NUV" za naknadu za uređenje voda (uključujući oznaku NUV na naljepnici ili tekstu),
@@ -247,7 +250,7 @@ export async function extractCaseInfoFromScan(formData: FormData) {
             content: [
               {
                 type: 'text',
-                text: `Analiziraj ovaj dokument (${file.name}), posebno potraži prijamni štambilj (pečat zaprimanja) za točan datum primitka, te izvuci traženi JSON:`,
+                text: `Analiziraj ovaj dokument (${file.name}), posebno potraži prijamni štambilj / pisarničku naljepnicu za točan datum primitka te SVE rukopisne ili naknadno dodane zabilješke na košuljici spisa ili rubovima dokumenta, te izvuci traženi JSON:`,
               },
               {
                 type: 'file',
@@ -292,9 +295,10 @@ export async function extractCaseInfoFromScan(formData: FormData) {
     const datumPredajeZalbe = normalizeDateToIso(parsed.datumPredajeZalbe);
     const rukopisnaNapomena = (parsed.rukopisnaNapomena || '').trim();
     const baseNapomena = (parsed.napomena || '').trim();
+    const detectedVrsta = (parsed.vrstaDokumenta || guessDocRoleFromFilename(file.name) || '').trim();
     const combinedNapomena =
       rukopisnaNapomena && !baseNapomena.toLowerCase().includes(rukopisnaNapomena.toLowerCase())
-        ? baseNapomena
+        ? baseNapomena && !detectedVrsta.toLowerCase().includes('košulj')
           ? `${rukopisnaNapomena} — ${baseNapomena}`
           : rukopisnaNapomena
         : baseNapomena || rukopisnaNapomena;
@@ -311,11 +315,11 @@ export async function extractCaseInfoFromScan(formData: FormData) {
         podrucje: (['NUV', 'VD', 'NZZV', 'Ostalo'].includes(parsed.podrucje)
           ? parsed.podrucje
           : 'Ostalo') as PredmetPodrucje,
-        vrstaDokumenta:
-          parsed.vrstaDokumenta || guessDocRoleFromFilename(file.name),
+        vrstaDokumenta: detectedVrsta,
         izravnoMinistarstvu: Boolean(parsed.izravnoMinistarstvu),
         tijeloPrvogStupnja: (parsed.tijeloPrvogStupnja || '').trim(),
         rukopisnaNapomena,
+        opisPredmeta: detectedVrsta.toLowerCase().includes('košulj') ? '' : baseNapomena,
         napomena: combinedNapomena,
       },
     };

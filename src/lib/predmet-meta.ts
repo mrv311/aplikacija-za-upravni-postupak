@@ -538,3 +538,112 @@ export function calculateZupDeadline(
     label: `Preostalo ${daysRemaining} d.`,
   };
 }
+
+/**
+ * Provjerava označava li naziv ili vrsta dokumenta košuljicu spisa.
+ */
+export function isKosuljicaRole(vrstaOrName: string | null | undefined): boolean {
+  const v = (vrstaOrName || '').toLowerCase();
+  return v.includes('košulj') || v.includes('kosulj');
+}
+
+/**
+ * Vraća true za skenove čiji naziv datoteke ne otkriva izričito drugu vrstu akta
+ * (npr. Scan_002.pdf, IMG_1234.jpg), pa bi mogli biti košuljica spisa sa zabilješkama.
+ */
+export function isAmbiguousScanFilename(fileName: string): boolean {
+  const f = fileName.toLowerCase();
+  const ext = f.split('.').pop() || '';
+  if (!['pdf', 'jpg', 'jpeg', 'png', 'webp'].includes(ext)) return false;
+
+  const explicitNonKosuljicaMarkers = [
+    'žalba',
+    'zalba',
+    'prigovor',
+    'dostavn',
+    'povratnic',
+    'punomo',
+    'popratn',
+    'izvje',
+    'dopis',
+    'drugostup',
+    'up-ii',
+    'up_ii',
+    'rješenj',
+    'rjesenj',
+    'prvostup',
+    'dozvol',
+    'izvadak',
+    'obrazac',
+    'zapisnik',
+    'dokaz',
+  ];
+  return !explicitNonKosuljicaMarkers.some((marker) => f.includes(marker));
+}
+
+function normalizeNoteForDedupe(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[.,;:\-—–|()„”"'`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Provjerava sadrži li postojeća bilješka već novi unos (bez obzira na interpunkciju i veličinu slova).
+ */
+export function containsNoteNormalized(container: string, snippet: string): boolean {
+  const normContainer = normalizeNoteForDedupe(container);
+  const normSnippet = normalizeNoteForDedupe(snippet);
+  if (!normSnippet) return true;
+  if (!normContainer) return false;
+  if (normContainer.includes(normSnippet)) return true;
+
+  const clauses = snippet
+    .split(/[;\n—]+/)
+    .map((c) => normalizeNoteForDedupe(c))
+    .filter((c) => c.length >= 2);
+  if (clauses.length > 1) {
+    return clauses.every((c) => normContainer.includes(c));
+  }
+  return false;
+}
+
+/**
+ * Pametno spaja zabilješke s košuljice / rukopisne bilješke s postojećom napomenom predmeta
+ * bez gubitka sadržaja i bez dupliranja bez obzira na redoslijed učitavanja dokumenata.
+ */
+export function mergeKosuljicaNote(params: {
+  currentNapomena: string;
+  newNote: string;
+  isHandwrittenOrJacket: boolean;
+  currentIsPureAutoSummary?: boolean;
+}): { napomena: string; added: boolean } {
+  const current = (params.currentNapomena || '').trim();
+  const incoming = (params.newNote || '').trim();
+
+  if (!incoming) {
+    return { napomena: current, added: false };
+  }
+
+  if (containsNoteNormalized(current, incoming)) {
+    return { napomena: current, added: false };
+  }
+
+  if (!current) {
+    return { napomena: incoming, added: true };
+  }
+
+  if (params.isHandwrittenOrJacket) {
+    // Ako je dosadašnja napomena bila samo opći AI sažetak s dopisa/žalbe,
+    // zabilješku s košuljice stavljamo na početak kako bi odmah bila vidljiva.
+    if (params.currentIsPureAutoSummary) {
+      return { napomena: `${incoming} — ${current}`, added: true };
+    }
+    return { napomena: `${current}; ${incoming}`, added: true };
+  }
+
+  // Opći sažetak dokumenta (npr. popratni dopis dodan NAKON košuljice)
+  return { napomena: `${current} — ${incoming}`, added: true };
+}
+

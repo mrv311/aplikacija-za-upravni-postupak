@@ -163,6 +163,7 @@ export function DocumentManager({
     let successCount = 0;
     let ocrCount = 0;
     let detectedAppealInfo: { date: string; izvor: string } | null = null;
+    const detectedKosuljicaNotes: string[] = [];
 
     try {
       for (let i = 0; i < queuedFiles.length; i++) {
@@ -188,6 +189,9 @@ export function DocumentManager({
             izvor: result.detectedDatumIzvor || 'učitani spis',
           };
         }
+        if (result.detectedKosuljicaNote) {
+          detectedKosuljicaNotes.push(result.detectedKosuljicaNote);
+        }
       }
 
       setQueuedFiles([]);
@@ -201,13 +205,19 @@ export function DocumentManager({
             detectedAppealInfo.date
           ).toLocaleDateString('hr-HR')} (${detectedAppealInfo.izvor}) — ZUP rok od 60 dana je pokrenut.`
         : '';
+      const kosuljicaNoteMsg =
+        detectedKosuljicaNotes.length > 0
+          ? ` Dodane su zabilješke s košuljice u bilješku predmeta („${detectedKosuljicaNotes.join('; ')}”).`
+          : '';
 
       setFeedback({
         type: 'success',
         message:
           (ocrCount > 0
             ? `Uspješno dodano ${successCount} dok. u spis (${ocrCount} pročitano putem AI OCR skena).`
-            : `Uspješno dodano ${successCount} dok. u spis.`) + appealNote,
+            : `Uspješno dodano ${successCount} dok. u spis.`) +
+          appealNote +
+          kosuljicaNoteMsg,
       });
     } catch (err: any) {
       console.error(err);

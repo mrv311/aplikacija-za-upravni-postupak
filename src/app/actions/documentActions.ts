@@ -16,7 +16,10 @@ import {
   encodePredmetMetaUrl,
   decodePredmetMetaUrl,
   normalizeDateToIso,
+  isKosuljicaRole,
+  mergeKosuljicaNote,
   type IzvorTekstaTip,
+  type PredmetExtendedMeta,
   type PredmetPodrucje,
   type PredmetIshod,
 } from '@/lib/predmet-meta';
@@ -168,6 +171,56 @@ function buildAppealDateSnippet(rawText: string): string {
   return chunks.join('\n...\n').slice(0, 14000);
 }
 
+function extractJsonObject(raw: string): Record<string, unknown> {
+  const cleanedRaw = (raw || '')
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+  const firstBrace = cleanedRaw.indexOf('{');
+  const lastBrace = cleanedRaw.lastIndexOf('}');
+  const cleaned =
+    firstBrace !== -1 && lastBrace > firstBrace
+      ? cleanedRaw.slice(firstBrace, lastBrace + 1)
+      : cleanedRaw;
+  return JSON.parse(cleaned) as Record<string, unknown>;
+}
+
+async function readPredmetMetaDoc(predmetId: string): Promise<{
+  id: string | null;
+  meta: PredmetExtendedMeta;
+}> {
+  const { data: metaDoc } = await db
+    .from('dokumenti')
+    .select('id, storage_url')
+    .eq('predmet_id', predmetId)
+    .eq('tip_dokumenta', META_DOC_TYPE)
+    .maybeSingle();
+
+  return {
+    id: metaDoc?.id ?? null,
+    meta: metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {},
+  };
+}
+
+async function writePredmetMetaDoc(
+  predmetId: string,
+  metaDocId: string | null,
+  nextMeta: PredmetExtendedMeta
+) {
+  const mergedUrl = encodePredmetMetaUrl(nextMeta);
+  if (metaDocId) {
+    await db.from('dokumenti').update({ storage_url: mergedUrl }).eq('id', metaDocId);
+  } else {
+    await db.from('dokumenti').insert({
+      predmet_id: predmetId,
+      tip_dokumenta: META_DOC_TYPE,
+      storage_url: mergedUrl,
+      raw_text: '',
+    });
+  }
+}
+
 async function tryDetectAndSaveAppealDate(
   predmetId: string,
   tipDokumenta: string,
@@ -175,8 +228,7 @@ async function tryDetectAndSaveAppealDate(
 ): Promise<{ datumPredajeZalbe: string; izvor: string } | null> {
   const roleLower = tipDokumenta.toLowerCase();
   if (
-    roleLower.includes('košulj') ||
-    roleLower.includes('kosulj') ||
+    isKosuljicaRole(roleLower) ||
     roleLower.includes('drugostup') ||
     roleLower.includes('odgovor na tužb')
   ) {
@@ -184,14 +236,7 @@ async function tryDetectAndSaveAppealDate(
   }
 
   try {
-    const { data: metaDoc } = await db
-      .from('dokumenti')
-      .select('id, storage_url')
-      .eq('predmet_id', predmetId)
-      .eq('tip_dokumenta', META_DOC_TYPE)
-      .maybeSingle();
-
-    const currentMeta = metaDoc ? decodePredmetMetaUrl(metaDoc.storage_url) : {};
+    const { id: metaDocId, meta: currentMeta } = await readPredmetMetaDoc(predmetId);
     if (currentMeta.datum_predaje_zalbe) {
       return null;
     }
@@ -203,43 +248,112 @@ async function tryDetectAndSaveAppealDate(
       prompt: `Vrsta dokumenta: ${tipDokumenta}\n\nSadržaj dokumenta:\n${snippet}`,
     });
 
-    const cleanedRaw = (text || '')
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/```$/i, '')
-      .trim();
-    const firstBrace = cleanedRaw.indexOf('{');
-    const lastBrace = cleanedRaw.lastIndexOf('}');
-    const cleaned =
-      firstBrace !== -1 && lastBrace > firstBrace
-        ? cleanedRaw.slice(firstBrace, lastBrace + 1)
-        : cleanedRaw;
-
-    const parsed = JSON.parse(cleaned);
-    const isoDate = normalizeDateToIso(parsed.datumPredajeZalbe);
+    const parsed = extractJsonObject(text);
+    const rawDate = typeof parsed.datumPredajeZalbe === 'string' ? parsed.datumPredajeZalbe : '';
+    const isoDate = normalizeDateToIso(rawDate);
     if (!isoDate) return null;
 
-    const izvor = (parsed.izvor || '').trim() || 'učitani spis';
-    const mergedUrl = encodePredmetMetaUrl({
+    const rawIzvor = typeof parsed.izvor === 'string' ? parsed.izvor.trim() : '';
+    const izvor = rawIzvor || 'učitani spis';
+    await writePredmetMetaDoc(predmetId, metaDocId, {
       ...currentMeta,
       datum_predaje_zalbe: isoDate,
       datum_predaje_zalbe_izvor: izvor,
     });
 
-    if (metaDoc?.id) {
-      await db.from('dokumenti').update({ storage_url: mergedUrl }).eq('id', metaDoc.id);
-    } else {
-      await db.from('dokumenti').insert({
-        predmet_id: predmetId,
-        tip_dokumenta: META_DOC_TYPE,
-        storage_url: mergedUrl,
-        raw_text: '',
-      });
-    }
-
     return { datumPredajeZalbe: isoDate, izvor };
   } catch (err) {
     console.warn('Napomena: automatska detekcija datuma predaje žalbe preskočena:', err);
+    return null;
+  }
+}
+
+const KOSULJICA_NOTES_PROMPT = `Ti si stručni pravni asistent za drugostupanjski upravni postupak u Ministarstvu (Republika Hrvatska).
+Zadatak: pažljivo pregledaj priloženu **košuljicu spisa** i prepiši SVE korisnikove zabilješke — rukopisne bilješke (kemijska olovka, grafitna olovka, flomaster, potcrtano/zaokruženo), zalijepljene papiriće ili naknadno dodane PDF komentare/napomene po koricama (npr. "zastara", "NKD", "odbiti", "poništiti", "dopuna spisa", "šutnja", članci propisa, datumi itd.).
+Nemoj prepisivati standardni tiskani tekst pisarničke bar-kod naljepnice (naziv Ministarstva, samu KLASU, tiskane zaglavne rubrike).
+
+Vrati ISKLJUČIVO valjani JSON:
+{
+  "rukopisnaNapomena": "doslovni prijepis svih zabilješki na košuljici (više bilješki spoji točka-zarezom; ako ih nema, vrati '')"
+}`;
+
+async function tryDetectAndSaveKosuljicaNotes(
+  predmetId: string,
+  tipDokumenta: string,
+  buffer: Buffer,
+  fileName: string,
+  mimeType: string | undefined,
+  rawText: string
+): Promise<string | null> {
+  if (!isKosuljicaRole(tipDokumenta) && !isKosuljicaRole(fileName)) {
+    return null;
+  }
+
+  try {
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    const isVisualDoc =
+      ['pdf', 'jpg', 'jpeg', 'png', 'webp'].includes(ext) ||
+      (mimeType || '').startsWith('image/') ||
+      mimeType === 'application/pdf';
+
+    let jsonRaw = '';
+    if (isVisualDoc) {
+      const resolvedMime = resolveMediaType(fileName, mimeType);
+      const { text } = await generateText({
+        model: google('gemini-3.8-flash'),
+        system: KOSULJICA_NOTES_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Prepiši sve rukopisne i naknadno dodane zabilješke s ove košuljice spisa (${fileName}):`,
+              },
+              {
+                type: 'file',
+                data: buffer.toString('base64'),
+                mediaType: resolvedMime,
+              },
+            ],
+          },
+        ],
+      });
+      jsonRaw = text || '';
+    } else if (rawText.trim()) {
+      const { text } = await generateText({
+        model: google('gemini-3.8-flash'),
+        system: KOSULJICA_NOTES_PROMPT,
+        prompt: rawText.slice(0, 12000),
+      });
+      jsonRaw = text || '';
+    } else {
+      return null;
+    }
+
+    const parsed = extractJsonObject(jsonRaw);
+    const rukopisnaNapomena =
+      typeof parsed.rukopisnaNapomena === 'string' ? parsed.rukopisnaNapomena.trim() : '';
+    if (!rukopisnaNapomena) return null;
+
+    const { id: metaDocId, meta: currentMeta } = await readPredmetMetaDoc(predmetId);
+    const merged = mergeKosuljicaNote({
+      currentNapomena: currentMeta.napomena || '',
+      newNote: rukopisnaNapomena,
+      isHandwrittenOrJacket: true,
+      currentIsPureAutoSummary: true,
+    });
+
+    if (!merged.added) return null;
+
+    await writePredmetMetaDoc(predmetId, metaDocId, {
+      ...currentMeta,
+      napomena: merged.napomena,
+    });
+
+    return rukopisnaNapomena;
+  } catch (err) {
+    console.warn('Napomena: automatska detekcija zabilješki s košuljice preskočena:', err);
     return null;
   }
 }
@@ -313,6 +427,14 @@ export async function uploadAndParseDocument(formData: FormData) {
       tipDokumenta,
       parsedResult.rawText
     );
+    const detectedKosuljicaNote = await tryDetectAndSaveKosuljicaNotes(
+      predmetId,
+      tipDokumenta,
+      buffer,
+      file.name,
+      file.type,
+      parsedResult.rawText
+    );
 
     revalidatePath('/');
     revalidatePath('/arhiva');
@@ -325,6 +447,7 @@ export async function uploadAndParseDocument(formData: FormData) {
       izvorTeksta: parsedResult.izvorTeksta,
       detectedDatumPredajeZalbe: detectedAppealDate?.datumPredajeZalbe || null,
       detectedDatumIzvor: detectedAppealDate?.izvor || null,
+      detectedKosuljicaNote,
     };
   } catch (err: any) {
     console.error('uploadAndParseDocument Error:', err);
