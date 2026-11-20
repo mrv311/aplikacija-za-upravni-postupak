@@ -3,6 +3,7 @@ import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import { calculateZupRok, type ZupRokResult } from '@/lib/rok-kalkulator';
 import { parseCroatianDate } from '@/lib/upravni-sporovi';
+import type { PovezanoDrugostupanjskoRjesenje } from '@/lib/spor-zup-matcher';
 
 export interface ExtractedCourtCase {
   sud: string;
@@ -13,6 +14,7 @@ export interface ExtractedCourtCase {
   vrstaSpora: 'Šutnja uprave' | 'Pobijanje rješenja' | 'Upravni spor';
   predmet: string;
   pobijaniAkt?: string;
+  prvostupanjskiAkt?: string;
   datumPreuzimanja: string; // YYYY-MM-DD
   datumPreuzimanjaFormat: string; // DD.MM.YYYY.
   rokDana: number;
@@ -21,11 +23,8 @@ export interface ExtractedCourtCase {
   rokDospijecaFormat: string; // DD.MM.YYYY.
   rjesavateljPreporuka?: string;
   sazetak: string;
-  povezaniPredmet?: {
-    id: string;
-    klasa: string;
-    stranka: string;
-  } | null;
+  autoBiljeska?: string;
+  povezaniPredmet?: (PovezanoDrugostupanjskoRjesenje & { id: string }) | null;
   detektiraneDatoteke: {
     potvrda?: string;
     dopisNalog?: string;
@@ -62,17 +61,22 @@ export async function parseCourtPacket(files: FileInput[]): Promise<ExtractedCou
     if (
       nameLower.includes('potvrda') ||
       combined.includes('potvrda o preuzimanju') ||
+      combined.includes('potvrda o nepreuzimanju') ||
       combined.includes('potvrda primitka') ||
       combined.includes('potvrda uručenja') ||
+      combined.includes('smatra da je dostava izvršena') ||
       combined.includes('preuzeo navedena pismena')
     ) {
       role = 'potvrda';
     } else if (
       nameLower.includes('dopis') ||
       nameLower.includes('rješenje') ||
+      nameLower.includes('rjesenje') ||
       nameLower.includes('odluka') ||
       combined.includes('tužba s prilozima se dostavlja tuženiku na odgovor') ||
-      combined.includes('poziva se tuženika')
+      combined.includes('tužba sa svim prilozima se dostavlja na odgovor') ||
+      combined.includes('poziva se tuženika') ||
+      combined.includes('poziva se tuženik')
     ) {
       role = 'nalog';
     } else if (
@@ -118,11 +122,12 @@ export async function parseCourtPacket(files: FileInput[]): Promise<ExtractedCou
   else if (/visoki\s+upravni\s+sud|VUS/i.test(allText)) sud = 'Visoki upravni sud Republike Hrvatske';
   else if (/upravni\s+sud\s+u\s+zagrebu|US\s*ZG/i.test(allText)) sud = 'Upravni sud u Zagrebu';
 
-  // Datum primitka s Potvrde primitka pošiljke
+  // Datum primitka s Potvrde primitka / Potvrde o nepreuzimanju pošiljke
   let datumPreuzimanjaObj: Date | null = null;
   const preuzetoMatch =
     potvrdaText.match(/preuzeo\s+navedena\s+pismena.*?(\d{1,2}\.\d{1,2}\.\d{4}\.?)/i) ||
     potvrdaText.match(/dana\s+(\d{1,2}\.\d{1,2}\.\d{4}\.?)\s+preuzeo/i) ||
+    potvrdaText.match(/dostava\s+izvr[sš]ena\s+dana\s+(\d{1,2}\.\d{1,2}\.\d{4}\.?)/i) ||
     potvrdaText.match(/otprema\s+od\s+(\d{1,2}\.\d{1,2}\.\d{4}\.?)/i) ||
     potvrdaText.match(/poslana\s+sljedeća\s+pismena.*?dana\s+(\d{1,2}\.\d{1,2}\.\d{4}\.?)/i);
 
@@ -155,8 +160,8 @@ export async function parseCourtPacket(files: FileInput[]): Promise<ExtractedCou
   // Tužitelj regex fallback
   let regexTuzitelj = '';
   const tuziteljMatch =
-    tuzbaText.match(/Tužitelj:\s*[\r\n\s]*([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?)(?:,|\s+OIB:|\s+Ulica|\s+kojeg|\r?\n)/i) ||
-    nalogText.match(/upravnom\s+sporu\s+tužitelja\s+([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?)(?:,|\s+OIB:|\s+Podgora|\s+Zagreb|\s+zastupan)/i);
+    tuzbaText.match(/Tužitelj(?:ica)?:\s*[\r\n\s]*([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?)(?:,|\s+iz\s+|\s+OIB:|\s+Ulica|\s+koj[ea]g?|\r?\n)/i) ||
+    nalogText.match(/upravnom\s+sporu\s+tužitelj(?:a|ice)\s+([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?)(?:,|\s+iz\s+|\s+OIB:|\s+Podgora|\s+Zagreb|\s+zastupan)/i);
   if (tuziteljMatch) {
     regexTuzitelj = tuziteljMatch[1].replace(/\s+/g, ' ').trim();
   }
@@ -164,31 +169,35 @@ export async function parseCourtPacket(files: FileInput[]): Promise<ExtractedCou
   // Opunomoćenik regex fallback
   let regexOpunomocenik = '';
   const opMatch =
-    allText.match(/(?:opunomoćeniku|punomoćnik)\s+([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?,\s*odvjetnik[^\r\n,]*)/i) ||
+    allText.match(/(?:opunomoćeniku|opunomoćenik|punomoćnik)\s+([A-ZČĆĐŠŽa-zčćđšž\s\.-]+?,\s*odvjetnik[^\r\n,]*)/i) ||
     allText.match(/ODVJETNIK\s*[\r\n\s]*([A-ZČĆĐŠŽ\s]+)/i);
   if (opMatch) {
     regexOpunomocenik = opMatch[1].replace(/\s+/g, ' ').trim();
   }
 
-  // Šutnja uprave ili pobijanje rješenja
+  // Šutnja uprave ili pobijanje rješenja (široko prepoznavanje sudskih i tužbenih formulacija)
+  const normalizedAllForSutnja = allText.replace(/\s+/g, ' ');
   let isSutnja = false;
   if (
-    /radi\s+šutnje\s+uprave/i.test(allText) ||
-    /radi\s+donošenja\s+pojedinačne\s+odluke/i.test(allText) ||
-    /člank(?:a|u)\s+24\.\s+Zakona\s+o\s+upravnim\s+sporovima/i.test(allText) ||
-    /nije\s+donijelo\s+rješenje\s+o\s+žalbi/i.test(allText)
+    /[sš]utnj[aeiu]\s+(?:uprav[en]|upravnog\s+tijela|administracij)/i.test(normalizedAllForSutnja) ||
+    /propu[sš]tanj[aeu]\s+dono[sš]enj[aeu]\s+(?:pojedina[cč]ne\s+)?(?:odluk|rje[sš]enj|upravnog\s+akta)/i.test(normalizedAllForSutnja) ||
+    /nedono[sš]enj[aeu]\s+(?:upravnog\s+akta|pojedina[cč]ne\s+odluke|rje[sš]enja)/i.test(normalizedAllForSutnja) ||
+    /radi\s+dono[sš]enj[aeu]\s+pojedina[cč]ne\s+odluke/i.test(normalizedAllForSutnja) ||
+    /nije\s+donijel[oa]\s+(?:rje[sš]enje|odluku|upravni\s+akt)\s+(?:o|po)\s+[zž]albi/i.test(normalizedAllForSutnja) ||
+    /nije\s+donesen[oa]\s+(?:rje[sš]enje|odluka)\s+(?:o|po|protiv)/i.test(normalizedAllForSutnja) ||
+    /ne\s*rje[sš]avanjem\s+(?:o|po)\s+[zž]albi/i.test(normalizedAllForSutnja) ||
+    /[cč]lank(?:a|u)\s+24\.(?:\s+stavk(?:a|u)\s+\d+\.)?\s+Zakona\s+o\s+upravnim\s+sporovima/i.test(normalizedAllForSutnja) ||
+    /[cč]l\.\s*24\.(?:\s*st\.\s*\d+\.)?\s*ZUS/i.test(normalizedAllForSutnja) ||
+    fileTexts.some((ft) => /[sš]utnj/i.test(ft.name))
   ) {
     isSutnja = true;
   }
 
-  // Klasa i Urbroj pobijanog akta
-  let pobijaniAkt: string | undefined = undefined;
-  const klasaMatch =
-    allText.match(/(KLASA:\s*UP\/[I|II]-[\d\w\/-]+)/i) ||
-    allText.match(/(UP\/[I|II]-[\d\w\/-]+)/i);
-  if (klasaMatch) {
-    pobijaniAkt = klasaMatch[1].trim();
-  }
+  // Odvojeno izdvajanje drugostupanjske (UP/II-) i prvostupanjske (UP/I-) KLASE
+  const upIiMatch = allText.match(/(?:KLASA:\s*|kl\.?:\s*)?(UP\/II-\s*[\dA-Za-z\/-]+)/i);
+  const upIMatch = allText.match(/(?:KLASA:\s*|kl\.?:\s*)?(UP\/I-\s*[\dA-Za-z\/-]+)/i);
+  const upIiKlasa = upIiMatch ? upIiMatch[1].replace(/\s+/g, '').replace(/[.,;:)\]]+$/, '') : undefined;
+  const upIKlasa = upIMatch ? upIMatch[1].replace(/\s+/g, '').replace(/[.,;:)\]]+$/, '') : undefined;
 
   // 2. AI ENRICHMENT POMOĆU GEMINI MODELA
   let aiData: {
@@ -207,7 +216,7 @@ Molim te izvuci točne podatke u čistom JSON formatu:
 {
   "tuzitelj": "Točno puno ime i prezime fizičke osobe ili točan naziv pravne osobe koja je tužitelj (npr. Matko Vela)",
   "opunomocenik": "Ime odvjetnika ili punomoćnika tužitelja ako postoji (npr. Zoran Antunović, odvjetnik u Makarskoj)",
-  "vrstaSpora": "Šutnja uprave" ako tuži jer drugostupanjsko tijelo nije u roku od 60 dana riješilo žalbu, ili "Pobijanje rješenja" ako pobija konkretno rješenje,
+  "vrstaSpora": "Šutnja uprave" ako tužitelj tuži zbog propuštanja donošenja odluke u propisanom roku / nedonošenja upravnog akta o žalbi / šutnje upravnog tijela (čl. 24. ZUS) — VAŽNO: čak i kada sud u rješenju ili tužitelj u tužbi navodi točnu KLASU prvostupanjskog rješenja Hrvatskih voda (UP/I-...) protiv kojeg je žalba podnesena, radi se o 'Šutnja uprave' ako drugostupanjsko rješenje Ministarstva (UP/II-...) nije bilo doneseno! Koristi "Pobijanje rješenja" ISKLJUČIVO ako tužitelj pobija već doneseno drugostupanjsko rješenje (UP/II-...).,
   "predmet": "Jedna ili dvije riječi za pravno područje: npr. 'nuv', 'vodni doprinos', 'ozakonjenje', 'zakup jvd', 'troškovi postupka'",
   "sazetak": "Sažeti i precizni pravni prikaz tužbe u 2-3 rečenice: zašto tuži, koji akt navodi, što tužitelj traži od suda i traži li troškove."
 }
@@ -241,11 +250,25 @@ Vrati isključivo validan JSON bez markdown backtickova.`;
   const tuziteljFinal = aiData.tuzitelj || regexTuzitelj || (oib ? `Tužitelj (OIB: ${oib})` : 'Tužitelj');
   const opunomocenikFinal = aiData.opunomocenik || regexOpunomocenik;
 
-  const vrstaSporaFinal = isSutnja
-    ? 'Šutnja uprave'
-    : aiData.vrstaSpora === 'Šutnja uprave'
+  const isSutnjaFinal =
+    isSutnja ||
+    (aiData.vrstaSpora || '').toLowerCase().includes('šutnj') ||
+    (aiData.vrstaSpora || '').toLowerCase().includes('sutnj');
+
+  const vrstaSporaFinal: ExtractedCourtCase['vrstaSpora'] = isSutnjaFinal
     ? 'Šutnja uprave'
     : 'Pobijanje rješenja';
+
+  const prvostupanjskiAkt = upIKlasa ? `KLASA: ${upIKlasa}` : undefined;
+  const pobijaniAktFinal = isSutnjaFinal
+    ? upIKlasa
+      ? `Šutnja uprave (I. stupanj: ${upIKlasa})`
+      : 'Šutnja uprave'
+    : upIiKlasa
+    ? `KLASA: ${upIiKlasa}`
+    : upIKlasa
+    ? `KLASA: ${upIKlasa}`
+    : undefined;
 
   const dRok = new Date(`${rokCalc.konacniIstekRoka}T00:00:00`);
   const rokDospijecaFormat = `${dRok.getDate()}.${dRok.getMonth() + 1}.${dRok.getFullYear()}.`;
@@ -264,8 +287,9 @@ Vrati isključivo validan JSON bez markdown backtickova.`;
     oib,
     opunomocenik: opunomocenikFinal || undefined,
     vrstaSpora: vrstaSporaFinal,
-    predmet: aiData.predmet || (isSutnja ? 'šutnja uprave' : 'upravni postupak'),
-    pobijaniAkt: pobijaniAkt || (isSutnja ? 'šutnja uprave' : undefined),
+    predmet: aiData.predmet || (isSutnjaFinal ? 'šutnja uprave' : 'upravni postupak'),
+    pobijaniAkt: pobijaniAktFinal,
+    prvostupanjskiAkt,
     datumPreuzimanja: datumPreuzimanjaStr,
     datumPreuzimanjaFormat,
     rokDana,

@@ -3,6 +3,12 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { supabaseServer as dbServer } from './supabase-server';
 import { supabase as dbClient } from './supabase';
+import {
+  enrichSporoviWithZupRjesenja,
+  type PovezanoDrugostupanjskoRjesenje,
+} from './spor-zup-matcher';
+
+export type { PovezanoDrugostupanjskoRjesenje };
 
 export const EXCEL_SPOROVI_PATH =
   'C:\\Users\\dmalbasa\\OneDrive - Ministarstvo zaštite okoliša i zelene tranzicije\\P O S A O\\UPRAVNI SPOROVI\\TABLICA - upravni sporovi\\TABLICA - U P R A V N I  S P O R O V I.xlsx';
@@ -59,8 +65,10 @@ export interface UpravniSpor {
   fazaOpis: string;
   troskoviInfo?: TroskoviInfo;
   hasManualOverride?: boolean;
+  manualSutnjaOverride?: boolean;
   isDismissed?: boolean;
   dismissedReason?: string;
+  povezanoRjesenje?: PovezanoDrugostupanjskoRjesenje | null;
 }
 
 export const SPOROVI_OVERRIDES_PATH = path.join(process.cwd(), 'data', 'upravni-sporovi-overrides.json');
@@ -74,9 +82,28 @@ export interface SporOverride {
   visokiUpravniSud?: string;
   rjesavatelj?: string;
   vrijednostNapomena?: string;
+  upIiRjesenje?: string;
+  predmet?: string;
+  isSutnjaUprave?: boolean;
   isDismissed?: boolean;
   dismissedReason?: string;
   updatedAt?: string;
+}
+
+/**
+ * Provjerava ukazuje li tekst polja (akt, predmet, napomena...) na tužbu zbog šutnje uprave.
+ */
+export function detectIsSutnjaText(text?: string | null): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  if (/nije\s+[sš]utnj|ne\s+radi\s+se\s+o\s+[sš]utnj/i.test(lower)) {
+    return false;
+  }
+  return (
+    /[sš]utnj[aeiuo]?/i.test(lower) ||
+    /nedono[sš]enj/i.test(lower) ||
+    /propu[sš]tanj[aeu]\s+dono[sš]enj/i.test(lower)
+  );
 }
 
 export function getSporoviOverridesFromFile(): Record<string, SporOverride> {
@@ -359,6 +386,10 @@ export function applySporOverrides(spor: UpravniSpor, overrides: Record<string, 
     visokiUpravniSud: ov.visokiUpravniSud !== undefined ? ov.visokiUpravniSud : spor.visokiUpravniSud,
     rjesavatelj: ov.rjesavatelj !== undefined ? ov.rjesavatelj : spor.rjesavatelj,
     vrijednostNapomena: ov.vrijednostNapomena !== undefined ? ov.vrijednostNapomena : spor.vrijednostNapomena,
+    upIiRjesenje: ov.upIiRjesenje !== undefined ? ov.upIiRjesenje : spor.upIiRjesenje,
+    predmet: ov.predmet !== undefined ? ov.predmet : spor.predmet,
+    isSutnjaUprave: ov.isSutnjaUprave !== undefined ? ov.isSutnjaUprave : spor.isSutnjaUprave,
+    manualSutnjaOverride: ov.isSutnjaUprave !== undefined ? ov.isSutnjaUprave : spor.manualSutnjaOverride,
     hasManualOverride: true,
   };
 
@@ -545,8 +576,12 @@ export function parseTroskoviInfo(
     };
   }
 
-  // 4. Pronađi točan iznos troška
-  const iznos = extractCostAmount(combined);
+  // 4. Pronađi točan iznos troška (ignoriraj brojčane oznake unutar KLASA / URBROJ)
+  const sanitizedForCost = combined
+    .replace(/KLASA:\s*UP\/I{1,2}-[\dA-Za-z\/-]+/gi, ' ')
+    .replace(/URBROJ:\s*[\dA-Za-z\/-]+/gi, ' ')
+    .replace(/UP\/I{1,2}-[\dA-Za-z\/-]+/gi, ' ');
+  const iznos = extractCostAmount(sanitizedForCost);
   const hasCostWord = lower.includes('trošak') || lower.includes('troškov') || lower.includes('nalog');
 
   // Ako nema ni iznosa ni riječi trošak/nalog u tekstu: NEMA TROŠKOVA
@@ -561,7 +596,7 @@ export function parseTroskoviInfo(
   }
 
   // Preskoči čiste vrijednosti predmeta (npr. 335.228.00 kn) ako se ne spominje trošak
-  if (!hasCostWord && !/eur|€|1250|2500|3750|625|1875/i.test(combined)) {
+  if (!hasCostWord && !/eur|€|\b(?:1250|2500|3750|625|1875)\b/i.test(sanitizedForCost)) {
     return {
       imaTroskova: false,
       status: 'nema_troskova',
@@ -822,11 +857,15 @@ export function enrichSporCalculations(spor: UpravniSpor, today: Date = new Date
     };
   }
 
+  const autoIsSutnja =
+    Boolean(spor.isSutnjaUprave) ||
+    detectIsSutnjaText(upIi) ||
+    detectIsSutnjaText(tuziteljRaw) ||
+    detectIsSutnjaText(predmet) ||
+    detectIsSutnjaText(napomena);
+
   const isSutnja =
-    spor.isSutnjaUprave ||
-    upIi.toLowerCase().includes('šutnja') ||
-    tuziteljRaw.toLowerCase().includes('šutnja') ||
-    predmet.toLowerCase().includes('šutnja');
+    spor.manualSutnjaOverride !== undefined ? spor.manualSutnjaOverride : autoIsSutnja;
 
   const isPresudeno = !!(presuda || datumZapPresude || (aktPoPresudi && isAktDone(aktPoPresudi, presuda)));
 
@@ -1322,5 +1361,10 @@ export async function parseExcelSporoviAsync(forceRefresh = false): Promise<{
     getSporoviOverridesAsync(),
     getCustomSporoviAsync(),
   ]);
-  return parseExcelSporovi(forceRefresh, overrides, customSporovi);
+  const parsed = parseExcelSporovi(forceRefresh, overrides, customSporovi);
+  const enrichedSporovi = await enrichSporoviWithZupRjesenja(parsed.sporovi);
+  return {
+    ...parsed,
+    sporovi: enrichedSporovi,
+  };
 }

@@ -77,6 +77,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [editVus, setEditVus] = useState('');
   const [editRjesavatelj, setEditRjesavatelj] = useState('');
   const [editNapomena, setEditNapomena] = useState('');
+  const [editUpIiRjesenje, setEditUpIiRjesenje] = useState('');
+  const [editPredmet, setEditPredmet] = useState('');
+  const [editIsSutnja, setEditIsSutnja] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editSuccessMsg, setEditSuccessMsg] = useState('');
 
@@ -185,6 +188,9 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
     setEditVus(spor.visokiUpravniSud || '');
     setEditRjesavatelj(spor.rjesavatelj || '');
     setEditNapomena(spor.vrijednostNapomena || '');
+    setEditUpIiRjesenje(spor.upIiRjesenje || '');
+    setEditPredmet(spor.predmet || '');
+    setEditIsSutnja(Boolean(spor.isSutnjaUprave));
     setEditSuccessMsg('');
   };
 
@@ -202,15 +208,25 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
         visokiUpravniSud: editVus,
         rjesavatelj: editRjesavatelj,
         vrijednostNapomena: editNapomena,
+        upIiRjesenje: editUpIiRjesenje,
+        predmet: editPredmet,
+        isSutnjaUprave: editIsSutnja,
       });
 
       if (res.success && res.updatedSpor) {
         const updated = res.updatedSpor;
-        setSporovi((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+        setSporovi((prev) =>
+          prev.map((s) =>
+            s.id === updated.id || (updated.poslovniBroj && s.poslovniBroj === updated.poslovniBroj)
+              ? updated
+              : s
+          )
+        );
         setSelectedSpor(updated);
         setEditingSporId(null);
         setEditSuccessMsg(`✓ Zabilješke za predmet ${updated.poslovniBroj || updated.tuzitelj} uspješno spremljene!`);
         setTimeout(() => setEditSuccessMsg(''), 5000);
+        await loadData(false);
       }
     } catch (err) {
       console.error('Greška pri spremanju izmjena spora:', err);
@@ -248,6 +264,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
   const [formRokDospijeca, setFormRokDospijeca] = useState('');
   const [formRjesavatelj, setFormRjesavatelj] = useState('Dino Malbaša');
   const [formSazetak, setFormSazetak] = useState('');
+  const [formBiljeska, setFormBiljeska] = useState('');
   const [formPresuda, setFormPresuda] = useState('');
   const [formDatumZapPresude, setFormDatumZapPresude] = useState('');
   const [formTroskoviNapomena, setFormTroskoviNapomena] = useState('');
@@ -305,6 +322,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
     setFormRokDospijeca(data.rokDospijecaFormat);
     setFormRjesavatelj(data.rjesavateljPreporuka || 'Dino Malbaša');
     setFormSazetak(data.sazetak);
+    setFormBiljeska(data.autoBiljeska || '');
     setFormPresuda('');
     setFormDatumZapPresude('');
     setFormTroskoviNapomena('');
@@ -379,20 +397,26 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
           : formDatumPreuzimanja;
 
       const odgovorEvidencija = `rok ${formRokDana} dana - do ${formRokDospijeca}`;
+      const isSutnjaSelected = formVrstaSpora === 'Šutnja uprave';
+      const combinedNapomena = [formBiljeska.trim(), formTroskoviNapomena.trim()]
+        .filter(Boolean)
+        .join(' | ');
 
       const res = await saveNewSporAction({
         sud: formSud,
         poslovniBroj: formPoslovniBroj,
         tuzitelj: formOib ? `${formTuzitelj} (OIB:${formOib})` : formTuzitelj,
         oib: formOib,
-        upIiRjesenje: formPobijaniAkt || (formVrstaSpora === 'Šutnja uprave' ? 'šutnja uprave' : ''),
+        vrstaSpora: formVrstaSpora,
+        isSutnjaUprave: isSutnjaSelected,
+        upIiRjesenje: formPobijaniAkt || (isSutnjaSelected ? 'Šutnja uprave' : ''),
         predmet: formPredmet,
         rjesavatelj: formRjesavatelj,
         tuzbaPreuzeta: formattedPreuzeto,
         odgovorNaTuzbu: odgovorEvidencija,
         presudaTroskovi: formPresuda,
         datumZapPresude: formDatumZapPresude,
-        vrijednostNapomena: formTroskoviNapomena,
+        vrijednostNapomena: combinedNapomena,
       });
 
       if (res.success) {
@@ -887,7 +911,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                 </td>
 
                                 {/* Predmet / Pobijani akt */}
-                                <td className="py-2.5 px-3 max-w-[200px]">
+                                <td className="py-2.5 px-3 max-w-[220px]">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     {spor.isSutnjaUprave && (
                                       <span className="px-1.5 py-0.5 rounded text-2xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
@@ -900,6 +924,18 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                       </span>
                                     )}
                                   </div>
+                                  {spor.isSutnjaUprave &&
+                                    spor.povezanoRjesenje?.doneseno &&
+                                    !spor.isPresudeno &&
+                                    !spor.isOdgovoreno && (
+                                      <span
+                                        className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-2xs font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
+                                        title={`Doneseno II. rješenje ${spor.povezanoRjesenje.klasa} — izraditi odgovor na tužbu`}
+                                      >
+                                        <CheckCircle2 className="w-3 h-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                        <span>II. rješenje doneseno • izraditi odgovor</span>
+                                      </span>
+                                    )}
                                   {spor.upIiRjesenje && !spor.isSutnjaUprave && (
                                     <p className="text-2xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                                       {spor.upIiRjesenje}
@@ -1179,6 +1215,50 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                             <div className="space-y-1">
                                               <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Vrsta spora (kategorija):
+                                              </label>
+                                              <select
+                                                value={editIsSutnja ? 'sutnja' : 'redovni'}
+                                                onChange={(e) => setEditIsSutnja(e.target.value === 'sutnja')}
+                                                className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/30 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-semibold"
+                                              >
+                                                <option value="redovni">Redovni spor (pobijanje rješenja)</option>
+                                                <option value="sutnja">Šutnja uprave (čl. 24. ZUS)</option>
+                                              </select>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                {editIsSutnja ? 'Osnova / Prvostupanjski akt (Klasa):' : 'Pobijani akt / Klasa:'}
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editUpIiRjesenje}
+                                                onChange={(e) => setEditUpIiRjesenje(e.target.value)}
+                                                placeholder={
+                                                  editIsSutnja
+                                                    ? 'npr. Šutnja uprave (I. stupanj: UP/I-325-10/22-04/0005585)'
+                                                    : 'npr. KLASA: UP/II-325-08/25-02/...'
+                                                }
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                                                Pravno područje / Predmet:
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={editPredmet}
+                                                onChange={(e) => setEditPredmet(e.target.value)}
+                                                placeholder="npr. nuv, vodni doprinos, ozakonjenje"
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="font-semibold text-slate-700 dark:text-slate-300">
                                                 Akt UP/II po presudi / Novodoneseno rješenje:
                                               </label>
                                               <input
@@ -1262,7 +1342,16 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                               <textarea
                                                 rows={2}
                                                 value={editNapomena}
-                                                onChange={(e) => setEditNapomena(e.target.value)}
+                                                onChange={(e) => {
+                                                  const val = e.target.value;
+                                                  setEditNapomena(val);
+                                                  if (
+                                                    /[sš]utnj/i.test(val) &&
+                                                    !/nije\s+[sš]utnj|ne\s+radi\s+se\s+o\s+[sš]utnj/i.test(val)
+                                                  ) {
+                                                    setEditIsSutnja(true);
+                                                  }
+                                                }}
                                                 placeholder="Unesite internu napomenu ili specifičnost spora..."
                                                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                                               />
@@ -1300,6 +1389,63 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                         </div>
                                       ) : (
                                         <div className="space-y-3">
+                                          {/* AUTOMATSKO UPOZORENJE: KOD ŠUTNJE UPRAVE U MEĐUVREMENU JE DONESENO II. RJEŠENJE */}
+                                          {spor.isSutnjaUprave &&
+                                            spor.povezanoRjesenje?.doneseno &&
+                                            !spor.isPresudeno &&
+                                            !spor.isOdgovoreno && (
+                                              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 dark:from-emerald-950/50 dark:via-teal-950/30 dark:to-indigo-950/40 border-2 border-emerald-400 dark:border-emerald-700 space-y-2 shadow-xs">
+                                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="p-1.5 rounded-lg bg-emerald-600 text-white shadow-xs">
+                                                      <CheckCircle2 className="w-5 h-5" />
+                                                    </span>
+                                                    <div>
+                                                      <span className="text-xs font-black text-emerald-950 dark:text-emerald-100 uppercase tracking-wide">
+                                                        U međuvremenu doneseno drugostupanjsko rješenje — izraditi odgovor na tužbu
+                                                      </span>
+                                                      <p className="text-2xs text-emerald-800 dark:text-emerald-300">
+                                                        Sustav je povezao tužbu zbog šutnje uprave s riješenim ZUP predmetom u evidenciji
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                  <a
+                                                    href={`/predmeti/${spor.povezanoRjesenje.predmetId}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg font-semibold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 transition-colors"
+                                                  >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <span>Otvori ZUP spis</span>
+                                                  </a>
+                                                </div>
+                                                <div className="text-xs text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-900/60 p-2.5 rounded-lg border border-emerald-200/80 dark:border-emerald-900/40">
+                                                  <p>
+                                                    Doneseno drugostupanjsko rješenje:{' '}
+                                                    <strong className="text-slate-950 dark:text-white">
+                                                      KLASA: {spor.povezanoRjesenje.klasa}
+                                                      {spor.povezanoRjesenje.urbroj ? `, URBROJ: ${spor.povezanoRjesenje.urbroj}` : ''}
+                                                    </strong>
+                                                    {spor.povezanoRjesenje.datumRjesenja
+                                                      ? ` od ${spor.povezanoRjesenje.datumRjesenja}`
+                                                      : spor.povezanoRjesenje.datumRjesavanjaFormat
+                                                      ? ` (${spor.povezanoRjesenje.datumRjesavanjaFormat})`
+                                                      : ''}
+                                                    {spor.povezanoRjesenje.ishod ? ` — ${spor.povezanoRjesenje.ishod}` : ''}.
+                                                  </p>
+                                                  <p className="mt-1">
+                                                    <strong>Sljedeća radnja:</strong> Izraditi odgovor na tužbu s prijedlogom za obustavu spora (čl. 24. st. 3. ZUS-a) uz dostavu preslike rješenja sudu
+                                                    {spor.rokDatum ? (
+                                                      <>
+                                                        {' '}do <strong className="text-rose-700 dark:text-rose-300 underline">{spor.rokDatum}</strong>
+                                                      </>
+                                                    ) : (
+                                                      ''
+                                                    )}.
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            )}
+
                                           {/* HITNO UPOZORENJE ZA PREDMETE GDJE MINISTARSTVO MORA DONIJETI RJEŠENJE PO PRESUDI */}
                                           {spor.cekaAktPoPresudi && (
                                             <div className="p-4 rounded-xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 dark:from-rose-950/40 dark:via-amber-950/30 dark:to-rose-950/40 border-2 border-rose-400 dark:border-rose-700 space-y-2 shadow-xs">
@@ -1368,9 +1514,15 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                                 )}
                                                 <p><span className="text-slate-400">Odgovor na tužbu:</span> <strong>{spor.odgovorNaTuzbu || 'Nije poslano'}</strong></p>
                                                 {spor.isSutnjaUprave && (
-                                                  <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
-                                                    <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
-                                                  </div>
+                                                  spor.povezanoRjesenje?.doneseno && !spor.isOdgovoreno ? (
+                                                    <div className="mt-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-2xs">
+                                                      <strong>Šutnja uprave — II. rješenje doneseno ({spor.povezanoRjesenje.klasa}):</strong> Izraditi odgovor na tužbu s prijedlogom obustave spora (čl. 24. st. 3. ZUS).
+                                                    </div>
+                                                  ) : (
+                                                    <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-2xs">
+                                                      <strong>Šutnja uprave (čl. 24. ZUS):</strong> Provjeriti je li spis dostavljen sudu i pripremiti drugostupanjski akt.
+                                                    </div>
+                                                  )
                                                 )}
                                               </div>
                                             </div>
@@ -1514,10 +1666,30 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                                             <div className="space-y-1 text-slate-700 dark:text-slate-300">
                                               <p><span className="text-slate-400">Rješavatelj:</span> <strong>{spor.rjesavatelj || '-'}</strong></p>
                                               <p><span className="text-slate-400">Vrsta predmeta:</span> <strong>{spor.predmet || '-'}</strong></p>
-                                              <p><span className="text-slate-400">Pobijani akt:</span> <strong>{spor.upIiRjesenje || '-'}</strong></p>
+                                              <p>
+                                                <span className="text-slate-400">
+                                                  {spor.isSutnjaUprave ? 'Osnova / I. stupanj:' : 'Pobijani akt:'}
+                                                </span>{' '}
+                                                <strong>{spor.upIiRjesenje || (spor.isSutnjaUprave ? 'Šutnja uprave' : '-')}</strong>
+                                              </p>
+                                              {spor.povezanoRjesenje && (
+                                                <p className="text-2xs pt-0.5">
+                                                  <span className="text-slate-400">Povezani ZUP spis:</span>{' '}
+                                                  <a
+                                                    href={`/predmeti/${spor.povezanoRjesenje.predmetId}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                                  >
+                                                    {spor.povezanoRjesenje.klasa}
+                                                  </a>{' '}
+                                                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                                                    ({spor.povezanoRjesenje.doneseno ? 'Rješenje doneseno' : spor.povezanoRjesenje.faza || 'U radu'})
+                                                  </span>
+                                                </p>
+                                              )}
                                               {spor.vrijednostNapomena && (
-                                                <div className="mt-2 p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-2xs">
-                                                  <span className="text-slate-400 font-semibold">Napomena:</span> {spor.vrijednostNapomena}
+                                                <div className="mt-2 p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-2xs leading-relaxed">
+                                                  <span className="text-slate-400 font-semibold">Bilješka / Napomena:</span> {spor.vrijednostNapomena}
                                                 </div>
                                               )}
                                             </div>
@@ -1660,6 +1832,14 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                         )}
                         <p><strong>Rješavatelj:</strong> {spor.rjesavatelj || '-'}</p>
                         {spor.upIiRjesenje && <p><strong>Spis:</strong> {spor.upIiRjesenje}</p>}
+                        {spor.isSutnjaUprave &&
+                          spor.povezanoRjesenje?.doneseno &&
+                          !spor.isPresudeno &&
+                          !spor.isOdgovoreno && (
+                            <p className="mt-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 font-semibold">
+                              ✓ Doneseno II. rješenje ({spor.povezanoRjesenje.klasa}) — izraditi odgovor na tužbu!
+                            </p>
+                          )}
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
@@ -1901,7 +2081,7 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                           <Sparkles className="w-3.5 h-3.5" />
                           Uspješno očitani podaci sa suda
                         </span>
-                        {extractedData.vrstaSpora === 'Šutnja uprave' && (
+                        {formVrstaSpora === 'Šutnja uprave' && (
                           <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                             Šutnja uprave
                           </span>
@@ -1945,12 +2125,54 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
 
                   {/* POVEZANI PREDMET U BAZI */}
                   {extractedData.povezaniPredmet && (
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>
-                        <strong>Povezano s drugostupanjskim predmetom u bazi:</strong>{' '}
-                        {extractedData.povezaniPredmet.klasa} ({extractedData.povezaniPredmet.stranka})
-                      </span>
+                    <div
+                      className={`p-3.5 rounded-xl border text-xs flex items-start justify-between gap-3 ${
+                        extractedData.povezaniPredmet.doneseno
+                          ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100'
+                          : 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        {extractedData.povezaniPredmet.doneseno ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                        )}
+                        <div className="space-y-0.5">
+                          <p className="font-bold">
+                            {extractedData.povezaniPredmet.doneseno
+                              ? 'U sustavu je pronađeno već doneseno drugostupanjsko rješenje!'
+                              : 'Povezano s aktivnim drugostupanjskim predmetom u bazi:'}
+                          </p>
+                          <p>
+                            KLASA: <strong>{extractedData.povezaniPredmet.klasa}</strong>
+                            {extractedData.povezaniPredmet.urbroj
+                              ? ` • URBROJ: ${extractedData.povezaniPredmet.urbroj}`
+                              : ''}
+                            {extractedData.povezaniPredmet.datumRjesenja
+                              ? ` • od ${extractedData.povezaniPredmet.datumRjesenja}`
+                              : extractedData.povezaniPredmet.datumRjesavanjaFormat
+                              ? ` • ${extractedData.povezaniPredmet.datumRjesavanjaFormat}`
+                              : ''}
+                            {extractedData.povezaniPredmet.ishod
+                              ? ` • ${extractedData.povezaniPredmet.ishod}`
+                              : ''}{' '}
+                            ({extractedData.povezaniPredmet.stranka})
+                          </p>
+                          {extractedData.povezaniPredmet.doneseno && formVrstaSpora === 'Šutnja uprave' && (
+                            <p className="text-2xs font-semibold text-emerald-800 dark:text-emerald-300">
+                              ✓ Činjenica o donesenom drugostupanjskom rješenju i potrebi izrade odgovora na tužbu automatski je upisana u bilješku ispod.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <a
+                        href={`/predmeti/${extractedData.povezaniPredmet.id}`}
+                        className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-2xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Otvori spis</span>
+                      </a>
                     </div>
                   )}
 
@@ -2102,6 +2324,19 @@ export default function UpravniSporoviModal({ isOpen, onClose }: UpravniSporoviM
                         value={formSazetak}
                         onChange={(e) => setFormSazetak(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Bilješka / Napomena za evidenciju spora:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formBiljeska}
+                        onChange={(e) => setFormBiljeska(e.target.value)}
+                        placeholder="Automatski se popunjava ako je u međuvremenu doneseno II. rješenje, ili upišite vlastitu bilješku..."
+                        className="w-full px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20 text-slate-900 dark:text-slate-100"
                       />
                     </div>
 

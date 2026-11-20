@@ -3,23 +3,50 @@
 import fs from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { supabaseServer as dbServer } from '@/lib/supabase-server';
-import { supabase as dbClient } from '@/lib/supabase';
 import {
-  parseExcelSporovi,
   parseExcelSporoviAsync,
-  getSporoviOverridesAsync,
   saveSporOverrideAsync,
   getCustomSporoviAsync,
   saveCustomSporAsync,
   parseTroskoviInfo,
   extractDeadline,
+  detectIsSutnjaText,
+  enrichSporCalculations,
   type UpravniSpor,
+  type SporOverride,
   E_KOMUNIKACIJA_PATH,
 } from '@/lib/upravni-sporovi';
+import {
+  findLinkedZupRjesenjeForQuery,
+  buildAutoNoteForIssuedRjesenje,
+  enrichSporoviWithZupRjesenja,
+  extractUpIKlase,
+} from '@/lib/spor-zup-matcher';
 import { parseCourtPacket, type ExtractedCourtCase } from '@/lib/court-packet-parser';
 
-const db = dbServer || dbClient;
+async function attachLinkedZupToExtracted(extracted: ExtractedCourtCase): Promise<ExtractedCourtCase> {
+  try {
+    const matched = await findLinkedZupRjesenjeForQuery({
+      pobijaniAkt: extracted.pobijaniAkt,
+      prvostupanjskiAkt: extracted.prvostupanjskiAkt,
+      tuzitelj: extracted.tuzitelj,
+      oib: extracted.oib,
+    });
+
+    if (matched) {
+      extracted.povezaniPredmet = {
+        ...matched,
+        id: matched.predmetId,
+      };
+      if (extracted.vrstaSpora === 'Šutnja uprave' && matched.doneseno) {
+        extracted.autoBiljeska = buildAutoNoteForIssuedRjesenje(matched);
+      }
+    }
+  } catch (err) {
+    console.warn('Greška pri povezivanju uvezenog paketa sa ZUP bazom:', err);
+  }
+  return extracted;
+}
 
 export interface SporoviStats {
   total: number;
@@ -48,8 +75,7 @@ export async function getUpravniSporoviAction(forceRefresh = false): Promise<{
   error?: string;
 }> {
   try {
-    const overrides = await getSporoviOverridesAsync();
-    const result = parseExcelSporovi(forceRefresh, overrides);
+    const result = await parseExcelSporoviAsync(forceRefresh);
     const sporovi = result.sporovi;
 
     const stats: SporoviStats = {
@@ -177,25 +203,7 @@ export async function analyzeCourtPacketAction(formData: FormData): Promise<{
       }))
     );
 
-    const extracted = await parseCourtPacket(fileInputs);
-
-    // Provjeri postoji li povezani predmet u bazi prema klasi ili stranci
-    if (extracted.pobijaniAkt || extracted.tuzitelj) {
-      try {
-        let query = db.from('predmeti').select('id, klasa, stranka');
-        if (extracted.pobijaniAkt && extracted.pobijaniAkt.includes('325-')) {
-          const cleanKlasa = extracted.pobijaniAkt.replace(/KLASA:\s*/i, '').trim();
-          const { data: matched } = await query.ilike('klasa', `%${cleanKlasa}%`).limit(1).maybeSingle();
-          if (matched) extracted.povezaniPredmet = matched;
-        } else if (extracted.tuzitelj && extracted.tuzitelj.length > 4) {
-          const prezime = extracted.tuzitelj.split(' ').pop() || extracted.tuzitelj;
-          const { data: matched } = await query.ilike('stranka', `%${prezime}%`).limit(1).maybeSingle();
-          if (matched) extracted.povezaniPredmet = matched;
-        }
-      } catch {
-        // Ignoriraj bazu ako nije dostupna
-      }
-    }
+    const extracted = await attachLinkedZupToExtracted(await parseCourtPacket(fileInputs));
 
     return { success: true, data: extracted };
   } catch (err: unknown) {
@@ -268,7 +276,7 @@ export async function analyzeFromOneDriveFolderAction(folderName: string): Promi
       };
     });
 
-    const extracted = await parseCourtPacket(fileInputs);
+    const extracted = await attachLinkedZupToExtracted(await parseCourtPacket(fileInputs));
     return { success: true, data: extracted };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -290,6 +298,8 @@ export async function saveNewSporAction(payload: {
   rjesavatelj: string;
   tuzbaPreuzeta: string;
   odgovorNaTuzbu: string;
+  vrstaSpora?: string;
+  isSutnjaUprave?: boolean;
   presudaTroskovi?: string;
   datumZapPresude?: string;
   aktUpIiPoPresudi?: string;
@@ -310,9 +320,27 @@ export async function saveNewSporAction(payload: {
     const odgovor = (payload.odgovorNaTuzbu || '').trim();
 
     const isSutnja =
-      payload.upIiRjesenje.toLowerCase().includes('šutnja') ||
-      payload.predmet.toLowerCase().includes('šutnja') ||
-      payload.tuzitelj.toLowerCase().includes('šutnja');
+      payload.isSutnjaUprave !== undefined
+        ? payload.isSutnjaUprave
+        : detectIsSutnjaText(payload.vrstaSpora) ||
+          detectIsSutnjaText(payload.upIiRjesenje) ||
+          detectIsSutnjaText(payload.predmet) ||
+          detectIsSutnjaText(payload.tuzitelj) ||
+          detectIsSutnjaText(vrijednostNapomena);
+
+    // Ako je šutnja uprave, osiguraj da upIiRjesenje jasno naznačava šutnju (uz očuvanje I. st. klase ako postoji)
+    let normalizedUpIiRjesenje = (payload.upIiRjesenje || '').trim();
+    if (isSutnja) {
+      if (!normalizedUpIiRjesenje) {
+        normalizedUpIiRjesenje = 'Šutnja uprave';
+      } else if (!detectIsSutnjaText(normalizedUpIiRjesenje)) {
+        const upIKlase = extractUpIKlase(normalizedUpIiRjesenje);
+        normalizedUpIiRjesenje =
+          upIKlase.length > 0
+            ? `Šutnja uprave (I. stupanj: ${upIKlase[0]})`
+            : `Šutnja uprave (${normalizedUpIiRjesenje})`;
+      }
+    }
 
     const isPresudeno = !!(presuda || datumZapPresude || aktPoPresudi);
     const isOdgovoreno =
@@ -379,7 +407,7 @@ export async function saveNewSporAction(payload: {
       existingCustom.length > 0 ? Math.max(...existingCustom.map((s) => s.rbr || 0)) : 1000;
     const nextRbr = Math.max(1000, maxExistingRbr + 1);
 
-    const newSpor: UpravniSpor = {
+    const baseNewSpor: UpravniSpor = {
       id: `custom-${Date.now()}`,
       rbr: nextRbr,
       rowNum: 9999,
@@ -387,7 +415,7 @@ export async function saveNewSporAction(payload: {
       oib: payload.oib,
       sud: payload.sud,
       poslovniBroj: payload.poslovniBroj,
-      upIiRjesenje: payload.upIiRjesenje,
+      upIiRjesenje: normalizedUpIiRjesenje,
       predmet: payload.predmet,
       rjesavatelj: payload.rjesavatelj,
       tuzbaPreuzeta: payload.tuzbaPreuzeta,
@@ -401,12 +429,16 @@ export async function saveNewSporAction(payload: {
       rokDatum: rokDatumStr || undefined,
       danaDoRoka: danaDoRoka ?? undefined,
       isSutnjaUprave: isSutnja,
+      manualSutnjaOverride: payload.isSutnjaUprave,
       isOdgovoreno,
       isPresudeno,
       hitnost,
       fazaOpis,
       troskoviInfo,
     };
+
+    const enrichedBase = enrichSporCalculations(baseNewSpor, today);
+    const [newSpor] = await enrichSporoviWithZupRjesenja([enrichedBase]);
 
     // 1. Spremi u Supabase bazu podataka
     await saveCustomSporAsync(newSpor);
@@ -458,6 +490,9 @@ export async function updateSporManualDetailsAction(payload: {
   visokiUpravniSud?: string;
   rjesavatelj?: string;
   vrijednostNapomena?: string;
+  upIiRjesenje?: string;
+  predmet?: string;
+  isSutnjaUprave?: boolean;
 }): Promise<{
   success: boolean;
   updatedSpor?: UpravniSpor;
@@ -465,7 +500,7 @@ export async function updateSporManualDetailsAction(payload: {
 }> {
   try {
     const key = payload.poslovniBroj || payload.id;
-    const updateData = {
+    const updateData: SporOverride = {
       aktUpIiPoPresudi: payload.aktUpIiPoPresudi,
       odgovorNaTuzbu: payload.odgovorNaTuzbu,
       presudaTroskovi: payload.presudaTroskovi,
@@ -475,13 +510,16 @@ export async function updateSporManualDetailsAction(payload: {
       rjesavatelj: payload.rjesavatelj,
       vrijednostNapomena: payload.vrijednostNapomena,
     };
+    if (payload.upIiRjesenje !== undefined) updateData.upIiRjesenje = payload.upIiRjesenje;
+    if (payload.predmet !== undefined) updateData.predmet = payload.predmet;
+    if (payload.isSutnjaUprave !== undefined) updateData.isSutnjaUprave = payload.isSutnjaUprave;
+
     await saveSporOverrideAsync(key, updateData);
     if (payload.id && payload.poslovniBroj && payload.id !== payload.poslovniBroj) {
       await saveSporOverrideAsync(payload.id, updateData);
     }
 
-    const overrides = await getSporoviOverridesAsync();
-    const res = parseExcelSporovi(false, overrides);
+    const res = await parseExcelSporoviAsync(false);
     const updated = res.sporovi.find(
       (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
     );
@@ -521,8 +559,7 @@ export async function dismissSporAction(payload: {
       await saveSporOverrideAsync(payload.id, overrideData);
     }
 
-    const overrides = await getSporoviOverridesAsync();
-    const res = parseExcelSporovi(false, overrides);
+    const res = await parseExcelSporoviAsync(false);
     const updated = res.sporovi.find(
       (s) => s.id === payload.id || (payload.poslovniBroj && s.poslovniBroj === payload.poslovniBroj)
     );

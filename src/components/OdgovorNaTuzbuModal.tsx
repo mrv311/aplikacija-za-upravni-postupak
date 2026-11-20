@@ -124,18 +124,62 @@ export default function OdgovorNaTuzbuModal({
     setPoslovniBroj(spor.poslovniBroj || '');
 
     const tuziteljBase = spor.tuzitelj || '';
-    const tuziteljFull = spor.oib ? `${tuziteljBase} (OIB: ${spor.oib})` : tuziteljBase;
+    const tuziteljFull =
+      spor.oib && !tuziteljBase.includes(spor.oib)
+        ? `${tuziteljBase} (OIB: ${spor.oib})`
+        : tuziteljBase;
     setTuzitelj(tuziteljFull);
     setOib(spor.oib || '');
 
     setDatum(getCroatianLongDate());
 
     const currentYear = new Date().getFullYear().toString().slice(-2);
-    setKlasa(spor.upIiRjesenje || `UP/II-325-08/${currentYear}-02/${spor.rbr || '1'}`);
+    const povezano = spor.povezanoRjesenje;
+
+    // Izvuci točnu I. stupanjsku klasu (UP/I-...) ako je navedena
+    const upIMatch = (spor.upIiRjesenje || '').match(/UP\/I-[\dA-Za-z\/-]+/i);
+    const upIKlasa = upIMatch ? upIMatch[0] : povezano?.prvostupanjskaKlasa;
+    const upIiMatch = (spor.upIiRjesenje || '').match(/UP\/II-[\dA-Za-z\/-]+/i);
+
+    const klasaDefault =
+      povezano?.klasa ||
+      (upIiMatch ? upIiMatch[0] : `UP/II-325-08/${currentYear}-02/${spor.rbr || '1'}`);
+    setKlasa(klasaDefault);
     setUrbroj(`517-05-2-${currentYear}-2`);
 
+    const mapIshodToPhrase = (ishod?: string): string => {
+      const lower = (ishod || '').toLowerCase();
+      if (lower.includes('poništ') || lower.includes('ponist')) {
+        return 'poništeno je prvostupanjsko rješenje i predmet vraćen na ponovni postupak';
+      }
+      if (lower.includes('odbač') || lower.includes('odbac')) {
+        return 'odbačena je žalba podnositelja';
+      }
+      if (lower.includes('obustav')) {
+        return 'obustavljen je žalbeni postupak';
+      }
+      return 'odbijena je kao neosnovana žalba podnositelja';
+    };
+
+    const formatDonesenoRjesenjeOpis = (p: NonNullable<UpravniSpor['povezanoRjesenje']>): string => {
+      const parts = [`rješenje KLASA: ${p.klasa}`];
+      if (p.urbroj) parts.push(`URBROJ: ${p.urbroj}`);
+      const datumDio = p.datumRjesenja
+        ? ` od ${p.datumRjesenja}`
+        : p.datumRjesavanjaFormat
+        ? ` od ${p.datumRjesavanjaFormat}`
+        : '';
+      return `${parts.join(', ')}${datumDio}`;
+    };
+
     // Određivanje početnog scenarija
-    if (spor.aktUpIiPoPresudi && spor.aktUpIiPoPresudi.trim()) {
+    if (spor.isSutnjaUprave && povezano?.doneseno) {
+      setScenarij('sutnja_naknadno_doneseno');
+      setDonesenoRjesenje(formatDonesenoRjesenjeOpis(povezano));
+      setDatumDostave(povezano.datumRjesavanjaFormat || povezano.datumRjesenja || '');
+      setIshodRjesenja(mapIshodToPhrase(povezano.ishod));
+      setPredmetSpora('šutnje uprave');
+    } else if (spor.aktUpIiPoPresudi && spor.aktUpIiPoPresudi.trim()) {
       setScenarij('sutnja_naknadno_doneseno');
       setDonesenoRjesenje(spor.aktUpIiPoPresudi);
       setPredmetSpora('šutnje uprave');
@@ -147,13 +191,18 @@ export default function OdgovorNaTuzbuModal({
       setPredmetSpora(spor.predmet || 'ocjene zakonitosti rješenja');
     }
 
-    if (spor.upIiRjesenje) {
+    if (upIKlasa) {
+      setPrvostupanjskiAkt(`rješenja Hrvatskih voda KLASA: ${upIKlasa}`);
+    } else if (spor.upIiRjesenje && !spor.upIiRjesenje.toLowerCase().includes('šutnj')) {
       setPrvostupanjskiAkt(spor.upIiRjesenje);
+    } else {
+      setPrvostupanjskiAkt('');
     }
 
     // Reset doc stanja
     setTuzbaDoc(null);
     setRjesenjeDoc(null);
+    setLinkedZup(povezano || null);
     setShowTuzbaPreview(false);
     setShowRjesenjePreview(false);
     setExportSuccess(false);
@@ -175,10 +224,33 @@ export default function OdgovorNaTuzbuModal({
       })
       .finally(() => setIsLoadingOneDrive(false));
 
-    // 2. Potraži povezani ZUP predmet u bazi ako postoji
-    findLinkedZupPredmetAction(spor.upIiRjesenje, spor.tuzitelj)
+    // 2. Potraži povezani ZUP predmet i tekst drugostupanjskog rješenja u bazi ako postoji
+    findLinkedZupPredmetAction(spor.upIiRjesenje, spor.tuzitelj, spor.oib)
       .then((zup) => {
-        if (zup) setLinkedZup(zup);
+        if (zup) {
+          setLinkedZup(zup);
+          if (zup.doneseno && spor.isSutnjaUprave) {
+            setKlasa(zup.klasa);
+            setScenarij('sutnja_naknadno_doneseno');
+            setDonesenoRjesenje(formatDonesenoRjesenjeOpis(zup));
+            if (zup.datumRjesavanjaFormat || zup.datumRjesenja) {
+              setDatumDostave(zup.datumRjesavanjaFormat || zup.datumRjesenja || '');
+            }
+            if (zup.ishod) {
+              setIshodRjesenja(mapIshodToPhrase(zup.ishod));
+            }
+          }
+          if (zup.rjesenjeTekst) {
+            setRjesenjeDoc((prev) =>
+              prev || {
+                name: `Drugostupanjsko rješenje (${zup.klasa}) — iz ZUP baze`,
+                text: zup.rjesenjeTekst!,
+                charCount: zup.rjesenjeTekst!.length,
+                source: 'onedrive',
+              }
+            );
+          }
+        }
       })
       .catch(() => {});
   }, [spor, isOpen]);
@@ -317,7 +389,7 @@ export default function OdgovorNaTuzbuModal({
 
     try {
       const zupPodaci = linkedZup
-        ? `Povezani ZUP predmet: KLASA: ${linkedZup.klasa}, Stranka: ${linkedZup.stranka}, Pravna osnova: ${linkedZup.pravna_osnova || '-'}`
+        ? `Povezani ZUP predmet: KLASA: ${linkedZup.klasa}${linkedZup.urbroj ? `, URBROJ: ${linkedZup.urbroj}` : ''}, Stranka: ${linkedZup.stranka}, Status: ${linkedZup.status}${linkedZup.ishod ? `, Ishod: ${linkedZup.ishod}` : ''}${linkedZup.datumRjesenja ? `, Datum rješenja: ${linkedZup.datumRjesenja}` : ''}`
         : undefined;
 
       const res = await generateAiOdgovorAction({
@@ -485,6 +557,23 @@ export default function OdgovorNaTuzbuModal({
                 <p>Učitavanje i obrada dokumenta u tijeku...</p>
                 <p className="text-2xs font-normal text-indigo-700 dark:text-indigo-300">
                   Ako je datoteka skenirana slika bez tekstualnog sloja, automatski se provodi optičko prepoznavanje (OCR).
+                </p>
+              </div>
+            </div>
+          )}
+
+          {linkedZup?.doneseno && (
+            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs flex items-start gap-2.5 shadow-2xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">
+                  Automatski prepoznato doneseno drugostupanjsko rješenje u ZUP evidenciji!
+                </p>
+                <p className="text-2xs text-emerald-800 dark:text-emerald-300 mt-0.5">
+                  KLASA: <strong>{linkedZup.klasa}</strong>
+                  {linkedZup.urbroj ? ` • URBROJ: ${linkedZup.urbroj}` : ''}
+                  {linkedZup.datumRjesenja ? ` • od ${linkedZup.datumRjesenja}` : linkedZup.datumRjesavanjaFormat ? ` • ${linkedZup.datumRjesavanjaFormat}` : ''}
+                  {linkedZup.ishod ? ` • ${linkedZup.ishod}` : ''}. Podaci su automatski uneseni u obrazac odgovora na tužbu (prijedlog obustave spora po čl. 24. st. 3. ZUS-a).
                 </p>
               </div>
             </div>

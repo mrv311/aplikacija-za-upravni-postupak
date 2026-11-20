@@ -10,10 +10,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import { E_KOMUNIKACIJA_PATH } from '@/lib/upravni-sporovi';
-import { supabaseServer as dbServer } from '@/lib/supabase-server';
-import { supabase as dbClient } from '@/lib/supabase';
-
-const db = dbServer || dbClient;
+import {
+  findLinkedZupRjesenjeForQuery,
+  type PovezanoRjesenjeWithDoc,
+} from '@/lib/spor-zup-matcher';
 const wordExtractor = new WordExtractor();
 
 export interface ExtractedDocResult {
@@ -333,24 +333,20 @@ export async function loadOneDriveCourtFileAction(
 /**
  * Pretražuje povezane podatke iz evidencije drugostupanjskih upravnih predmeta (ZUP)
  */
-export async function findLinkedZupPredmetAction(klasaOrUpIi?: string, stranka?: string) {
+export async function findLinkedZupPredmetAction(
+  klasaOrUpIi?: string,
+  stranka?: string,
+  oib?: string
+): Promise<PovezanoRjesenjeWithDoc | null> {
   try {
-    if (!klasaOrUpIi && !stranka) return null;
-
-    let query = db.from('predmeti').select('id, klasa, stranka, opis, pravna_osnova, status, datum_zaprimanja');
-    if (klasaOrUpIi && klasaOrUpIi.includes('325-')) {
-      const clean = klasaOrUpIi.replace(/KLASA:\s*/i, '').trim();
-      const { data } = await query.ilike('klasa', `%${clean}%`).limit(1).maybeSingle();
-      if (data) return data;
-    }
-
-    if (stranka && stranka.length > 4) {
-      const prezime = stranka.split(/[\s,]+/).pop() || stranka;
-      const { data } = await query.ilike('stranka', `%${prezime}%`).limit(1).maybeSingle();
-      if (data) return data;
-    }
-
-    return null;
+    if (!klasaOrUpIi && !stranka && !oib) return null;
+    return await findLinkedZupRjesenjeForQuery({
+      pobijaniAkt: klasaOrUpIi,
+      prvostupanjskiAkt: klasaOrUpIi,
+      tuzitelj: stranka,
+      oib,
+      includeDocText: true,
+    });
   } catch (err) {
     console.warn('Greška pri dohvatu povezanog ZUP predmeta:', err);
     return null;
