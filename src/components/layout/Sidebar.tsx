@@ -9,6 +9,7 @@ import {
   BarChart3,
   BookOpen,
   Scale,
+  ScrollText,
   Calculator,
   Sparkles,
   PanelLeftClose,
@@ -85,6 +86,12 @@ export function Sidebar() {
       href: '/propisi',
       label: 'Baza propisa',
       icon: Scale,
+      exact: false,
+    },
+    {
+      href: '/izrada-propisa',
+      label: 'Izrada propisa',
+      icon: ScrollText,
       exact: false,
     },
     {

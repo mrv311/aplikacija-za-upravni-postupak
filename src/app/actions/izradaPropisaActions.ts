@@ -1,0 +1,468 @@
+'use server';
+
+import fs from 'fs';
+import path from 'path';
+import { revalidatePath } from 'next/cache';
+import { generateText } from 'ai';
+import { google } from '@/lib/google';
+import {
+  listPropisProjectSummaries,
+  getPropisProject,
+  createPropisProject,
+  savePropisProject,
+  deletePropisProject,
+  listPropisDocuments,
+  addPropisDocument,
+  updatePropisDocument,
+  deletePropisDocument,
+  readPropisChatHistory,
+  writePropisChatHistory,
+} from '@/lib/izrada-propisa-storage';
+import {
+  parsePropisBufferLocally,
+  classifyPropisFile,
+  scanLocalPropisFolder,
+  detectSenderFromText,
+  extractDateFromFileName,
+  SUPPORTED_PROPIS_EXTENSIONS,
+} from '@/lib/izrada-propisa-parser';
+import { parseNormativeDraft } from '@/lib/propis-article-parser';
+import {
+  PROPIS_DOC_ROLE_MAP,
+  type PropisDocRole,
+  type PropisFazaPostupka,
+  type PropisVrstaAkta,
+  type PropisDocument,
+  type LocalFolderScanEntry,
+} from '@/lib/izrada-propisa-types';
+import type { LegalUIMessage } from '@/lib/ai-types';
+
+const RAW_UPLOADS_BASE = path.join(process.cwd(), 'data', 'izrada-propisa');
+
+function saveRawUploadForOcr(projectId: string, fileName: string, buffer: Buffer): string {
+  const safeProj = projectId.replace(/[^a-zA-Z0-9_-]/g, '');
+  const dir = path.join(RAW_UPLOADS_BASE, safeProj, 'raw_uploads');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80)}`;
+  const fullPath = path.join(dir, safeName);
+  fs.writeFileSync(fullPath, buffer);
+  return fullPath;
+}
+
+export async function listProjectsAction() {
+  return listPropisProjectSummaries();
+}
+
+export async function createPropisProjectAction(input: {
+  naziv: string;
+  puniNazivAkta: string;
+  vrstaAkta: PropisVrstaAkta;
+  maticniPropisi: string[];
+  pravnoPodrucje?: string;
+  fazaPostupka?: PropisFazaPostupka;
+  klasa?: string;
+  urbroj?: string;
+  strucniNositelj?: string;
+  referentnaMapa?: string;
+  opis?: string;
+}) {
+  if (!input.naziv?.trim()) {
+    return { error: 'Naziv projekta je obavezan.' };
+  }
+  try {
+    const project = createPropisProject(input);
+    revalidatePath('/izrada-propisa');
+    return { success: true, project };
+  } catch (err: any) {
+    return { error: err?.message || 'Greška pri kreiranju projekta.' };
+  }
+}
+
+export async function updatePropisProjectAction(
+  projectId: string,
+  patch: {
+    naziv?: string;
+    puniNazivAkta?: string;
+    vrstaAkta?: PropisVrstaAkta;
+    maticniPropisi?: string[];
+    pravnoPodrucje?: string;
+    fazaPostupka?: PropisFazaPostupka;
+    klasa?: string;
+    urbroj?: string;
+    strucniNositelj?: string;
+    referentnaMapa?: string;
+    opis?: string;
+  }
+) {
+  const existing = getPropisProject(projectId);
+  if (!existing) return { error: 'Projekt nije pronađen.' };
+  const updated = savePropisProject({
+    ...existing,
+    ...patch,
+    id: existing.id,
+  });
+  revalidatePath('/izrada-propisa');
+  revalidatePath(`/izrada-propisa/${projectId}`);
+  return { success: true, project: updated };
+}
+
+export async function deletePropisProjectAction(projectId: string) {
+  const ok = deletePropisProject(projectId);
+  if (!ok) return { error: 'Projekt nije pronađen.' };
+  revalidatePath('/izrada-propisa');
+  return { success: true };
+}
+
+/**
+ * Višestruki upload dokumenata s 100% lokalnim parsiranjem (0 AI troška).
+ */
+export async function uploadPropisDocumentsAction(formData: FormData) {
+  const projectId = String(formData.get('projectId') || '').trim();
+  const requestedRole = String(formData.get('uloga') || 'auto').trim();
+  const customSender = String(formData.get('posiljatelj') || '').trim();
+  const customDate = String(formData.get('datumVerzije') || '').trim();
+  const files = formData.getAll('files') as File[];
+
+  if (!projectId) return { error: 'Nedostaje ID projekta.' };
+  if (!files || files.length === 0) return { error: 'Niste odabrali nijednu datoteku.' };
+
+  const added: PropisDocument[] = [];
+  const errors: string[] = [];
+
+  for (const file of files) {
+    try {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (!SUPPORTED_PROPIS_EXTENSIONS.has(ext)) {
+        errors.push(`${file.name}: nepodržan format (.${ext}). Podržani: .docx, .doc, .xlsx, .xls, .pdf, .txt`);
+        continue;
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const autoCls = classifyPropisFile(file.name);
+      const role: PropisDocRole =
+        requestedRole === 'auto'
+          ? autoCls.role
+          : (requestedRole as PropisDocRole);
+
+      const parsed = await parsePropisBufferLocally(buffer, file.name, role);
+
+      let savedRawPath: string | undefined;
+      if (parsed.needsOcr || ext === 'docx') {
+        // Spremamo sirovi upload za skenirane PDF-ove (opcionalni kasniji OCR) ili .docx (lokalni uvoz Word tablice primjedbi)
+        savedRawPath = saveRawUploadForOcr(projectId, file.name, buffer);
+      }
+
+      const detectedSender =
+        customSender ||
+        autoCls.sender ||
+        (role === 'misljenje' ? detectSenderFromText(parsed.rawText.slice(0, 1200)).label : undefined);
+      const detectedDate = customDate || autoCls.date || extractDateFromFileName(file.name);
+
+      const roleMeta = PROPIS_DOC_ROLE_MAP[role];
+      const doc = addPropisDocument(projectId, {
+        naziv: file.name,
+        prikazniNaziv: file.name.replace(/\.[^.]+$/, ''),
+        uloga: role,
+        posiljatelj: detectedSender,
+        datumVerzije: detectedDate,
+        ekstenzija: ext,
+        velicinaBajta: file.size,
+        izvorDatoteke: 'upload',
+        lokalnaPutanja: savedRawPath,
+        izvorTeksta: 'lokalni_parser',
+        needsOcr: parsed.needsOcr,
+        includeInAiContext: roleMeta.defaultInAiContext && !parsed.needsOcr,
+        rawText: parsed.rawText,
+        htmlTablesCount: parsed.htmlTablesCount,
+        parsedDraft: parsed.parsedDraft,
+        excelSheets: parsed.excelSheets,
+      });
+
+      added.push(doc);
+    } catch (err: any) {
+      errors.push(`${file.name}: ${err?.message || 'Greška pri lokalnom parsiranju.'}`);
+    }
+  }
+
+  revalidatePath('/izrada-propisa');
+  revalidatePath(`/izrada-propisa/${projectId}`);
+
+  return {
+    success: added.length > 0,
+    added,
+    errors,
+  };
+}
+
+/**
+ * Skenira lokalnu/OneDrive mapu projekta i vraća kategorizirani popis datoteka (0 AI troška).
+ */
+export async function scanProjectLocalFolderAction(
+  projectId: string,
+  overridePath?: string
+): Promise<{
+  folderPath: string;
+  exists: boolean;
+  entries: LocalFolderScanEntry[];
+  error?: string;
+}> {
+  const project = getPropisProject(projectId);
+  if (!project) {
+    return { folderPath: '', exists: false, entries: [], error: 'Projekt nije pronađen.' };
+  }
+
+  const targetPath = (overridePath ?? project.referentnaMapa ?? '').trim();
+  if (!targetPath) {
+    return {
+      folderPath: '',
+      exists: false,
+      entries: [],
+      error: 'Nije definirana referentna mapa za ovaj projekt.',
+    };
+  }
+
+  if (!fs.existsSync(targetPath)) {
+    return {
+      folderPath: targetPath,
+      exists: false,
+      entries: [],
+      error: `Mapa ne postoji ili nije dostupna na ovom računalu: ${targetPath}`,
+    };
+  }
+
+  // Ako je korisnik unio novu putanju, spremi je na projekt
+  if (overridePath && overridePath.trim() && overridePath.trim() !== project.referentnaMapa) {
+    savePropisProject({ ...project, referentnaMapa: overridePath.trim() });
+  }
+
+  const existingDocs = listPropisDocuments(projectId);
+  const importedPaths = new Set(
+    existingDocs
+      .map((d) => d.lokalnaPutanja?.toLowerCase())
+      .filter((p): p is string => Boolean(p))
+  );
+
+  const entries = scanLocalPropisFolder(targetPath, importedPaths);
+  return {
+    folderPath: targetPath,
+    exists: true,
+    entries,
+  };
+}
+
+/**
+ * Masovni lokalni uvoz odabranih datoteka iz OneDrive mape projekta (100% lokalno, 0 AI troška).
+ */
+export async function importFromLocalFolderAction(
+  projectId: string,
+  selections: Array<{
+    fullPath: string;
+    uloga: PropisDocRole;
+    posiljatelj?: string;
+    datumVerzije?: string;
+  }>
+) {
+  if (!projectId || !selections || selections.length === 0) {
+    return { error: 'Niste odabrali nijednu datoteku za uvoz.' };
+  }
+
+  const existingDocs = listPropisDocuments(projectId);
+  const importedSet = new Set(
+    existingDocs
+      .map((d) => d.lokalnaPutanja?.toLowerCase())
+      .filter((p): p is string => Boolean(p))
+  );
+
+  // Sortiraj tako da `aktualni_nacrt` ide zadnji kako bi sigurno ostao glavni aktivni nacrt
+  const ordered = [...selections].sort((a, b) => {
+    if (a.uloga === 'aktualni_nacrt' && b.uloga !== 'aktualni_nacrt') return 1;
+    if (b.uloga === 'aktualni_nacrt' && a.uloga !== 'aktualni_nacrt') return -1;
+    return 0;
+  });
+
+  const imported: PropisDocument[] = [];
+  const skipped: string[] = [];
+  const errors: string[] = [];
+
+  for (const sel of ordered) {
+    const fileName = path.basename(sel.fullPath);
+    if (importedSet.has(sel.fullPath.toLowerCase())) {
+      skipped.push(fileName);
+      continue;
+    }
+
+    try {
+      if (!fs.existsSync(sel.fullPath)) {
+        errors.push(`${fileName}: datoteka više ne postoji na disku.`);
+        continue;
+      }
+
+      const buffer = fs.readFileSync(sel.fullPath);
+      const ext = (fileName.split('.').pop() || '').toLowerCase();
+      const parsed = await parsePropisBufferLocally(buffer, fileName, sel.uloga);
+      const detectedSender =
+        sel.posiljatelj ||
+        (sel.uloga === 'misljenje'
+          ? detectSenderFromText(`${fileName}\n${parsed.rawText.slice(0, 1200)}`).label
+          : undefined);
+      const detectedDate = sel.datumVerzije || extractDateFromFileName(fileName);
+      const roleMeta = PROPIS_DOC_ROLE_MAP[sel.uloga];
+
+      const doc = addPropisDocument(projectId, {
+        naziv: fileName,
+        prikazniNaziv: fileName.replace(/\.[^.]+$/, ''),
+        uloga: sel.uloga,
+        posiljatelj: detectedSender,
+        datumVerzije: detectedDate,
+        ekstenzija: ext,
+        velicinaBajta: buffer.length,
+        izvorDatoteke: 'lokalna_mapa',
+        lokalnaPutanja: sel.fullPath,
+        izvorTeksta: 'lokalni_parser',
+        needsOcr: parsed.needsOcr,
+        includeInAiContext: roleMeta.defaultInAiContext && !parsed.needsOcr,
+        rawText: parsed.rawText,
+        htmlTablesCount: parsed.htmlTablesCount,
+        parsedDraft: parsed.parsedDraft,
+        excelSheets: parsed.excelSheets,
+      });
+
+      imported.push(doc);
+      importedSet.add(sel.fullPath.toLowerCase());
+    } catch (err: any) {
+      errors.push(`${fileName}: ${err?.message || 'Greška pri lokalnom parsiranju.'}`);
+    }
+  }
+
+  revalidatePath('/izrada-propisa');
+  revalidatePath(`/izrada-propisa/${projectId}`);
+
+  return {
+    success: true,
+    importedCount: imported.length,
+    skippedCount: skipped.length,
+    imported,
+    errors,
+  };
+}
+
+export async function updatePropisDocumentAction(
+  projectId: string,
+  docId: string,
+  patch: {
+    prikazniNaziv?: string;
+    uloga?: PropisDocRole;
+    posiljatelj?: string;
+    datumVerzije?: string;
+    includeInAiContext?: boolean;
+    rawText?: string;
+    biljeska?: string;
+  }
+) {
+  const docs = listPropisDocuments(projectId);
+  const existing = docs.find((d) => d.id === docId);
+  if (!existing) return { error: 'Dokument nije pronađen.' };
+
+  const nextRole = patch.uloga ?? existing.uloga;
+  const nextText = patch.rawText ?? existing.rawText;
+  const textEdited = patch.rawText !== undefined && patch.rawText !== existing.rawText;
+
+  let parsedDraft = existing.parsedDraft;
+  if (
+    (nextRole === 'aktualni_nacrt' || nextRole === 'prethodna_verzija') &&
+    (textEdited || !existing.parsedDraft || patch.uloga !== undefined)
+  ) {
+    const candidate = parseNormativeDraft(nextText);
+    parsedDraft = candidate.clanci.length > 0 || candidate.preambula.length > 0 ? candidate : undefined;
+  }
+
+  const updated = updatePropisDocument(projectId, docId, {
+    ...patch,
+    parsedDraft,
+    izvorTeksta: textEdited ? 'rucno_uredeno' : existing.izvorTeksta,
+    needsOcr: textEdited && nextText.trim().length > 50 ? false : existing.needsOcr,
+  });
+
+  revalidatePath('/izrada-propisa');
+  revalidatePath(`/izrada-propisa/${projectId}`);
+  return { success: true, doc: updated };
+}
+
+export async function deletePropisDocumentAction(projectId: string, docId: string) {
+  const ok = deletePropisDocument(projectId, docId);
+  if (!ok) return { error: 'Dokument nije pronađen.' };
+  revalidatePath('/izrada-propisa');
+  revalidatePath(`/izrada-propisa/${projectId}`);
+  return { success: true };
+}
+
+/**
+ * Opcionalni RUČNI AI OCR — pokreće se ISKLJUČIVO na izričit klik korisnika za skenirane PDF-ove bez tekstualnog sloja.
+ */
+export async function runManualOcrOnPropisDocAction(projectId: string, docId: string) {
+  const docs = listPropisDocuments(projectId);
+  const doc = docs.find((d) => d.id === docId);
+  if (!doc) return { error: 'Dokument nije pronađen.' };
+  if (!doc.lokalnaPutanja || !fs.existsSync(doc.lokalnaPutanja)) {
+    return { error: 'Izvorna PDF datoteka nije dostupna na disku za AI OCR.' };
+  }
+
+  try {
+    const buffer = fs.readFileSync(doc.lokalnaPutanja);
+    const { text } = await generateText({
+      model: google('gemini-3.8-flash'),
+      system:
+        'Ti si precizni pravni OCR sustav za hrvatske službene dokumente (mišljenja ministarstava, UZZ-a, zapisnike i nacrte propisa). Prepiši vjerno sav tekst dokumenta uključujući zaglavlja, KLASU, URBROJ, datume, članke i tablice. Vrati isključivo pročitani tekst.',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: `Prepiši cjeloviti tekst ovog skeniranog dokumenta (${doc.naziv}):` },
+            { type: 'file', data: buffer.toString('base64'), mediaType: 'application/pdf' },
+          ],
+        },
+      ],
+    });
+
+    const clean = (text || '').trim();
+    if (!clean) return { error: 'AI OCR nije uspio očitati tekst iz skena.' };
+
+    const parsedDraft =
+      doc.uloga === 'aktualni_nacrt' || doc.uloga === 'prethodna_verzija'
+        ? parseNormativeDraft(clean)
+        : doc.parsedDraft;
+
+    const updated = updatePropisDocument(projectId, docId, {
+      rawText: clean,
+      izvorTeksta: 'rucni_ai_ocr',
+      needsOcr: false,
+      includeInAiContext: PROPIS_DOC_ROLE_MAP[doc.uloga].defaultInAiContext,
+      parsedDraft,
+    });
+
+    revalidatePath(`/izrada-propisa/${projectId}`);
+    return { success: true, doc: updated };
+  } catch (err: any) {
+    return { error: err?.message || 'Greška pri AI OCR čitanju dokumenta.' };
+  }
+}
+
+export async function getPropisChatHistoryAction(projectId: string): Promise<LegalUIMessage[]> {
+  return readPropisChatHistory(projectId);
+}
+
+export async function savePropisChatHistoryAction(projectId: string, messages: LegalUIMessage[]) {
+  try {
+    writePropisChatHistory(projectId, messages);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || 'Greška pri spremanju razgovora.' };
+  }
+}
+
+export async function clearPropisChatHistoryAction(projectId: string) {
+  writePropisChatHistory(projectId, []);
+  return { success: true };
+}

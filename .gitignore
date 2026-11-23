@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Upravni sporovi temp
 data/excel_temp/
+
+# Izrada propisa (lokalni radni projekti i nacrti)
+data/izrada-propisa/
