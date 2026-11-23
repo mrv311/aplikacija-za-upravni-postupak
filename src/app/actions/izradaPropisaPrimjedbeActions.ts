@@ -71,7 +71,7 @@ const VALID_KATEGORIJE = new Set<PrimjedbaKategorijaTijela>([
  * Lokalni uvoz postojeće Word tablice primjedbi (0 AI troška).
  */
 export async function importExistingPrimjedbeDocxAction(projectId: string, docId: string) {
-  const docs = listPropisDocuments(projectId);
+  const docs = await listPropisDocuments(projectId);
   const doc = docs.find((d) => d.id === docId);
   if (!doc) return { error: 'Dokument nije pronađen.' };
 
@@ -94,7 +94,7 @@ export async function importExistingPrimjedbeDocxAction(projectId: string, docId
       };
     }
 
-    const existing = listPrimjedbe(projectId);
+    const existing = await listPrimjedbe(projectId);
     const now = new Date().toISOString();
     const added: PrimjedbaItem[] = extracted.map((item) => ({
       ...item,
@@ -106,7 +106,7 @@ export async function importExistingPrimjedbeDocxAction(projectId: string, docId
     const merged = [...existing, ...added].sort(
       (a, b) => articleSortRank(a.clanakOznaka) - articleSortRank(b.clanakOznaka)
     );
-    savePrimjedbe(projectId, merged);
+    await savePrimjedbe(projectId, merged);
     revalidatePath(`/izrada-propisa/${projectId}`);
 
     return { success: true, importedCount: added.length, primjedbe: merged };
@@ -123,10 +123,10 @@ export async function extractPrimjedbeFromDocsAction(params: {
   docIds: string[];
   modelPreference?: 'flash' | 'pro';
 }) {
-  const project = getPropisProject(params.projectId);
+  const project = await getPropisProject(params.projectId);
   if (!project) return { error: 'Projekt nije pronađen.' };
 
-  const docs = listPropisDocuments(params.projectId);
+  const docs = await listPropisDocuments(params.projectId);
   const selectedDocs = docs.filter(
     (d) => params.docIds.includes(d.id) && d.rawText && d.rawText.trim().length > 20
   );
@@ -240,11 +240,11 @@ ${combinedOpinionsText}`;
       };
     });
 
-    const existing = listPrimjedbe(params.projectId);
+    const existing = await listPrimjedbe(params.projectId);
     const merged = [...existing, ...added].sort(
       (a, b) => articleSortRank(a.clanakOznaka) - articleSortRank(b.clanakOznaka)
     );
-    savePrimjedbe(params.projectId, merged);
+    await savePrimjedbe(params.projectId, merged);
     revalidatePath(`/izrada-propisa/${params.projectId}`);
 
     return { success: true, extractedCount: added.length, primjedbe: merged };
@@ -264,14 +264,14 @@ export async function suggestSinglePrimjedbaResponseAction(params: {
   dodatnaUputa?: string;
   modelPreference?: 'flash' | 'pro';
 }) {
-  const project = getPropisProject(params.projectId);
+  const project = await getPropisProject(params.projectId);
   if (!project) return { error: 'Projekt nije pronađen.' };
 
-  const all = listPrimjedbe(params.projectId);
+  const all = await listPrimjedbe(params.projectId);
   const item = all.find((p) => p.id === params.primjedbaId);
   if (!item) return { error: 'Primjedba nije pronađena.' };
 
-  const docs = listPropisDocuments(params.projectId);
+  const docs = await listPropisDocuments(params.projectId);
   const aktualniNacrt = docs.find((d) => d.uloga === 'aktualni_nacrt');
   const aiModel = params.modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
 
@@ -335,7 +335,7 @@ ${formatPraksa(rag.praksa)}`,
         : p
     );
 
-    savePrimjedbe(params.projectId, updatedList);
+    await savePrimjedbe(params.projectId, updatedList);
     revalidatePath(`/izrada-propisa/${params.projectId}`);
     return {
       success: true,
@@ -354,7 +354,7 @@ export async function upsertPrimjedbaAction(
     izvorUnosa?: PrimjedbaItem['izvorUnosa'];
   }
 ) {
-  const all = listPrimjedbe(projectId);
+  const all = await listPrimjedbe(projectId);
   const now = new Date().toISOString();
 
   let next: PrimjedbaItem[];
@@ -381,21 +381,21 @@ export async function upsertPrimjedbaAction(
   }
 
   next.sort((a, b) => articleSortRank(a.clanakOznaka) - articleSortRank(b.clanakOznaka));
-  savePrimjedbe(projectId, next);
+  await savePrimjedbe(projectId, next);
   revalidatePath(`/izrada-propisa/${projectId}`);
   return { success: true, primjedbe: next };
 }
 
 export async function deletePrimjedbaAction(projectId: string, primjedbaId: string) {
-  const all = listPrimjedbe(projectId);
+  const all = await listPrimjedbe(projectId);
   const next = all.filter((p) => p.id !== primjedbaId);
-  savePrimjedbe(projectId, next);
+  await savePrimjedbe(projectId, next);
   revalidatePath(`/izrada-propisa/${projectId}`);
   return { success: true, primjedbe: next };
 }
 
 export async function clearAllPrimjedbeAction(projectId: string) {
-  savePrimjedbe(projectId, []);
+  await savePrimjedbe(projectId, []);
   revalidatePath(`/izrada-propisa/${projectId}`);
   return { success: true };
 }

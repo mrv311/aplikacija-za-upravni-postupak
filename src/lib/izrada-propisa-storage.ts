@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { supabaseServer as dbServer } from './supabase-server';
+import { supabase as dbClient } from './supabase';
 import {
   DEFAULT_UREDBA_NUV_MAPA,
   type PropisProject,
@@ -15,32 +17,134 @@ import type { LegalUIMessage } from './ai-types';
 
 const BASE_DIR = path.join(process.cwd(), 'data', 'izrada-propisa');
 const PROJECTS_FILE = path.join(BASE_DIR, 'projects.json');
+const SB_CATEGORY = 'SYSTEM_IZRADA_PROPISA';
 
-function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+function getDb() {
+  return dbServer || dbClient;
 }
 
-function readJsonSafe<T>(filePath: string, fallback: T): T {
-  try {
-    if (!fs.existsSync(filePath)) return fallback;
-    const raw = fs.readFileSync(filePath, 'utf8');
-    if (!raw.trim()) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJsonSafe(filePath: string, data: unknown) {
-  ensureDir(path.dirname(filePath));
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+function safeId(projectId: string): string {
+  return projectId.replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
 function projectDir(projectId: string): string {
-  const safeId = projectId.replace(/[^a-zA-Z0-9_-]/g, '');
-  return path.join(BASE_DIR, safeId);
+  return path.join(BASE_DIR, safeId(projectId));
+}
+
+function readLocalJsonSafe<T>(filePath: string): T | null {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    const raw = fs.readFileSync(filePath, 'utf8');
+    if (!raw.trim()) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalJsonSafe(filePath: string, data: unknown): void {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch {
+    // Na Vercelu je filesystem read-only (EROFS) — sigurno ignoriramo jer je primarna pohrana u Supabaseu
+  }
+}
+
+async function readStore<T>(
+  supabaseKey: string,
+  localFilePath: string,
+  fallback: T
+): Promise<T> {
+  // 1. Pokušaj pročitati iz Supabase tablice `pravna_praksa` (radi i na Vercelu i lokalno)
+  try {
+    const db = getDb();
+    if (db) {
+      const { data, error } = await db
+        .from('pravna_praksa')
+        .select('sadrzaj')
+        .eq('naslov', supabaseKey)
+        .maybeSingle();
+
+      if (!error && data?.sadrzaj) {
+        const parsed = JSON.parse(data.sadrzaj) as T;
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn(`Supabase readStore (${supabaseKey}) fallback na lokalno:`, err);
+  }
+
+  // 2. Fallback na lokalnu datoteku (npr. lokalni dev bez zapisa u bazi)
+  const local = readLocalJsonSafe<T>(localFilePath);
+  if (local !== null) {
+    return local;
+  }
+
+  return fallback;
+}
+
+async function writeStore(
+  supabaseKey: string,
+  localFilePath: string,
+  data: unknown
+): Promise<void> {
+  // 1. Spremi u Supabase (`pravna_praksa`)
+  try {
+    const db = getDb();
+    if (db) {
+      const sadrzaj = JSON.stringify(data);
+      const { data: existing } = await db
+        .from('pravna_praksa')
+        .select('id')
+        .eq('naslov', supabaseKey)
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { error } = await db
+          .from('pravna_praksa')
+          .update({ sadrzaj, kategorija: SB_CATEGORY })
+          .eq('id', existing.id);
+        if (error) console.error(`Supabase update (${supabaseKey}) greška:`, error.message);
+      } else {
+        const { error } = await db.from('pravna_praksa').insert({
+          naslov: supabaseKey,
+          kategorija: SB_CATEGORY,
+          sadrzaj,
+        });
+        if (error) console.error(`Supabase insert (${supabaseKey}) greška:`, error.message);
+      }
+    }
+  } catch (err) {
+    console.error(`Supabase writeStore (${supabaseKey}) greška:`, err);
+  }
+
+  // 2. Zrcali lokalno ako je filesystem writable (ignorira EROFS na Vercelu)
+  writeLocalJsonSafe(localFilePath, data);
+}
+
+async function deleteStoreKeys(supabaseKeys: string[], localDirToRemove?: string): Promise<void> {
+  try {
+    const db = getDb();
+    if (db && supabaseKeys.length > 0) {
+      await db.from('pravna_praksa').delete().in('naslov', supabaseKeys);
+    }
+  } catch (err) {
+    console.warn('Supabase deleteStoreKeys upozorenje:', err);
+  }
+
+  if (localDirToRemove) {
+    try {
+      if (fs.existsSync(localDirToRemove)) {
+        fs.rmSync(localDirToRemove, { recursive: true, force: true });
+      }
+    } catch {
+      // Ignore EROFS on Vercel
+    }
+  }
 }
 
 function buildDefaultUredbaNuvProject(): PropisProject {
@@ -71,29 +175,33 @@ function buildDefaultUredbaNuvProject(): PropisProject {
   };
 }
 
-export function listPropisProjects(): PropisProject[] {
-  ensureDir(BASE_DIR);
-  if (!fs.existsSync(PROJECTS_FILE)) {
+// ============================================================================
+// PROJEKTI
+// ============================================================================
+
+export async function listPropisProjects(): Promise<PropisProject[]> {
+  const projects = await readStore<PropisProject[]>(
+    'IZRADA_PROPISA_PROJECTS',
+    PROJECTS_FILE,
+    []
+  );
+
+  if (!Array.isArray(projects) || projects.length === 0) {
     const seeded = [buildDefaultUredbaNuvProject()];
-    writeJsonSafe(PROJECTS_FILE, seeded);
+    await writeStore('IZRADA_PROPISA_PROJECTS', PROJECTS_FILE, seeded);
     return seeded;
   }
-  const projects = readJsonSafe<PropisProject[]>(PROJECTS_FILE, []);
-  if (projects.length === 0) {
-    const seeded = [buildDefaultUredbaNuvProject()];
-    writeJsonSafe(PROJECTS_FILE, seeded);
-    return seeded;
-  }
-  return projects.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+
+  return [...projects].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 }
 
-export function getPropisProject(projectId: string): PropisProject | null {
-  const projects = listPropisProjects();
+export async function getPropisProject(projectId: string): Promise<PropisProject | null> {
+  const projects = await listPropisProjects();
   return projects.find((p) => p.id === projectId) || null;
 }
 
-export function savePropisProject(project: PropisProject): PropisProject {
-  const projects = listPropisProjects();
+export async function savePropisProject(project: PropisProject): Promise<PropisProject> {
+  const projects = await listPropisProjects();
   const idx = projects.findIndex((p) => p.id === project.id);
   const updated: PropisProject = {
     ...project,
@@ -104,11 +212,11 @@ export function savePropisProject(project: PropisProject): PropisProject {
   } else {
     projects.unshift(updated);
   }
-  writeJsonSafe(PROJECTS_FILE, projects);
+  await writeStore('IZRADA_PROPISA_PROJECTS', PROJECTS_FILE, projects);
   return updated;
 }
 
-export function createPropisProject(input: {
+export async function createPropisProject(input: {
   naziv: string;
   puniNazivAkta: string;
   vrstaAkta: PropisProject['vrstaAkta'];
@@ -120,7 +228,7 @@ export function createPropisProject(input: {
   strucniNositelj?: string;
   referentnaMapa?: string;
   opis?: string;
-}): PropisProject {
+}): Promise<PropisProject> {
   const baseSlug = input.naziv
     .toLowerCase()
     .normalize('NFD')
@@ -129,7 +237,7 @@ export function createPropisProject(input: {
     .replace(/^-|-$/g, '')
     .slice(0, 48);
 
-  const existing = listPropisProjects();
+  const existing = await listPropisProjects();
   let id = baseSlug || `propis-${Date.now()}`;
   if (existing.some((p) => p.id === id)) {
     id = `${id}-${crypto.randomBytes(2).toString('hex')}`;
@@ -157,51 +265,66 @@ export function createPropisProject(input: {
     updatedAt: now,
   };
 
-  savePropisProject(project);
+  await savePropisProject(project);
   return project;
 }
 
-export function deletePropisProject(projectId: string): boolean {
-  const projects = listPropisProjects();
+export async function deletePropisProject(projectId: string): Promise<boolean> {
+  const projects = await listPropisProjects();
   const next = projects.filter((p) => p.id !== projectId);
   if (next.length === projects.length) return false;
-  writeJsonSafe(PROJECTS_FILE, next);
-  const dir = projectDir(projectId);
-  if (fs.existsSync(dir)) {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+
+  await writeStore('IZRADA_PROPISA_PROJECTS', PROJECTS_FILE, next);
+  const sid = safeId(projectId);
+  await deleteStoreKeys(
+    [
+      `IZRADA_PROPISA_DOCS_${sid}`,
+      `IZRADA_PROPISA_PRIMJEDBE_${sid}`,
+      `IZRADA_PROPISA_STRESS_${sid}`,
+      `IZRADA_PROPISA_DELIVERABLES_${sid}`,
+      `IZRADA_PROPISA_CHAT_${sid}`,
+    ],
+    projectDir(projectId)
+  );
   return true;
 }
 
-function touchProject(projectId: string) {
-  const proj = getPropisProject(projectId);
-  if (proj) savePropisProject(proj);
+async function touchProject(projectId: string) {
+  const proj = await getPropisProject(projectId);
+  if (proj) await savePropisProject(proj);
 }
 
 // ============================================================================
 // DOKUMENTI PROJEKTA
 // ============================================================================
 
-export function listPropisDocuments(projectId: string): PropisDocument[] {
-  const file = path.join(projectDir(projectId), 'documents.json');
-  const docs = readJsonSafe<PropisDocument[]>(file, []);
-  return docs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export async function listPropisDocuments(projectId: string): Promise<PropisDocument[]> {
+  const sid = safeId(projectId);
+  const docs = await readStore<PropisDocument[]>(
+    `IZRADA_PROPISA_DOCS_${sid}`,
+    path.join(projectDir(projectId), 'documents.json'),
+    []
+  );
+  return [...docs].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 }
 
-export function savePropisDocuments(projectId: string, docs: PropisDocument[]) {
-  const file = path.join(projectDir(projectId), 'documents.json');
-  writeJsonSafe(file, docs);
-  touchProject(projectId);
+export async function savePropisDocuments(projectId: string, docs: PropisDocument[]) {
+  const sid = safeId(projectId);
+  await writeStore(
+    `IZRADA_PROPISA_DOCS_${sid}`,
+    path.join(projectDir(projectId), 'documents.json'),
+    docs
+  );
+  await touchProject(projectId);
 }
 
-export function addPropisDocument(
+export async function addPropisDocument(
   projectId: string,
   doc: Omit<PropisDocument, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>
-): PropisDocument {
-  const docs = listPropisDocuments(projectId);
+): Promise<PropisDocument> {
+  const docs = await listPropisDocuments(projectId);
   const now = new Date().toISOString();
 
-  // Ako se dodaje novi "aktualni_nacrt", prethodni aktualni automatski prelazi u "prethodna_verzija"
   if (doc.uloga === 'aktualni_nacrt') {
     for (const d of docs) {
       if (d.uloga === 'aktualni_nacrt') {
@@ -221,16 +344,16 @@ export function addPropisDocument(
   };
 
   docs.unshift(created);
-  savePropisDocuments(projectId, docs);
+  await savePropisDocuments(projectId, docs);
   return created;
 }
 
-export function updatePropisDocument(
+export async function updatePropisDocument(
   projectId: string,
   docId: string,
   patch: Partial<PropisDocument>
-): PropisDocument | null {
-  const docs = listPropisDocuments(projectId);
+): Promise<PropisDocument | null> {
+  const docs = await listPropisDocuments(projectId);
   const idx = docs.findIndex((d) => d.id === docId);
   if (idx < 0) return null;
 
@@ -252,15 +375,15 @@ export function updatePropisDocument(
     projectId,
     updatedAt: now,
   };
-  savePropisDocuments(projectId, docs);
+  await savePropisDocuments(projectId, docs);
   return docs[idx];
 }
 
-export function deletePropisDocument(projectId: string, docId: string): boolean {
-  const docs = listPropisDocuments(projectId);
+export async function deletePropisDocument(projectId: string, docId: string): Promise<boolean> {
+  const docs = await listPropisDocuments(projectId);
   const next = docs.filter((d) => d.id !== docId);
   if (next.length === docs.length) return false;
-  savePropisDocuments(projectId, next);
+  await savePropisDocuments(projectId, next);
   return true;
 }
 
@@ -268,95 +391,131 @@ export function deletePropisDocument(projectId: string, docId: string): boolean 
 // PRIMJEDBE (FAZA 2)
 // ============================================================================
 
-export function listPrimjedbe(projectId: string): PrimjedbaItem[] {
-  const file = path.join(projectDir(projectId), 'primjedbe.json');
-  return readJsonSafe<PrimjedbaItem[]>(file, []);
+export async function listPrimjedbe(projectId: string): Promise<PrimjedbaItem[]> {
+  const sid = safeId(projectId);
+  return readStore<PrimjedbaItem[]>(
+    `IZRADA_PROPISA_PRIMJEDBE_${sid}`,
+    path.join(projectDir(projectId), 'primjedbe.json'),
+    []
+  );
 }
 
-export function savePrimjedbe(projectId: string, items: PrimjedbaItem[]) {
-  const file = path.join(projectDir(projectId), 'primjedbe.json');
-  writeJsonSafe(file, items);
-  touchProject(projectId);
+export async function savePrimjedbe(projectId: string, items: PrimjedbaItem[]) {
+  const sid = safeId(projectId);
+  await writeStore(
+    `IZRADA_PROPISA_PRIMJEDBE_${sid}`,
+    path.join(projectDir(projectId), 'primjedbe.json'),
+    items
+  );
+  await touchProject(projectId);
 }
 
 // ============================================================================
 // STRESS-TEST IZVJEŠĆA (FAZA 3)
 // ============================================================================
 
-export function listStressTests(projectId: string): StressTestReport[] {
-  const file = path.join(projectDir(projectId), 'stress-tests.json');
-  return readJsonSafe<StressTestReport[]>(file, []);
+export async function listStressTests(projectId: string): Promise<StressTestReport[]> {
+  const sid = safeId(projectId);
+  return readStore<StressTestReport[]>(
+    `IZRADA_PROPISA_STRESS_${sid}`,
+    path.join(projectDir(projectId), 'stress-tests.json'),
+    []
+  );
 }
 
-export function saveStressTests(projectId: string, reports: StressTestReport[]) {
-  const file = path.join(projectDir(projectId), 'stress-tests.json');
-  writeJsonSafe(file, reports);
-  touchProject(projectId);
+export async function saveStressTests(projectId: string, reports: StressTestReport[]) {
+  const sid = safeId(projectId);
+  await writeStore(
+    `IZRADA_PROPISA_STRESS_${sid}`,
+    path.join(projectDir(projectId), 'stress-tests.json'),
+    reports
+  );
+  await touchProject(projectId);
 }
 
 // ============================================================================
-// GENERIRANI AKTI: OBRAZLOŽENJE, FACTSHEET, PODLOGA (FAZA 3)
+// GENERIRANI AKTI (FAZA 3)
 // ============================================================================
 
-export function listDeliverables(projectId: string): DeliverableRecord[] {
-  const file = path.join(projectDir(projectId), 'deliverables.json');
-  return readJsonSafe<DeliverableRecord[]>(file, []);
+export async function listDeliverables(projectId: string): Promise<DeliverableRecord[]> {
+  const sid = safeId(projectId);
+  return readStore<DeliverableRecord[]>(
+    `IZRADA_PROPISA_DELIVERABLES_${sid}`,
+    path.join(projectDir(projectId), 'deliverables.json'),
+    []
+  );
 }
 
-export function saveDeliverables(projectId: string, records: DeliverableRecord[]) {
-  const file = path.join(projectDir(projectId), 'deliverables.json');
-  writeJsonSafe(file, records);
-  touchProject(projectId);
+export async function saveDeliverables(projectId: string, records: DeliverableRecord[]) {
+  const sid = safeId(projectId);
+  await writeStore(
+    `IZRADA_PROPISA_DELIVERABLES_${sid}`,
+    path.join(projectDir(projectId), 'deliverables.json'),
+    records
+  );
+  await touchProject(projectId);
 }
 
 // ============================================================================
 // POVIJEST AI CHATA PO PROJEKTU (FAZA 1)
 // ============================================================================
 
-export function readPropisChatHistory(projectId: string): LegalUIMessage[] {
-  const file = path.join(projectDir(projectId), 'chat.json');
-  return readJsonSafe<LegalUIMessage[]>(file, []);
+export async function readPropisChatHistory(projectId: string): Promise<LegalUIMessage[]> {
+  const sid = safeId(projectId);
+  return readStore<LegalUIMessage[]>(
+    `IZRADA_PROPISA_CHAT_${sid}`,
+    path.join(projectDir(projectId), 'chat.json'),
+    []
+  );
 }
 
-export function writePropisChatHistory(projectId: string, messages: LegalUIMessage[]) {
-  const file = path.join(projectDir(projectId), 'chat.json');
-  writeJsonSafe(file, messages);
+export async function writePropisChatHistory(projectId: string, messages: LegalUIMessage[]) {
+  const sid = safeId(projectId);
+  await writeStore(
+    `IZRADA_PROPISA_CHAT_${sid}`,
+    path.join(projectDir(projectId), 'chat.json'),
+    messages
+  );
 }
 
 // ============================================================================
 // SAŽETAK SVIH PROJEKATA ZA POČETNI PREGLED
 // ============================================================================
 
-export function listPropisProjectSummaries(): PropisProjectSummary[] {
-  const projects = listPropisProjects();
-  return projects.map((p) => {
-    const docs = listPropisDocuments(p.id);
-    const primjedbe = listPrimjedbe(p.id);
-    const stressTests = listStressTests(p.id);
-    const deliverables = listDeliverables(p.id);
+export async function listPropisProjectSummaries(): Promise<PropisProjectSummary[]> {
+  const projects = await listPropisProjects();
+  return Promise.all(
+    projects.map(async (p) => {
+      const [docs, primjedbe, stressTests, deliverables] = await Promise.all([
+        listPropisDocuments(p.id),
+        listPrimjedbe(p.id),
+        listStressTests(p.id),
+        listDeliverables(p.id),
+      ]);
 
-    const roleCounts: Record<PropisDocRole, number> = {
-      aktualni_nacrt: 0,
-      prethodna_verzija: 0,
-      misljenje: 0,
-      zapisnik: 0,
-      excel_tarife: 0,
-      popratni_akt: 0,
-    };
+      const roleCounts: Record<PropisDocRole, number> = {
+        aktualni_nacrt: 0,
+        prethodna_verzija: 0,
+        misljenje: 0,
+        zapisnik: 0,
+        excel_tarife: 0,
+        popratni_akt: 0,
+      };
 
-    for (const d of docs) {
-      roleCounts[d.uloga] = (roleCounts[d.uloga] || 0) + 1;
-    }
+      for (const d of docs) {
+        roleCounts[d.uloga] = (roleCounts[d.uloga] || 0) + 1;
+      }
 
-    return {
-      ...p,
-      docCount: docs.length,
-      roleCounts,
-      primjedbeCount: primjedbe.length,
-      nerijesenePrimjedbeCount: primjedbe.filter((x) => x.status === 'Na razmatranju').length,
-      hasAktualniNacrt: roleCounts.aktualni_nacrt > 0,
-      stressTestsCount: stressTests.length,
-      deliverablesCount: deliverables.length,
-    };
-  });
+      return {
+        ...p,
+        docCount: docs.length,
+        roleCounts,
+        primjedbeCount: primjedbe.length,
+        nerijesenePrimjedbeCount: primjedbe.filter((x) => x.status === 'Na razmatranju').length,
+        hasAktualniNacrt: roleCounts.aktualni_nacrt > 0,
+        stressTestsCount: stressTests.length,
+        deliverablesCount: deliverables.length,
+      };
+    })
+  );
 }

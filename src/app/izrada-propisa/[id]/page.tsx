@@ -19,16 +19,19 @@ export default async function IzradaPropisaProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = getPropisProject(id);
+  const project = await getPropisProject(id);
   if (!project) {
     notFound();
   }
 
-  const documents = listPropisDocuments(id);
-  const primjedbe = listPrimjedbe(id);
-  const stressTests = listStressTests(id);
-  const deliverables = listDeliverables(id);
-  const initialChatMessages = readPropisChatHistory(id);
+  const [documents, primjedbe, stressTests, deliverables, initialChatMessages] =
+    await Promise.all([
+      listPropisDocuments(id),
+      listPrimjedbe(id),
+      listStressTests(id),
+      listDeliverables(id),
+      readPropisChatHistory(id),
+    ]);
 
   let praksaCount = 0;
   try {

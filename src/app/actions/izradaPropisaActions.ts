@@ -39,14 +39,19 @@ import type { LegalUIMessage } from '@/lib/ai-types';
 
 const RAW_UPLOADS_BASE = path.join(process.cwd(), 'data', 'izrada-propisa');
 
-function saveRawUploadForOcr(projectId: string, fileName: string, buffer: Buffer): string {
-  const safeProj = projectId.replace(/[^a-zA-Z0-9_-]/g, '');
-  const dir = path.join(RAW_UPLOADS_BASE, safeProj, 'raw_uploads');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80)}`;
-  const fullPath = path.join(dir, safeName);
-  fs.writeFileSync(fullPath, buffer);
-  return fullPath;
+function saveRawUploadForOcr(projectId: string, fileName: string, buffer: Buffer): string | undefined {
+  try {
+    const safeProj = projectId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const dir = path.join(RAW_UPLOADS_BASE, safeProj, 'raw_uploads');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80)}`;
+    const fullPath = path.join(dir, safeName);
+    fs.writeFileSync(fullPath, buffer);
+    return fullPath;
+  } catch {
+    // Na Vercelu je filesystem read-only (EROFS) — tekst je već parsiran i pohranjen u Supabaseu
+    return undefined;
+  }
 }
 
 export async function listProjectsAction() {
@@ -70,7 +75,7 @@ export async function createPropisProjectAction(input: {
     return { error: 'Naziv projekta je obavezan.' };
   }
   try {
-    const project = createPropisProject(input);
+    const project = await createPropisProject(input);
     revalidatePath('/izrada-propisa');
     return { success: true, project };
   } catch (err: any) {
@@ -94,9 +99,9 @@ export async function updatePropisProjectAction(
     opis?: string;
   }
 ) {
-  const existing = getPropisProject(projectId);
+  const existing = await getPropisProject(projectId);
   if (!existing) return { error: 'Projekt nije pronađen.' };
-  const updated = savePropisProject({
+  const updated = await savePropisProject({
     ...existing,
     ...patch,
     id: existing.id,
@@ -107,7 +112,7 @@ export async function updatePropisProjectAction(
 }
 
 export async function deletePropisProjectAction(projectId: string) {
-  const ok = deletePropisProject(projectId);
+  const ok = await deletePropisProject(projectId);
   if (!ok) return { error: 'Projekt nije pronađen.' };
   revalidatePath('/izrada-propisa');
   return { success: true };
@@ -150,7 +155,6 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
 
       let savedRawPath: string | undefined;
       if (parsed.needsOcr || ext === 'docx') {
-        // Spremamo sirovi upload za skenirane PDF-ove (opcionalni kasniji OCR) ili .docx (lokalni uvoz Word tablice primjedbi)
         savedRawPath = saveRawUploadForOcr(projectId, file.name, buffer);
       }
 
@@ -161,7 +165,7 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
       const detectedDate = customDate || autoCls.date || extractDateFromFileName(file.name);
 
       const roleMeta = PROPIS_DOC_ROLE_MAP[role];
-      const doc = addPropisDocument(projectId, {
+      const doc = await addPropisDocument(projectId, {
         naziv: file.name,
         prikazniNaziv: file.name.replace(/\.[^.]+$/, ''),
         uloga: role,
@@ -208,7 +212,7 @@ export async function scanProjectLocalFolderAction(
   entries: LocalFolderScanEntry[];
   error?: string;
 }> {
-  const project = getPropisProject(projectId);
+  const project = await getPropisProject(projectId);
   if (!project) {
     return { folderPath: '', exists: false, entries: [], error: 'Projekt nije pronađen.' };
   }
@@ -223,21 +227,22 @@ export async function scanProjectLocalFolderAction(
     };
   }
 
-  if (!fs.existsSync(targetPath)) {
+  if (process.env.VERCEL || !fs.existsSync(targetPath)) {
     return {
       folderPath: targetPath,
       exists: false,
       entries: [],
-      error: `Mapa ne postoji ili nije dostupna na ovom računalu: ${targetPath}`,
+      error: process.env.VERCEL
+        ? 'Izravno skeniranje lokalne OneDrive mape dostupno je kad aplikaciju pokrenete lokalno (localhost). Na web verziji (Vercel) jednostavno povucite datoteke u polje za prijenos — sve učitano automatski se sinkronizira preko baze na oba okruženja!'
+        : `Mapa ne postoji ili nije dostupna na ovom računalu: ${targetPath}`,
     };
   }
 
-  // Ako je korisnik unio novu putanju, spremi je na projekt
   if (overridePath && overridePath.trim() && overridePath.trim() !== project.referentnaMapa) {
-    savePropisProject({ ...project, referentnaMapa: overridePath.trim() });
+    await savePropisProject({ ...project, referentnaMapa: overridePath.trim() });
   }
 
-  const existingDocs = listPropisDocuments(projectId);
+  const existingDocs = await listPropisDocuments(projectId);
   const importedPaths = new Set(
     existingDocs
       .map((d) => d.lokalnaPutanja?.toLowerCase())
@@ -268,14 +273,13 @@ export async function importFromLocalFolderAction(
     return { error: 'Niste odabrali nijednu datoteku za uvoz.' };
   }
 
-  const existingDocs = listPropisDocuments(projectId);
+  const existingDocs = await listPropisDocuments(projectId);
   const importedSet = new Set(
     existingDocs
       .map((d) => d.lokalnaPutanja?.toLowerCase())
       .filter((p): p is string => Boolean(p))
   );
 
-  // Sortiraj tako da `aktualni_nacrt` ide zadnji kako bi sigurno ostao glavni aktivni nacrt
   const ordered = [...selections].sort((a, b) => {
     if (a.uloga === 'aktualni_nacrt' && b.uloga !== 'aktualni_nacrt') return 1;
     if (b.uloga === 'aktualni_nacrt' && a.uloga !== 'aktualni_nacrt') return -1;
@@ -310,7 +314,7 @@ export async function importFromLocalFolderAction(
       const detectedDate = sel.datumVerzije || extractDateFromFileName(fileName);
       const roleMeta = PROPIS_DOC_ROLE_MAP[sel.uloga];
 
-      const doc = addPropisDocument(projectId, {
+      const doc = await addPropisDocument(projectId, {
         naziv: fileName,
         prikazniNaziv: fileName.replace(/\.[^.]+$/, ''),
         uloga: sel.uloga,
@@ -361,7 +365,7 @@ export async function updatePropisDocumentAction(
     biljeska?: string;
   }
 ) {
-  const docs = listPropisDocuments(projectId);
+  const docs = await listPropisDocuments(projectId);
   const existing = docs.find((d) => d.id === docId);
   if (!existing) return { error: 'Dokument nije pronađen.' };
 
@@ -378,7 +382,7 @@ export async function updatePropisDocumentAction(
     parsedDraft = candidate.clanci.length > 0 || candidate.preambula.length > 0 ? candidate : undefined;
   }
 
-  const updated = updatePropisDocument(projectId, docId, {
+  const updated = await updatePropisDocument(projectId, docId, {
     ...patch,
     parsedDraft,
     izvorTeksta: textEdited ? 'rucno_uredeno' : existing.izvorTeksta,
@@ -391,7 +395,7 @@ export async function updatePropisDocumentAction(
 }
 
 export async function deletePropisDocumentAction(projectId: string, docId: string) {
-  const ok = deletePropisDocument(projectId, docId);
+  const ok = await deletePropisDocument(projectId, docId);
   if (!ok) return { error: 'Dokument nije pronađen.' };
   revalidatePath('/izrada-propisa');
   revalidatePath(`/izrada-propisa/${projectId}`);
@@ -402,11 +406,14 @@ export async function deletePropisDocumentAction(projectId: string, docId: strin
  * Opcionalni RUČNI AI OCR — pokreće se ISKLJUČIVO na izričit klik korisnika za skenirane PDF-ove bez tekstualnog sloja.
  */
 export async function runManualOcrOnPropisDocAction(projectId: string, docId: string) {
-  const docs = listPropisDocuments(projectId);
+  const docs = await listPropisDocuments(projectId);
   const doc = docs.find((d) => d.id === docId);
   if (!doc) return { error: 'Dokument nije pronađen.' };
   if (!doc.lokalnaPutanja || !fs.existsSync(doc.lokalnaPutanja)) {
-    return { error: 'Izvorna PDF datoteka nije dostupna na disku za AI OCR.' };
+    return {
+      error:
+        'Izvorna PDF datoteka nije dostupna na lokalnom disku za naknadni AI OCR (pokrenite lokalno ili zalijepite tekst ručno).',
+    };
   }
 
   try {
@@ -434,7 +441,7 @@ export async function runManualOcrOnPropisDocAction(projectId: string, docId: st
         ? parseNormativeDraft(clean)
         : doc.parsedDraft;
 
-    const updated = updatePropisDocument(projectId, docId, {
+    const updated = await updatePropisDocument(projectId, docId, {
       rawText: clean,
       izvorTeksta: 'rucni_ai_ocr',
       needsOcr: false,
@@ -455,7 +462,7 @@ export async function getPropisChatHistoryAction(projectId: string): Promise<Leg
 
 export async function savePropisChatHistoryAction(projectId: string, messages: LegalUIMessage[]) {
   try {
-    writePropisChatHistory(projectId, messages);
+    await writePropisChatHistory(projectId, messages);
     return { success: true };
   } catch (err: any) {
     return { error: err?.message || 'Greška pri spremanju razgovora.' };
@@ -463,6 +470,6 @@ export async function savePropisChatHistoryAction(projectId: string, messages: L
 }
 
 export async function clearPropisChatHistoryAction(projectId: string) {
-  writePropisChatHistory(projectId, []);
+  await writePropisChatHistory(projectId, []);
   return { success: true };
 }

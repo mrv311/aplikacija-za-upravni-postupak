@@ -92,10 +92,13 @@ export async function runStressTestAction(params: {
   draftDocId?: string;
   modelPreference?: 'flash' | 'pro';
 }) {
-  const project = getPropisProject(params.projectId);
+  const project = await getPropisProject(params.projectId);
   if (!project) return { error: 'Projekt nije pronađen.' };
 
-  const docs = listPropisDocuments(params.projectId);
+  const [docs, primjedbe] = await Promise.all([
+    listPropisDocuments(params.projectId),
+    listPrimjedbe(params.projectId),
+  ]);
   const draftDoc =
     (params.draftDocId ? docs.find((d) => d.id === params.draftDocId) : undefined) ||
     docs.find((d) => d.uloga === 'aktualni_nacrt') ||
@@ -106,7 +109,6 @@ export async function runStressTestAction(params: {
   }
 
   const excelDocs = docs.filter((d) => d.uloga === 'excel_tarife');
-  const primjedbe = listPrimjedbe(params.projectId);
   const localFindings = runLocalStressChecks(draftDoc, excelDocs);
 
   const aiModelName =
@@ -273,9 +275,9 @@ ${openPrimjedbeSnippet ? `OTVORENE / ODBIJENE PRIMJEDBE TDU-a:\n${openPrimjedbeS
       referencedZakoni: mergedZakoni.map((z) => `${z.clanak_broj} (${z.naziv_zakona})`),
     };
 
-    const existing = listStressTests(params.projectId);
+    const existing = await listStressTests(params.projectId);
     const updated = [report, ...existing].slice(0, 15);
-    saveStressTests(params.projectId, updated);
+    await saveStressTests(params.projectId, updated);
     revalidatePath(`/izrada-propisa/${params.projectId}`);
 
     return { success: true, report, reports: updated };
@@ -295,10 +297,13 @@ export async function generateDeliverableAction(params: {
   customInstructions?: string;
   modelPreference?: 'flash' | 'pro';
 }) {
-  const project = getPropisProject(params.projectId);
+  const project = await getPropisProject(params.projectId);
   if (!project) return { error: 'Projekt nije pronađen.' };
 
-  const docs = listPropisDocuments(params.projectId);
+  const [docs, primjedbe] = await Promise.all([
+    listPropisDocuments(params.projectId),
+    listPrimjedbe(params.projectId),
+  ]);
   const aktualniNacrt =
     docs.find((d) => d.uloga === 'aktualni_nacrt') ||
     docs.find((d) => d.uloga === 'prethodna_verzija');
@@ -310,7 +315,6 @@ export async function generateDeliverableAction(params: {
   const excelDocs = docs.filter((d) => d.uloga === 'excel_tarife');
   const zapisnici = docs.filter((d) => d.uloga === 'zapisnik');
   const popratni = docs.filter((d) => d.uloga === 'popratni_akt' && d.includeInAiContext);
-  const primjedbe = listPrimjedbe(params.projectId);
 
   const aiModelName =
     params.modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
@@ -476,9 +480,9 @@ ${primjedbeStats}`,
       };
     }
 
-    const existing = listDeliverables(params.projectId).filter((r) => r.type !== params.type);
+    const existing = (await listDeliverables(params.projectId)).filter((r) => r.type !== params.type);
     const updated = [record, ...existing];
-    saveDeliverables(params.projectId, updated);
+    await saveDeliverables(params.projectId, updated);
     revalidatePath(`/izrada-propisa/${params.projectId}`);
 
     return { success: true, record, deliverables: updated };
@@ -492,13 +496,13 @@ export async function saveDeliverableAction(
   projectId: string,
   record: DeliverableRecord
 ) {
-  const existing = listDeliverables(projectId).filter((r) => r.type !== record.type);
+  const existing = (await listDeliverables(projectId)).filter((r) => r.type !== record.type);
   const next: DeliverableRecord = {
     ...record,
     updatedAt: new Date().toISOString(),
   };
   const updated = [next, ...existing];
-  saveDeliverables(projectId, updated);
+  await saveDeliverables(projectId, updated);
   revalidatePath(`/izrada-propisa/${projectId}`);
   return { success: true, record: next, deliverables: updated };
 }

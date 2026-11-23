@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Nedostaje ID projekta propisa.' }, { status: 400 });
     }
 
-    const project = getPropisProject(projectId);
+    const project = await getPropisProject(projectId);
     if (!project) {
       return Response.json({ error: 'Projekt propisa nije pronađen.' }, { status: 404 });
     }
@@ -129,8 +129,10 @@ export async function POST(req: Request) {
     const aiModelName = modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
     const modelMessages = await convertToModelMessages(messages);
 
-    const docs = listPropisDocuments(projectId);
-    const primjedbe = listPrimjedbe(projectId);
+    const [docs, primjedbe] = await Promise.all([
+      listPropisDocuments(projectId),
+      listPrimjedbe(projectId),
+    ]);
     const aktualniNacrt = docs.find((d) => d.uloga === 'aktualni_nacrt');
     const { contextText, includedDocNames } = buildProjectDocumentsContext(docs);
 

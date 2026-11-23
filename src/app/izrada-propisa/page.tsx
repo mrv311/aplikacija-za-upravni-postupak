@@ -6,7 +6,7 @@ import { PropisProjectsClient } from '@/components/izrada-propisa/PropisProjects
 export const dynamic = 'force-dynamic';
 
 export default async function IzradaPropisaPage() {
-  const projects = listPropisProjectSummaries();
+  const projects = await listPropisProjectSummaries();
   let praksaCount = 0;
   try {
     const catalog = await getPraksaCatalog();
