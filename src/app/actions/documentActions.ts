@@ -18,6 +18,7 @@ import {
   normalizeDateToIso,
   isKosuljicaRole,
   mergeKosuljicaNote,
+  getPodrucjePraksaCategory,
   type IzvorTekstaTip,
   type PredmetExtendedMeta,
   type PredmetPodrucje,
@@ -598,13 +599,6 @@ export async function deleteDocument(id: string, storageUrl: string) {
   }
 }
 
-const PODRUCJE_FULL_NAME: Record<string, string> = {
-  NUV: 'Naknada za uređenje voda',
-  VD: 'Vodni doprinos',
-  NZZV: 'Naknada za zaštitu voda',
-  Ostalo: 'Upravni postupak',
-};
-
 function chunkPraksaText(text: string, maxSize = 1400, overlap = 200): string[] {
   const clean = text.replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').trim();
   if (clean.length <= maxSize) return [clean];
@@ -709,7 +703,7 @@ Pravila anonimizacije:
     }
 
     const year = params.godina || new Date().getFullYear().toString();
-    const catFull = PODRUCJE_FULL_NAME[params.podrucje] || 'Naknada za uređenje voda';
+    const catFull = getPodrucjePraksaCategory(params.podrucje);
     const party = (parsed.anonymizedParty || 'N. N.').trim();
     const loc = (parsed.location || '').trim();
     const ishodShort =

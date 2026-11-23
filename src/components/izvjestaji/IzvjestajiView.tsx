@@ -28,7 +28,16 @@ import {
   Stamp,
   UserCheck,
 } from 'lucide-react';
-import { getInitials, type EnrichedPredmet, type Sluzbenik } from '@/lib/predmet-meta';
+import {
+  getInitials,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
+  VALID_PODRUCJE_VALUES,
+  type EnrichedPredmet,
+  type Sluzbenik,
+} from '@/lib/predmet-meta';
+import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
 import {
   type ReportFilters,
   type ReportPeriodPreset,
@@ -73,13 +82,14 @@ export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }:
   const [aiError, setAiError] = useState<string | null>(null);
   const [copiedAi, setCopiedAi] = useState(false);
 
-  // Dinamičko pronalaženje svih postojećih područja u podacima (tako da automatski podržava i sve buduće postupke)
-  const availablePodrucja = useMemo(() => {
-    const set = new Set<string>(['NUV', 'VD', 'NZZV', 'Ostalo']);
+  // Eventualna prilagođena područja iz starijih zapisa izvan standardnog kataloga
+  const extraPodrucja = useMemo(() => {
+    const known = new Set<string>(VALID_PODRUCJE_VALUES.map((v) => v.toUpperCase()));
+    const extras = new Set<string>();
     for (const p of initialPredmeti) {
-      if (p.podrucje) set.add(p.podrucje);
+      if (p.podrucje && !known.has(p.podrucje.toUpperCase())) extras.add(p.podrucje);
     }
-    return Array.from(set);
+    return Array.from(extras);
   }, [initialPredmeti]);
 
   // Dinamičko pronalaženje svih službenika iz popisa i iz predmeta
@@ -394,11 +404,16 @@ export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }:
               className="w-full text-xs font-medium px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="Sva">Sva upravna područja</option>
-              {availablePodrucja.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
+              <PodrucjeSelectOptions />
+              {extraPodrucja.length > 0 && (
+                <optgroup label="Ostale zatečene oznake">
+                  {extraPodrucja.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 
@@ -778,7 +793,7 @@ export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }:
                 <div key={item.podrucje} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {item.podrucje}
+                      {getPodrucjeFullLabel(item.podrucje)}
                     </span>
                     <span className="text-slate-500 dark:text-slate-400">
                       <strong className="text-slate-900 dark:text-slate-100">{item.count}</strong>{' '}
@@ -1033,8 +1048,13 @@ export default function IzvjestajiView({ initialPredmeti, initialSporovi = [] }:
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-md font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                          {p.podrucje || 'Ostalo'}
+                        <span
+                          title={getPodrucjeFullLabel(p.podrucje)}
+                          className={`px-2 py-0.5 rounded-md font-semibold text-[11px] border whitespace-nowrap ${getPodrucjeBadgeClass(
+                            p.podrucje
+                          )}`}
+                        >
+                          {getPodrucjeLabel(p.podrucje)}
                         </span>
                       </td>
 

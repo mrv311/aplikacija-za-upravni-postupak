@@ -1,4 +1,4 @@
-import type { EnrichedPredmet, PredmetPodrucje, PredmetIshod } from './predmet-meta';
+import { getPodrucjeFullLabel, type EnrichedPredmet, type PredmetPodrucje, type PredmetIshod } from './predmet-meta';
 
 export type ReportPeriodPreset =
   | 'ova-godina'
@@ -577,7 +577,7 @@ export function exportReportToCsv(predmeti: EnrichedPredmet[], filename?: string
       escapeCsv(p.klasa),
       escapeCsv(p.urbroj),
       escapeCsv(p.stranka),
-      escapeCsv(p.podrucje || 'Ostalo'),
+      escapeCsv(getPodrucjeFullLabel(p.podrucje)),
       escapeCsv(p.sluzbenik_ime || 'Neraspoređeno / U mom radu'),
       escapeCsv(datumDodjeleStr),
       escapeCsv(p.status === 'arhiviran' ? 'Arhiviran (A/A)' : 'Aktivan u radu'),

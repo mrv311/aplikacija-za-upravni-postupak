@@ -1200,7 +1200,11 @@ export function AiPanel({
                                 className="rounded border-slate-300 text-blue-600 cursor-pointer shrink-0"
                               />
                               <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0">
-                                {p.vrsta === 'Sudska presuda' ? 'Presuda' : 'II. st.'}
+                                {p.vrsta === 'Sudska presuda'
+                                  ? 'Presuda'
+                                  : p.vrsta === 'Mišljenje / Naputak'
+                                  ? 'Mišljenje'
+                                  : 'II. st.'}
                               </span>
                               <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                                 {p.kratkiNaziv}

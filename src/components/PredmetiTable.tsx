@@ -38,17 +38,20 @@ import {
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
-  PREDMET_PODRUCJA,
   PREDMET_FAZE,
   PREDMET_ISHODI,
   calculateZupDeadline,
   formatIsoDateHr,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from './StatusBadge';
 import { SluzbeniciModal } from './SluzbeniciModal';
 import { ParafiranjeModal } from './ParafiranjeModal';
 import { NadlezniPostupakModal } from './NadlezniPostupakModal';
 import { ObradjivacParafCell, useSluzbeniciList } from './ObradjivacParafCell';
+import { PodrucjeSelectOptions } from './PodrucjeSelectOptions';
 
 export { getStatusBadge };
 export type Predmet = EnrichedPredmet;
@@ -549,11 +552,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
             className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="sve">Sva područja</option>
-            {PREDMET_PODRUCJA.map((p) => (
-              <option key={p.value} value={p.value}>
-                Područje: {p.label}
-              </option>
-            ))}
+            <PodrucjeSelectOptions labelMode="full" />
           </select>
 
           {type === 'aktivni' ? (
@@ -727,8 +726,13 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           >
                             {predmet.klasa}
                           </Link>
-                          <span className="text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded bg-blue-50/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/70">
-                            {predmet.podrucje}
+                          <span
+                            title={getPodrucjeFullLabel(predmet.podrucje)}
+                            className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded border ${getPodrucjeBadgeClass(
+                              predmet.podrucje
+                            )}`}
+                          >
+                            {getPodrucjeLabel(predmet.podrucje)}
                           </span>
                         </div>
                         {predmet.urbroj && (
@@ -1081,11 +1085,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                   >
-                    {PREDMET_PODRUCJA.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.fullLabel}
-                      </option>
-                    ))}
+                    <PodrucjeSelectOptions />
                   </select>
                 </div>
 

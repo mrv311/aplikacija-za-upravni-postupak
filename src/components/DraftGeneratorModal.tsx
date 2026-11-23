@@ -569,6 +569,11 @@ export function DraftGeneratorModal({
             label: 'Odgovor na tužbu',
             cls: 'bg-amber-50 text-amber-700 border-amber-200',
           }
+        : p.vrsta === 'Mišljenje / Naputak'
+        ? {
+            label: 'Mišljenje / Naputak',
+            cls: 'bg-teal-50 text-teal-700 border-teal-200',
+          }
         : {
             label: 'Vaše II. st. rješenje',
             cls: 'bg-sky-50 text-sky-700 border-sky-200',

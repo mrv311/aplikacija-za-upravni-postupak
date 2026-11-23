@@ -39,6 +39,13 @@ function getVrstaPrakseBadge(vrsta: RagPraksaSource['vrsta']): {
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
     };
   }
+  if (vrsta === 'Mišljenje / Naputak') {
+    return {
+      label: 'Pravno mišljenje / Naputak (neupravno)',
+      shortLabel: 'Mišljenje / Naputak',
+      badgeClass: 'bg-teal-50 text-teal-700 border-teal-200',
+    };
+  }
   return {
     label: 'Vaše drugostupanjsko rješenje',
     shortLabel: 'Vaše rješenje (II. st.)',

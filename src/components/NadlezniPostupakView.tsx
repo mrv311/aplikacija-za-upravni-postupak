@@ -19,6 +19,9 @@ import {
 import {
   calculateZupDeadline,
   formatIsoDateHr,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
   type EnrichedPredmet,
   type NadlezniPostupakStatus,
 } from '@/lib/predmet-meta';
@@ -367,8 +370,13 @@ export function NadlezniPostupakView({ predmeti }: NadlezniPostupakViewProps) {
                           >
                             {predmet.klasa}
                           </Link>
-                          <span className="text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {predmet.podrucje}
+                          <span
+                            title={getPodrucjeFullLabel(predmet.podrucje)}
+                            className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded border ${getPodrucjeBadgeClass(
+                              predmet.podrucje
+                            )}`}
+                          >
+                            {getPodrucjeLabel(predmet.podrucje)}
                           </span>
                         </div>
                         {predmet.napomena && (

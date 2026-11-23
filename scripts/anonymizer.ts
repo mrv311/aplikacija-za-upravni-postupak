@@ -19,6 +19,7 @@ export interface AnonymizedResult {
   location: string;
   ishod: 'Poništeno rješenje' | 'Odbijena žalba' | 'Ostalo';
   storedName: string;
+  usedFallback?: boolean;
 }
 
 export async function anonymizeDocument(
@@ -57,11 +58,13 @@ Tvoj zadatak je anonimizirati ovaj upravni akt / presudu po ovim pravilima:
 5. PRAVNI MERITUM:
    - Zadrži sve članke zakona, obrazloženje, iznose i pravne stavove netaknutima.
 6. ISHOD:
-   - Odredi ishod postupka: "Poništeno rješenje" (ako je žalba uvažena/rješenje poništeno), "Odbijena žalba" (ako je žalba odbijena ili odbačena) ili "Ostalo".
+   - Odredi ishod postupka: "Poništeno rješenje" (ako je žalba uvažena/rješenje poništeno), "Odbijena žalba" (ako je žalba odbijena ili odbačena) ili "Ostalo" (za neupravna mišljenja, naputke, obavijesti, potvrde, zaključke o obustavi i sl.).
+7. NEUPRAVNI AKTI / MIŠLJENJA / NAPUTCI:
+   - Ako je dokument pravno mišljenje, provedbeni naputak, očitovanje ili opći dopis bez privatne fizičke osobe kao stranke (npr. kategorija "${categoryTag}"), u "anonymizedParty" upiši kratki opisni naslov teme (npr. "Provedbeni naputak - vodni doprinos", "Zakon o zadrugama - mišljenje", "HEP - mišljenje"), pritom i dalje strogo anonimizirajući osobna imena fizičkih osoba i nazive privatnih društava.
 
 Vrati JSON:
 {
-  "anonymizedParty": "Inicijali stranke (npr. 'M. M.' ili 'G. H. d.o.o.')",
+  "anonymizedParty": "Inicijali stranke (npr. 'M. M.' ili 'G. H. d.o.o.') ili kratka tema za mišljenje/naputak",
   "location": "Grad/mjesto stranke ili nekretnine (npr. 'Zagreb', 'Split', 'Rijeka')",
   "ishod": "Poništeno rješenje" | "Odbijena žalba" | "Ostalo",
   "anonymizedText": "Cjelokupni anonimizirani tekst rješenja"
@@ -122,5 +125,6 @@ ${sanitized.substring(0, 45000)}`;
     location: '',
     ishod: 'Ostalo',
     storedName: `[${categoryTag} - ${year}] Anonimna stranka (#${fileId})`,
+    usedFallback: true,
   };
 }

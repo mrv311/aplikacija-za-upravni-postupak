@@ -21,6 +21,8 @@ import {
   SLUZBENICI_DOC_TYPE,
   decodeDocLabel,
   decodePredmetMetaUrl,
+  getPodrucjeFullLabel,
+  getPodrucjePraksaCategory,
   type PredmetIshod,
 } from '@/lib/predmet-meta';
 import {
@@ -42,7 +44,7 @@ export interface RecommendedPracticeItem {
   id: number;
   nazivDatoteke: string;
   kratkiNaziv: string;
-  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu';
+  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu' | 'Mišljenje / Naputak';
   podrucje: string;
   godina: string | null;
   ishod: string;
@@ -601,7 +603,7 @@ ${authenticBlueprintBlock}`;
     const userPrompt = `PODACI O NOVOM PREDMETU:
 Stranka: ${predmet.stranka}
 KLASA drugostupanjskog spisa: ${predmet.klasa}
-Upravno područje: ${predmet.podrucje}
+Upravno područje: ${getPodrucjeFullLabel(predmet.podrucje)} (${predmet.podrucje})
 ${predmet.napomena ? `Napomena o predmetu: ${predmet.napomena}` : ''}
 ${predmet.uputa_voditelja ? `Uputa voditelja: ${predmet.uputa_voditelja}` : ''}
 
@@ -1130,7 +1132,7 @@ export async function publishReviewedActToPraksa(payload: {
     const proposedTitle =
       naslov ||
       anonymizeRes.proposedTitle ||
-      `[${podrucje} - ${godina}] Rješenje - ${ishod.toLowerCase()}`;
+      `[${getPodrucjePraksaCategory(podrucje)} - ${godina}] Rješenje - ${ishod.toLowerCase()}`;
     const cleanAnonymizedText = anonymizeRes.anonymizedText || actText;
 
     // Korak 2: Upis u tablicu praksa

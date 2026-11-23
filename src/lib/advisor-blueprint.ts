@@ -1,3 +1,5 @@
+import { getPodrucjeMeta } from '@/lib/predmet-meta';
+
 /**
  * Autentična višegodišnja struktura, stil i frazeologija drugostupanjskih rješenja
  * sektorskog savjetnika (Dino Malbaša, dipl. iur.) — dijeli se između Generatora nacrta
@@ -58,16 +60,29 @@ export function buildAuthenticAdvisorStructurePrompt(opts: {
     podrucje = 'NUV',
   } = opts;
 
-  const upravnaStvar =
-    podrucje === 'VD'
-      ? 'obračuna vodnoga doprinosa'
-      : podrucje === 'NZZV'
-      ? 'obračuna naknade za zaštitu voda'
-      : 'obračuna naknade za uređenje voda';
+  const podrucjeMeta = getPodrucjeMeta(podrucje);
+  const upravnaStvar = podrucjeMeta?.upravnaStvarOpis || 'upravnog postupka';
+  const temeljniPropis = podrucjeMeta?.temeljniPropis || 'ZUP';
+
+  const uvodniTemelj =
+    temeljniPropis === 'ZFVG'
+      ? `na temelju članka 70. stavka 2. Zakona o financiranju vodnoga gospodarstva („Narodne novine“, broj: 153/09, 90/11, 56/13, 119/15, 120/16, 127/17, 66/19 i 36/24), povodom žalbe podnositelja [puni naziv/ime i prezime žalitelja, adresa (OIB: ...)], izjavljene protiv rješenja Hrvatskih voda u predmetu ${upravnaStvar}, donosi`
+      : temeljniPropis === 'ZOV'
+      ? `na temelju mjerodavne odredbe Zakona o vodama („Narodne novine“, broj: 66/19, 84/21 i 47/23) i Zakona o općem upravnom postupku („Narodne novine“, broj: 47/09 i 110/21) — točan članak nadležnosti preuzmi iz <zakoni> i priloženih oglednih rješenja ovog savjetnika — povodom žalbe podnositelja [puni naziv/ime i prezime žalitelja, adresa (OIB: ...)], izjavljene protiv rješenja prvostupanjskog tijela u predmetu ${upravnaStvar}, donosi`
+      : temeljniPropis === 'NEUPRAVNO'
+      ? `NAPOMENA: Ovo je NEUPRAVNI PREDMET (pravno mišljenje, očitovanje ili provedbeni naputak). NE piši formu upravnog rješenja ("R J E Š E N J E") niti uputu o pravnom lijeku, nego sastavi jasan, argumentiran službeni dopis / pravno mišljenje u stilu priloženih oglednih mišljenja Ministarstva.`
+      : `na temelju mjerodavne odredbe Zakona o općem upravnom postupku („Narodne novine“, broj: 47/09 i 110/21) i posebnog materijalnog zakona (točan članak preuzmi iz <zakoni> i priloženih oglednih rješenja savjetnika), u predmetu ${upravnaStvar}, donosi`;
+
+  const materijalniZakonHint =
+    temeljniPropis === 'ZFVG'
+      ? 'Zakon o financiranju vodnoga gospodarstva'
+      : temeljniPropis === 'ZOV'
+      ? 'Zakon o vodama'
+      : 'Zakon o općem upravnom postupku i mjerodavni posebni propis';
 
   return `OBVEZNA UNUTARNJA DVOFAZNA PRIPREMA PRIJE SASTAVLJANJA NACRTA RJEŠENJA (PRIJEDLOG 2 — TIHA ANALIZA):
 Prije nego što ispišeš prvu riječ nacrta rješenja, u svom procesu zaključivanja (bez ispisivanja internih bilješki izvan samog akta) obavezno provedi ove korake:
-1. IDENTIFIKACIJA ČINJENICA IZ SPISA: Iz <spis> točno utvrdi puni naziv i adresu žalitelja (i OIB), nadležni VGI/VGO Hrvatskih voda, točnu KLASU, URBROJ i datum pobijanog prvostupanjskog rješenja, predmet i iznos obveze (površinu u m², tarifni razred, jediničnu cijenu, k.č. i k.o.), datum dostave prvostupanjskog rješenja (iz dostavnice) te datum predaje žalbe.
+1. IDENTIFIKACIJA ČINJENICA IZ SPISA: Iz <spis> točno utvrdi puni naziv i adresu žalitelja (i OIB), nadležno prvostupanjsko tijelo (npr. VGI/VGO Hrvatskih voda ili drugo tijelo), točnu KLASU, URBROJ i datum pobijanog akta, bitne činjenice predmeta (${upravnaStvar}), datum dostave (iz dostavnice) te datum predaje žalbe/zahtjeva.
 2. TAKSATIVNO MAPIRANJE SVIH ŽALBENIH NAVODA: Popiši SVAKI pojedini prigovor kojeg žalitelj iznosi u žalbi (nijedan prigovor ne smije ostati neodgovoren jer to vodi poništenju u upravnom sporu zbog povrede čl. 98. st. 5. i čl. 115. ZUP-a).
 3. POVEZIVANJE S PROPISIMA I PRAKSOM: Za svaki pojedini žalbeni navod odaberi mjerodavni članak iz <zakoni> (ZUP, ZFVG, ZOV, OPZ, Uredba/Pravilnik) i odgovarajuću pravnu argumentaciju iz <praksa> i <ogledno_rjesenje> (uključujući i shvaćanja upravnih sudova / VUSRH te ranija drugostupanjska rješenja ovog savjetnika).
 
@@ -75,9 +90,9 @@ AUTENTIČNA VIŠEGODIŠNJA STRUKTURA I FRAZEOLOGIJA DRUGOSTUPANJSKIH RJEŠENJA O
 Svako drugostupanjsko rješenje MORA strogo pratiti ovu strukturu, redoslijed odlomaka i pravni izričaj (BEZ izmišljenih podnaslova tipa "I. Prikaz pobijanog rješenja", "II. Žalbeni navodi", "III. Ocjena", BEZ Markdown zvjezdica ** i ljestvi ###):
 
 1. UVOD (odmah na početku, bez zaglavlja/memoranduma jer ga generira uredski sustav):
-"Ministarstvo zaštite okoliša i zelene tranzicije (OIB: 59951999361), na temelju članka 70. stavka 2. Zakona o financiranju vodnoga gospodarstva („Narodne novine“, broj: 153/09, 90/11, 56/13, 119/15, 120/16, 127/17, 66/19 i 36/24), povodom žalbe podnositelja [puni naziv/ime i prezime žalitelja, adresa (OIB: ...)], izjavljene protiv rješenja Hrvatskih voda u predmetu ${upravnaStvar}, donosi"
+${temeljniPropis === 'NEUPRAVNO' ? uvodniTemelj : `"Ministarstvo zaštite okoliša i zelene tranzicije (OIB: 59951999361), ${uvodniTemelj}"`}
 
-2. НАСЛОВ IZREKE I IZREKA:
+2. NASLOV IZREKE I IZREKA:
 R J E Š E N J E
 
 - Ako se žalba ODBIJA (jedna točka bez broja 1.):
@@ -117,7 +132,7 @@ ${
   "Ovo drugostupanjsko tijelo ispitalo je zakonitost i ocijenilo svrhovitost pobijanog rješenja u granicama zahtjeva iz žalbe, pazeći po službenoj dužnosti na nadležnost i postojanje razloga za oglašivanje rješenja ništavim, sukladno članku 115. Zakona o općem upravnom postupku („Narodne novine“, broj: 47/09 i 110/21), a nakon detaljnog uvida u cjelokupni spis predmeta utvrđeno je da žalba nije osnovana." (odnosno kod poništavanja: "...utvrđeno je da je žalba osnovana.").
 
 - Odlomci 6+ (Pravna analiza, mjerodavno materijalno pravo i odgovor na SVAKI pojedini žalbeni navod):
-  * Započni izlaganjem mjerodavnih zakonskih odredbi točnim stilom savjetnika: "Naime, Zakon o financiranju vodnoga gospodarstva u članku ... propisuje da..."
+  * Započni izlaganjem mjerodavnih zakonskih odredbi točnim stilom savjetnika: "Naime, ${materijalniZakonHint} u članku ... propisuje da..."
   * Poveži s činjenicama utvrđenim u spisu: "Na temelju uvida u cjelokupni spis predmeta, nesporno je utvrđeno da..."
   * Zatim sustavno otkloni (ili kod poništavanja prihvati) svaki pojedini žalbeni prigovor koristeći prijelaze ovog savjetnika: "Što se tiče žalbenih navoda kojima žalitelj osporava..., valja istaći da...", "Nadalje...", "Prema ocjeni ovoga tijela...", "Slijedom navedenog, okolnost da ... nije od utjecaja na drugačije rješenje ove upravne stvari, budući da...".
   * OBAVEZNO preuzmi pravnu argumentaciju i pozivanje na srodna stajališta upravnih sudova / Visokog upravnog suda RH ako postoje u priloženim oglednim odlukama iz Baze prakse!

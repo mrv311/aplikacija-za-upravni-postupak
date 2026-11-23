@@ -42,14 +42,17 @@ import {
   type PredmetFaza,
   type PredmetIshod,
   type PredmetPodrucje,
-  PREDMET_PODRUCJA,
   PREDMET_FAZE,
   PREDMET_ISHODI,
   calculateZupDeadline,
   decodeDocLabel,
   formatIsoDateHr,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from '@/components/StatusBadge';
+import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
 
 export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) {
   const router = useRouter();
@@ -279,8 +282,13 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
         {/* Status & Područje */}
         {getStatusBadge(predmet.status)}
 
-        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-          {predmet.podrucje}
+        <span
+          title={getPodrucjeFullLabel(predmet.podrucje)}
+          className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getPodrucjeBadgeClass(
+            predmet.podrucje
+          )}`}
+        >
+          {getPodrucjeLabel(predmet.podrucje)}
         </span>
 
         {predmet.poslano_u_praksu && (
@@ -618,11 +626,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
                     onChange={(e) => setPodrucje(e.target.value as PredmetPodrucje)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                   >
-                    {PREDMET_PODRUCJA.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.fullLabel}
-                      </option>
-                    ))}
+                    <PodrucjeSelectOptions />
                   </select>
                 </div>
                 <div>

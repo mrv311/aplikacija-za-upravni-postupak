@@ -24,6 +24,7 @@ import {
   confirmPublishSudskaOdlukaAction,
   SudskaOdlukaPreviewResult,
 } from '@/app/actions/praksaActions';
+import { PREDMET_PODRUCJA } from '@/lib/predmet-meta';
 
 interface DodajOdlukuModalProps {
   isOpen: boolean;
@@ -42,20 +43,14 @@ const SUDSKA_TIJELA = [
   'Ostalo / Drugo tijelo',
 ];
 
-const KATEGORIJE_PRAKSE = [
-  'Troškovi postupka',
-  'Ostali upravni sporovi',
-  'Vodni doprinos',
-  'Naknada za uređenje voda',
-  'Naknada za zaštitu voda',
-  'Naknada za korištenje voda',
-  'Naknada za koncesiju',
-  'Poništavanje i ukidanje rješenja (ZUP)',
-  'Obnova postupka',
-  'Oglašavanje rješenja ništavim',
-  'Zakup javnog vodnog dobra',
-  'Akti po presudama',
-];
+const KATEGORIJE_PRAKSE = Array.from(
+  new Set([
+    'Troškovi postupka',
+    'Ostali upravni sporovi',
+    ...PREDMET_PODRUCJA.map((p) => p.praksaCategory),
+    'Akti po presudama',
+  ])
+);
 
 const ISHODI_ODLUKE = [
   'Obustava postupka - dosuđeni troškovi',

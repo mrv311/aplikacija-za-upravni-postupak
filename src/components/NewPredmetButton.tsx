@@ -25,7 +25,6 @@ import {
 } from '@/app/actions/predmetActions';
 import { uploadAndParseDocument } from '@/app/actions/documentActions';
 import {
-  PREDMET_PODRUCJA,
   DOKUMENT_VRSTE,
   guessDocRoleFromFilename,
   isKosuljicaRole,
@@ -37,6 +36,7 @@ import {
   type Sluzbenik,
 } from '@/lib/predmet-meta';
 import { SluzbeniciModal } from '@/components/SluzbeniciModal';
+import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
 
 interface QueuedCaseFile {
   uid: string;
@@ -976,11 +976,7 @@ export default function NewPredmetButton({
                     }}
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {PREDMET_PODRUCJA.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.fullLabel}
-                      </option>
-                    ))}
+                    <PodrucjeSelectOptions />
                   </select>
                 </div>
               </div>

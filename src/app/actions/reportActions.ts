@@ -4,6 +4,7 @@ import { google } from '@/lib/google';
 import { generateText } from 'ai';
 import type { ReportMetrics } from '@/lib/report-utils';
 import type { SporoviReportMetrics } from '@/lib/report-sporovi-utils';
+import { getPodrucjeFullLabel } from '@/lib/predmet-meta';
 
 export async function generateAiReportNarrativeAction(payload: {
   periodLabel: string;
@@ -25,14 +26,17 @@ export async function generateAiReportNarrativeAction(payload: {
       .join('\n');
 
     const podrucjaSummary = metrics.podrucjaBreakdown
-      .map((p) => `* ${p.podrucje}: ${p.count} predmeta (${p.rijeseno} riješeno, ${p.uRadu} u radu)`)
+      .map(
+        (p) =>
+          `* ${getPodrucjeFullLabel(p.podrucje)}: ${p.count} predmeta (${p.rijeseno} riješeno, ${p.uRadu} u radu)`
+      )
       .join('\n');
 
     const sampleText = sampleItems
       .slice(0, 15)
       .map(
         (s) =>
-          `- ${s.klasa} (${s.stranka}, područje: ${s.podrucje}): ishod "${s.ishod || 'U radu'}", trajanje ${s.days} dana (${s.isOverdue ? 'PREKORAČEN ROK' : 'u roku'})`
+          `- ${s.klasa} (${s.stranka}, područje: ${getPodrucjeFullLabel(s.podrucje)}): ishod "${s.ishod || 'U radu'}", trajanje ${s.days} dana (${s.isOverdue ? 'PREKORAČEN ROK' : 'u roku'})`
       )
       .join('\n');
 

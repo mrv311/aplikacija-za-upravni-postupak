@@ -15,6 +15,7 @@ import {
   guessDocRoleFromFilename,
   getInitials,
   normalizeDateToIso,
+  normalizePodrucjeValue,
   type PredmetExtendedMeta,
   type PredmetFaza,
   type PredmetIshod,
@@ -152,7 +153,7 @@ Iz priloženog dokumenta (koji može biti **košuljica spisa s pisarničkom nalj
   "izvorDatuma": "prijamni štambilj" | "pisarnička naljepnica" | "datum dokumenta" | "",
   "datumPredajeZalbe": "YYYY-MM-DD ili ''",
   "izvorDatumaZalbe": "prijamni štambilj I. stupnja" | "preporučena pošta" | "popratni dopis I. stupnja" | "izravno Ministarstvo" | "",
-  "podrucje": "NUV" | "VD" | "NZZV" | "Ostalo",
+  "podrucje": "NUV" | "VD" | "NZZV" | "NKV" | "KONCESIJA" | "ZJVD" | "VPU" | "VPD" | "VPP" | "POTVRDE_NIG" | "POTVRDE_VG" | "OVRHA" | "TROSKOVI" | "OBNOVA" | "PONISTAVANJE" | "NISTAVOST" | "PRIGOVOR" | "ODUSTANAK" | "NENADLEZNOST" | "POVRACAJ" | "ISPRAVAK" | "POTVRDE_PI" | "OBAVIJEST_ROK" | "NEUPRAVNO" | "Ostalo",
   "vrstaDokumenta": "Košuljica spisa" | "Popratni dopis I. stupnja" | "Žalba" | "Prvostupanjsko rješenje" | "Dostavnica" | "Kompletni spis",
   "izravnoMinistarstvu": true | false,
   "tijeloPrvogStupnja": "npr. Hrvatske vode, VGI... ili ''",
@@ -188,11 +189,36 @@ STROGA PRAVILA ZA RUKOPISNE NAPOMENE I ZABILJEŠKE NA KOŠULJICI ("rukopisnaNapo
    - Ako je dokument "Košuljica spisa" i NEMA nikakvih korisnikovih zabilješki ni rukopisa ("rukopisnaNapomena": ""), za "napomena" OBAVEZNO vrati "".
    - Za ostale dokumente (popratni dopis, žalba, rješenje) kada nema rukopisa, daj sažeti opis predmeta u 1 rečenici.
 
-PRAVILA ZA PODRUČJE ("podrucje"):
-- "NUV" za naknadu za uređenje voda (uključujući oznaku NUV na naljepnici ili tekstu),
-- "VD" za vodni doprinos (VD),
-- "NZZV" za naknadu za zaštitu voda (NZZV),
-- "Ostalo" za sve ostalo (npr. ako se iz košuljice ne vidi o kojoj je naknadi riječ, ostavi "Ostalo", a rukopisne kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").
+PRAVILA ZA PODRUČJE ("podrucje" — koristi TOČNO jednu od sljedećih šifri):
+- Vodne naknade i koncesije (ZFVG):
+  * "NUV" — naknada za uređenje voda (NUV)
+  * "VD" — vodni doprinos (VD)
+  * "NZZV" — naknada za zaštitu voda (NZZV)
+  * "NKV" — naknada za korištenje voda (NKV)
+  * "KONCESIJA" — naknada za koncesiju / koncesije na vodama
+- Vodno dobro, vodopravni akti i potvrde (Zakon o vodama):
+  * "ZJVD" — zakup javnog vodnog dobra (JVD)
+  * "VPU" — vodopravni uvjeti
+  * "VPD" — vodopravna dozvola
+  * "VPP" — vodopravna potvrda
+  * "POTVRDE_NIG" — potvrde za nezakonito izgrađene građevine (ozakonjenje)
+  * "POTVRDE_VG" — potvrde za vodne građevine
+- Posebni ZUP postupci, izvanredni pravni lijekovi i ovrha:
+  * "OVRHA" — rješenje o ovrsi / upravna ovrha
+  * "TROSKOVI" — troškovi postupka
+  * "OBNOVA" — obnova postupka
+  * "PONISTAVANJE" — poništavanje i ukidanje rješenja (čl. 129.–132. ZUP)
+  * "NISTAVOST" — oglašavanje rješenja ništavim
+  * "PRIGOVOR" — rješenje po prigovoru
+  * "ODUSTANAK" — odustanak od zahtjeva / obustava zbog odustanka
+  * "NENADLEZNOST" — nenadležnost / ustupanje nadležnom tijelu
+  * "POVRACAJ" — povraćaj u prijašnje stanje
+  * "ISPRAVAK" — otklanjanje pogrešaka u rješenju (čl. 104. ZUP)
+  * "POTVRDE_PI" — potvrda o pravomoćnosti i izvršnosti
+  * "OBAVIJEST_ROK" — obavijest o razlozima nedonošenja rješenja
+- Neupravno i ostalo:
+  * "NEUPRAVNO" — neupravni predmeti (pravno mišljenje, naputak, očitovanje, predstavka)
+  * "Ostalo" — samo ako se iz dokumenta nikako ne može odrediti nijedno od gornjih područja (npr. prazna košuljica bez naznake materije; kratice poput "NKD" sačuvaj u "rukopisnaNapomena" i "napomena").
 
 PRAVILA ZA ŽALBE POSLANE IZRAVNO MINISTARSTVU ("izravnoMinistarstvu" i "tijeloPrvogStupnja"):
 - Postavi "izravnoMinistarstvu": true ako je iz dokumenta ili rukopisne bilješke na košuljici vidljivo da je žalba poslana/predana IZRAVNO Ministarstvu te je treba proslijediti prvostupanjskom tijelu na nadležni postupak (npr. rukopisna bilješka "na nadležni postupak", "nadležno postupanje", "čl. 110.", "izravno", "poslati HV", ili žalba naslovljena izravno na Ministarstvo bez popratnog dopisa I. stupnja); inače false.
@@ -312,9 +338,7 @@ export async function extractCaseInfoFromScan(formData: FormData) {
         izvorDatuma: (parsed.izvorDatuma || '').trim(),
         datumPredajeZalbe,
         izvorDatumaZalbe: datumPredajeZalbe ? (parsed.izvorDatumaZalbe || '').trim() : '',
-        podrucje: (['NUV', 'VD', 'NZZV', 'Ostalo'].includes(parsed.podrucje)
-          ? parsed.podrucje
-          : 'Ostalo') as PredmetPodrucje,
+        podrucje: normalizePodrucjeValue(parsed.podrucje),
         vrstaDokumenta: detectedVrsta,
         izravnoMinistarstvu: Boolean(parsed.izravnoMinistarstvu),
         tijeloPrvogStupnja: (parsed.tijeloPrvogStupnja || '').trim(),

@@ -8,6 +8,7 @@ import {
   type ZakonIzvorTip,
   parsePraksaMetadata,
 } from '@/lib/ai-types';
+import { getPodrucjeMeta } from '@/lib/predmet-meta';
 
 /**
  * VAŽNO:
@@ -450,10 +451,13 @@ export function matchesPraksaScope(nazivDatoteke: string, scope: PraksaFilterSco
 
 function matchesCasePodrucje(nazivDatoteke: string, podrucje?: string): boolean {
   if (!podrucje || podrucje === 'Ostalo') return false;
-  if (podrucje === 'NUV') return /naknada za ure[đd]enje voda|\bnuv\b/i.test(nazivDatoteke);
-  if (podrucje === 'VD') return /vodni doprinos|\bvd\b/i.test(nazivDatoteke);
-  if (podrucje === 'NZZV') return /za[šs]titu voda|\bnzzv\b/i.test(nazivDatoteke);
-  return false;
+  const meta = getPodrucjeMeta(podrucje);
+  if (!meta?.praksaPattern) return false;
+  const bracketHeader = nazivDatoteke.match(/^\[([^\]]+)\]/)?.[1];
+  if (bracketHeader) {
+    return meta.praksaPattern.test(bracketHeader);
+  }
+  return meta.praksaPattern.test(nazivDatoteke);
 }
 
 async function embedQuery(text: string, dimensions: number): Promise<number[] | null> {
@@ -700,9 +704,12 @@ export async function searchPraksaHybrid(params: {
     }
   }
 
-  // 3. Fallback: ako upit ima vrlo malo leksičkih pogodaka, dodaj najnovija rješenja iz istog upravnog područja
-  if (chunkMap.size < 18 && catalog.length > 0) {
-    const fallbackTitles = catalog
+  // 3. Osiguraj kandidate iz istog specifičnog upravnog područja (npr. Zakup JVD, Vodopravne dozvole, Ovrha, Obnova...)
+  //    ili kao fallback kad upit ima vrlo malo leksičkih pogodaka.
+  const isSpecializedArea =
+    Boolean(casePodrucje) && !['NUV', 'VD', 'Ostalo'].includes(casePodrucje || '');
+  if ((isSpecializedArea || chunkMap.size < 18) && catalog.length > 0) {
+    const areaTitles = catalog
       .filter(
         (c) =>
           matchesPraksaScope(c.naziv_datoteke, filterScope) &&
@@ -710,14 +717,14 @@ export async function searchPraksaHybrid(params: {
             casePodrucje === 'Ostalo' ||
             matchesCasePodrucje(c.naziv_datoteke, casePodrucje))
       )
-      .slice(0, 20)
+      .slice(0, isSpecializedArea ? 16 : 20)
       .map((c) => c.naziv_datoteke);
 
-    if (fallbackTitles.length > 0) {
+    if (areaTitles.length > 0) {
       const { data: fbRows } = await supabase
         .from('praksa')
         .select('id, naziv_datoteke, chunk_index, sadrzaj')
-        .in('naziv_datoteke', fallbackTitles)
+        .in('naziv_datoteke', areaTitles)
         .in('chunk_index', [0, 2])
         .limit(36);
 
@@ -728,7 +735,7 @@ export async function searchPraksaHybrid(params: {
             naziv_datoteke: row.naziv_datoteke,
             chunk_index: row.chunk_index,
             sadrzaj: row.sadrzaj,
-            lexScore: 0.8,
+            lexScore: isSpecializedArea ? 1.8 : 0.8,
             matchedLabels: new Set(),
           });
         }
@@ -741,8 +748,11 @@ export async function searchPraksaHybrid(params: {
   // 4. Odaberi top ~68 chunkova za točni 3072-dim vektorski reranking (po primarnom ključu < 500ms!)
   const allCandidates = Array.from(chunkMap.values()).map((c) => {
     const docBonus = (docLexicalTotal.get(c.naziv_datoteke) || 0) * 0.45;
-    const areaBonus = matchesCasePodrucje(c.naziv_datoteke, casePodrucje) ? 2.5 : 0;
-    const isAdvisorRjesenje = !/upravnih sudova|upravni spor|presud/i.test(c.naziv_datoteke);
+    const areaBonus = matchesCasePodrucje(c.naziv_datoteke, casePodrucje) ? 3.0 : 0;
+    const isNeupravnoDoc = /mi[šs]ljenja i naputci|neupravno/i.test(c.naziv_datoteke);
+    const isAdvisorRjesenje =
+      !/upravnih sudova|upravni spor|presud/i.test(c.naziv_datoteke) &&
+      (!isNeupravnoDoc || casePodrucje === 'NEUPRAVNO');
     const advisorBonus = preferAdvisorDecisions && isAdvisorRjesenje ? 2.0 : 0;
     return {
       ...c,

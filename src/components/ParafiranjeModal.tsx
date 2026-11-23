@@ -19,6 +19,9 @@ import {
 import {
   PARAF_VRSTE_AKATA,
   PARAF_STATUSI,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
   type EnrichedPredmet,
   type Sluzbenik,
   type ParafVrstaAkta,
@@ -232,8 +235,13 @@ export function ParafiranjeModal({
               <span className="font-mono text-sm font-bold text-blue-700 dark:text-blue-400">
                 {predmet.klasa}
               </span>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-200/70 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                {predmet.podrucje}
+              <span
+                title={getPodrucjeFullLabel(predmet.podrucje)}
+                className={`text-[11px] font-bold px-2 py-0.5 rounded border ${getPodrucjeBadgeClass(
+                  predmet.podrucje
+                )}`}
+              >
+                {getPodrucjeLabel(predmet.podrucje)}
               </span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 truncate max-w-md">

@@ -18,7 +18,13 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { calculateZupDeadline, type EnrichedPredmet } from '@/lib/predmet-meta';
+import {
+  calculateZupDeadline,
+  getPodrucjeLabel,
+  getPodrucjeFullLabel,
+  getPodrucjeBadgeClass,
+  type EnrichedPredmet,
+} from '@/lib/predmet-meta';
 import { updateDatumPredajeZalbeAction } from '@/app/actions/predmetActions';
 
 type LayoutMode = 'balanced' | 'focus-docs' | 'focus-ai';
@@ -214,8 +220,13 @@ export function PredmetWorkspace({
           )}
 
           {/* Oznaka područja */}
-          <span className="text-xs px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            {predmet.podrucje}
+          <span
+            title={getPodrucjeFullLabel(predmet.podrucje)}
+            className={`text-xs px-2.5 py-0.5 rounded-md font-semibold border ${getPodrucjeBadgeClass(
+              predmet.podrucje
+            )}`}
+          >
+            {getPodrucjeLabel(predmet.podrucje)}
           </span>
         </div>
 

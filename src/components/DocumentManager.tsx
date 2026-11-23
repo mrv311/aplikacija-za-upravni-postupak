@@ -14,7 +14,6 @@ import {
 import {
   META_DOC_TYPE,
   DOKUMENT_VRSTE,
-  PREDMET_PODRUCJA,
   PREDMET_ISHODI,
   decodeDocLabel,
   guessDocRoleFromFilename,
@@ -22,6 +21,7 @@ import {
   type PredmetPodrucje,
   type PredmetIshod,
 } from '@/lib/predmet-meta';
+import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
 import {
   Upload,
   FileText,
@@ -847,11 +847,7 @@ export function DocumentManager({
                         onChange={(e) => setPraksaPodrucje(e.target.value as PredmetPodrucje)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                       >
-                        {PREDMET_PODRUCJA.map((p) => (
-                          <option key={p.value} value={p.value}>
-                            {p.fullLabel}
-                          </option>
-                        ))}
+                        <PodrucjeSelectOptions />
                       </select>
                     </div>
 

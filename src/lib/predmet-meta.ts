@@ -144,14 +144,372 @@ export function isNaNadleznomPostupku(
   );
 }
 
-export type PredmetPodrucje = 'NUV' | 'VD' | 'NZZV' | 'Ostalo' | (string & {});
+export type PredmetPodrucjeGroupId = 'naknade' | 'vodopravni' | 'zup_posebni' | 'neupravno_ostalo';
 
-export const PREDMET_PODRUCJA: { value: PredmetPodrucje; label: string; fullLabel: string }[] = [
-  { value: 'NUV', label: 'NUV', fullLabel: 'Naknada za uređenje voda (NUV)' },
-  { value: 'VD', label: 'VD', fullLabel: 'Vodni doprinos (VD)' },
-  { value: 'NZZV', label: 'NZZV', fullLabel: 'Naknada za zaštitu voda (NZZV)' },
-  { value: 'Ostalo', label: 'Ostalo', fullLabel: 'Ostali upravni predmeti' },
+export type PredmetPodrucje =
+  | 'NUV'
+  | 'VD'
+  | 'NZZV'
+  | 'NKV'
+  | 'KONCESIJA'
+  | 'ZJVD'
+  | 'VPU'
+  | 'VPD'
+  | 'VPP'
+  | 'POTVRDE_NIG'
+  | 'POTVRDE_VG'
+  | 'OVRHA'
+  | 'TROSKOVI'
+  | 'OBNOVA'
+  | 'PONISTAVANJE'
+  | 'NISTAVOST'
+  | 'PRIGOVOR'
+  | 'ODUSTANAK'
+  | 'NENADLEZNOST'
+  | 'POVRACAJ'
+  | 'ISPRAVAK'
+  | 'POTVRDE_PI'
+  | 'OBAVIJEST_ROK'
+  | 'NEUPRAVNO'
+  | 'Ostalo'
+  | (string & {});
+
+export interface PredmetPodrucjeMeta {
+  value: PredmetPodrucje;
+  label: string;
+  fullLabel: string;
+  group: PredmetPodrucjeGroupId;
+  praksaCategory: string;
+  praksaPattern?: RegExp;
+  upravnaStvarOpis: string;
+  temeljniPropis: 'ZFVG' | 'ZOV' | 'ZUP' | 'NEUPRAVNO';
+}
+
+export const PREDMET_PODRUCJA_GRUPE: {
+  id: PredmetPodrucjeGroupId;
+  label: string;
+}[] = [
+  { id: 'naknade', label: 'Vodne naknade i koncesije (ZFVG)' },
+  { id: 'vodopravni', label: 'Vodno dobro, vodopravni akti i potvrde (Zakon o vodama)' },
+  { id: 'zup_posebni', label: 'Posebni ZUP postupci, pravni lijekovi i ovrha' },
+  { id: 'neupravno_ostalo', label: 'Neupravni predmeti i ostalo' },
 ];
+
+export const PREDMET_PODRUCJA: PredmetPodrucjeMeta[] = [
+  // 1. Vodne naknade i koncesije (ZFVG)
+  {
+    value: 'NUV',
+    label: 'NUV',
+    fullLabel: 'Naknada za uređenje voda (NUV)',
+    group: 'naknade',
+    praksaCategory: 'Naknada za uređenje voda',
+    praksaPattern: /naknada za ure[đd]enje voda|\bnuv\b/i,
+    upravnaStvarOpis: 'obračuna naknade za uređenje voda',
+    temeljniPropis: 'ZFVG',
+  },
+  {
+    value: 'VD',
+    label: 'VD',
+    fullLabel: 'Vodni doprinos (VD)',
+    group: 'naknade',
+    praksaCategory: 'Vodni doprinos',
+    praksaPattern: /vodni doprinos|\bvd\b/i,
+    upravnaStvarOpis: 'obračuna vodnoga doprinosa',
+    temeljniPropis: 'ZFVG',
+  },
+  {
+    value: 'NZZV',
+    label: 'NZZV',
+    fullLabel: 'Naknada za zaštitu voda (NZZV)',
+    group: 'naknade',
+    praksaCategory: 'Naknada za zaštitu voda',
+    praksaPattern: /za[šs]titu voda|\bnzzv\b/i,
+    upravnaStvarOpis: 'obračuna naknade za zaštitu voda',
+    temeljniPropis: 'ZFVG',
+  },
+  {
+    value: 'NKV',
+    label: 'NKV',
+    fullLabel: 'Naknada za korištenje voda (NKV)',
+    group: 'naknade',
+    praksaCategory: 'Naknada za korištenje voda',
+    praksaPattern: /kori[šs]tenje voda|\bnkv\b|\bnzkv\b/i,
+    upravnaStvarOpis: 'obračuna naknade za korištenje voda',
+    temeljniPropis: 'ZFVG',
+  },
+  {
+    value: 'KONCESIJA',
+    label: 'Koncesija',
+    fullLabel: 'Naknada za koncesiju',
+    group: 'naknade',
+    praksaCategory: 'Naknada za koncesiju',
+    praksaPattern: /naknada za koncesij|koncesij/i,
+    upravnaStvarOpis: 'obračuna naknade za koncesiju',
+    temeljniPropis: 'ZFVG',
+  },
+
+  // 2. Vodno dobro, vodopravni akti i potvrde (Zakon o vodama)
+  {
+    value: 'ZJVD',
+    label: 'Zakup JVD',
+    fullLabel: 'Zakup javnog vodnog dobra',
+    group: 'vodopravni',
+    praksaCategory: 'Zakup javnog vodnog dobra',
+    praksaPattern: /zakup javnog vodnog dobra|\bzjvd\b/i,
+    upravnaStvarOpis: 'zakupa javnog vodnog dobra',
+    temeljniPropis: 'ZOV',
+  },
+  {
+    value: 'VPU',
+    label: 'VPU',
+    fullLabel: 'Vodopravni uvjeti',
+    group: 'vodopravni',
+    praksaCategory: 'Vodopravni uvjeti',
+    praksaPattern: /vodopravni uvjet|\bvpu\b/i,
+    upravnaStvarOpis: 'izdavanja vodopravnih uvjeta',
+    temeljniPropis: 'ZOV',
+  },
+  {
+    value: 'VPD',
+    label: 'VPD',
+    fullLabel: 'Vodopravne dozvole',
+    group: 'vodopravni',
+    praksaCategory: 'Vodopravne dozvole',
+    praksaPattern: /vodopravn[ea] dozvol|\bvpd\b/i,
+    upravnaStvarOpis: 'izdavanja vodopravne dozvole',
+    temeljniPropis: 'ZOV',
+  },
+  {
+    value: 'VPP',
+    label: 'VPP',
+    fullLabel: 'Vodopravna potvrda',
+    group: 'vodopravni',
+    praksaCategory: 'Vodopravna potvrda',
+    praksaPattern: /vodopravn[ea] potvrd|\bvpp\b/i,
+    upravnaStvarOpis: 'izdavanja vodopravne potvrde',
+    temeljniPropis: 'ZOV',
+  },
+  {
+    value: 'POTVRDE_NIG',
+    label: 'Potvrda (NIG)',
+    fullLabel: 'Potvrde – nezakonito izgrađene građevine',
+    group: 'vodopravni',
+    praksaCategory: 'Potvrde - nezakonito izgrađene građevine',
+    praksaPattern: /nezakonito izgra[đd]en|ozakonjenj/i,
+    upravnaStvarOpis: 'izdavanja potvrde za nezakonito izgrađenu građevinu',
+    temeljniPropis: 'ZOV',
+  },
+  {
+    value: 'POTVRDE_VG',
+    label: 'Potvrda (VG)',
+    fullLabel: 'Potvrde – vodne građevine',
+    group: 'vodopravni',
+    praksaCategory: 'Potvrde - vodne građevine',
+    praksaPattern: /potvrde\s*[-–]\s*vodne gra[đd]evine|vodne gra[đd]evine/i,
+    upravnaStvarOpis: 'izdavanja potvrde za vodnu građevinu',
+    temeljniPropis: 'ZOV',
+  },
+
+  // 3. Posebni ZUP postupci, izvanredni pravni lijekovi i ovrha
+  {
+    value: 'OVRHA',
+    label: 'Ovrha',
+    fullLabel: 'Rješenja o ovrsi',
+    group: 'zup_posebni',
+    praksaCategory: 'Rješenja o ovrsi',
+    praksaPattern: /rje[šs]enja o ovrsi|\bovrh[aeu]\b|\bovrsi\b/i,
+    upravnaStvarOpis: 'ovrhe u upravnom postupku',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'TROSKOVI',
+    label: 'Troškovi',
+    fullLabel: 'Troškovi postupka',
+    group: 'zup_posebni',
+    praksaCategory: 'Troškovi postupka',
+    praksaPattern: /tro[šs]kovi postupka|tro[šs]kov/i,
+    upravnaStvarOpis: 'naknade troškova upravnog postupka',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'OBNOVA',
+    label: 'Obnova',
+    fullLabel: 'Obnova postupka',
+    group: 'zup_posebni',
+    praksaCategory: 'Obnova postupka',
+    praksaPattern: /obnova postupka/i,
+    upravnaStvarOpis: 'obnove upravnog postupka',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'PONISTAVANJE',
+    label: 'Poništ./ukid.',
+    fullLabel: 'Poništavanje i ukidanje rješenja (čl. 129.–132. ZUP)',
+    group: 'zup_posebni',
+    praksaCategory: 'Poništavanje i ukidanje rješenja (ZUP)',
+    praksaPattern: /poni[šs]tavanje i ukidanje/i,
+    upravnaStvarOpis: 'poništavanja i ukidanja rješenja po čl. 129.–132. ZUP-a',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'NISTAVOST',
+    label: 'Ništavost',
+    fullLabel: 'Oglašavanje rješenja ništavim',
+    group: 'zup_posebni',
+    praksaCategory: 'Oglašavanje rješenja ništavim',
+    praksaPattern: /ni[šs]tav/i,
+    upravnaStvarOpis: 'oglašavanja rješenja ništavim',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'PRIGOVOR',
+    label: 'Prigovor',
+    fullLabel: 'Rješenja po prigovoru',
+    group: 'zup_posebni',
+    praksaCategory: 'Rješenja po prigovoru',
+    praksaPattern: /po prigovoru|rje[šs]enja po prigovoru/i,
+    upravnaStvarOpis: 'rješavanja po prigovoru',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'ODUSTANAK',
+    label: 'Odustanak',
+    fullLabel: 'Odustanak od zahtjeva',
+    group: 'zup_posebni',
+    praksaCategory: 'Odustanak od zahtjeva',
+    praksaPattern: /odustanak od zahtjeva|odustank/i,
+    upravnaStvarOpis: 'obustave postupka zbog odustanka stranke',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'NENADLEZNOST',
+    label: 'Nenadležnost',
+    fullLabel: 'Nenadležnost',
+    group: 'zup_posebni',
+    praksaCategory: 'Nenadležnost',
+    praksaPattern: /nenadle[žz]nost/i,
+    upravnaStvarOpis: 'postupanja povodom nenadležnosti',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'POVRACAJ',
+    label: 'Povraćaj',
+    fullLabel: 'Povraćaj u prijašnje stanje',
+    group: 'zup_posebni',
+    praksaCategory: 'Povraćaj u prijašnje stanje',
+    praksaPattern: /povra[ćc]aj u prija[šs]nje stanje/i,
+    upravnaStvarOpis: 'povraćaja u prijašnje stanje',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'ISPRAVAK',
+    label: 'Ispravak (čl.104)',
+    fullLabel: 'Otklanjanje pogrešaka u rješenju (čl. 104. ZUP)',
+    group: 'zup_posebni',
+    praksaCategory: 'Otklanjanje pogrešaka u rješenju (čl. 104. ZUP)',
+    praksaPattern: /otklanjanje pogre[šs]aka|ispravak rje[šs]enja|čl\.\s*104/i,
+    upravnaStvarOpis: 'otklanjanja pogrešaka u rješenju po čl. 104. ZUP-a',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'POTVRDE_PI',
+    label: 'Pravom./izvrš.',
+    fullLabel: 'Potvrde o pravomoćnosti i izvršnosti',
+    group: 'zup_posebni',
+    praksaCategory: 'Potvrde o pravomoćnosti i izvršnosti',
+    praksaPattern: /pravomo[ćc]nosti i izvr[šs]nosti/i,
+    upravnaStvarOpis: 'izdavanja potvrde o pravomoćnosti i izvršnosti',
+    temeljniPropis: 'ZUP',
+  },
+  {
+    value: 'OBAVIJEST_ROK',
+    label: 'Obavijest (rok)',
+    fullLabel: 'Obavijest o razlozima nedonošenja rješenja',
+    group: 'zup_posebni',
+    praksaCategory: 'Obavijest o razlozima nedonošenja rješenja',
+    praksaPattern: /razlozima nedono[šs]enja/i,
+    upravnaStvarOpis: 'obavijesti o razlozima nedonošenja rješenja u roku',
+    temeljniPropis: 'ZUP',
+  },
+
+  // 4. Neupravno i ostalo
+  {
+    value: 'NEUPRAVNO',
+    label: 'Neupravno',
+    fullLabel: 'Neupravni predmeti (mišljenja i naputci)',
+    group: 'neupravno_ostalo',
+    praksaCategory: 'Mišljenja i naputci (Neupravno)',
+    praksaPattern: /mi[šs]ljenja i naputci|neupravno/i,
+    upravnaStvarOpis: 'neupravnog očitovanja / pravnog mišljenja',
+    temeljniPropis: 'NEUPRAVNO',
+  },
+  {
+    value: 'Ostalo',
+    label: 'Ostalo',
+    fullLabel: 'Ostali upravni predmeti',
+    group: 'neupravno_ostalo',
+    praksaCategory: 'Upravni postupak',
+    upravnaStvarOpis: 'upravnog postupka',
+    temeljniPropis: 'ZUP',
+  },
+];
+
+const PODRUCJE_META_MAP = new Map<string, PredmetPodrucjeMeta>(
+  PREDMET_PODRUCJA.map((p) => [p.value.toUpperCase(), p])
+);
+
+export const VALID_PODRUCJE_VALUES: PredmetPodrucje[] = PREDMET_PODRUCJA.map((p) => p.value);
+
+export function getPodrucjeMeta(podrucje: string | null | undefined): PredmetPodrucjeMeta | undefined {
+  if (!podrucje) return undefined;
+  const trimmed = podrucje.trim();
+  const byCode = PODRUCJE_META_MAP.get(trimmed.toUpperCase());
+  if (byCode) return byCode;
+  const low = trimmed.toLowerCase();
+  return PREDMET_PODRUCJA.find(
+    (p) =>
+      p.label.toLowerCase() === low ||
+      p.fullLabel.toLowerCase() === low ||
+      p.praksaCategory.toLowerCase() === low
+  );
+}
+
+export function normalizePodrucjeValue(raw: string | null | undefined): PredmetPodrucje {
+  const found = getPodrucjeMeta(raw);
+  return found ? found.value : 'Ostalo';
+}
+
+export function getPodrucjeLabel(podrucje: string | null | undefined): string {
+  const meta = getPodrucjeMeta(podrucje);
+  return meta ? meta.label : (podrucje || 'Ostalo');
+}
+
+export function getPodrucjeFullLabel(podrucje: string | null | undefined): string {
+  const meta = getPodrucjeMeta(podrucje);
+  return meta ? meta.fullLabel : (podrucje || 'Ostali upravni predmeti');
+}
+
+export function getPodrucjePraksaCategory(podrucje: string | null | undefined): string {
+  const meta = getPodrucjeMeta(podrucje);
+  return meta ? meta.praksaCategory : 'Upravni postupak';
+}
+
+export function getPodrucjeBadgeClass(podrucje: string | null | undefined): string {
+  const meta = getPodrucjeMeta(podrucje);
+  if (!meta || meta.value === 'Ostalo') {
+    return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+  }
+  switch (meta.group) {
+    case 'naknade':
+      return 'bg-blue-50/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200/70 dark:border-blue-800/70';
+    case 'vodopravni':
+      return 'bg-teal-50/80 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200/70 dark:border-teal-800/70';
+    case 'zup_posebni':
+      return 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/70 dark:border-indigo-800/70';
+    case 'neupravno_ostalo':
+      return 'bg-amber-50/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/70';
+  }
+}
 
 export type PredmetFaza = 'Novo' | 'U radu' | 'Čeka dopunu' | 'Na potpisu';
 

@@ -1,4 +1,5 @@
 import type { UIMessage } from 'ai';
+import { PREDMET_PODRUCJA } from '@/lib/predmet-meta';
 
 export type PraksaFilterScope = 'sve' | 'nuv' | 'vd' | 'sudska' | 'upravna';
 
@@ -56,7 +57,7 @@ export interface RagZakonSource {
 export interface ParsedPraksaMeta {
   kratkiNaziv: string;
   podrucje: string;
-  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu';
+  vrsta: 'Sudska presuda' | 'Drugostupanjsko rješenje' | 'Odgovor na tužbu' | 'Mišljenje / Naputak';
   godina: string | null;
   ishod: 'Poništeno rješenje' | 'Odbijena žalba' | 'Ostalo';
 }
@@ -172,39 +173,31 @@ export function parsePraksaMetadata(
       contentHead
     );
   const isSudskaNaziv = /upravnih sudova|upravni spor|presud/i.test(nazivDatoteke);
+  const isNeupravnoNaziv = /mi[šs]ljenja i naputci|neupravno/i.test(nazivDatoteke);
 
   let vrsta: ParsedPraksaMeta['vrsta'] = 'Drugostupanjsko rješenje';
   if (isOdgovorNaTuzbu) {
     vrsta = 'Odgovor na tužbu';
   } else if (isSudskaNaziv) {
     vrsta = 'Sudska presuda';
+  } else if (isNeupravnoNaziv) {
+    vrsta = 'Mišljenje / Naputak';
   }
 
+  const bracketHeader = nazivDatoteke.match(/^\[([^\]]+)\]/)?.[1] || '';
+
   let podrucje = 'Opći upravni postupak';
-  if (/naknada za ure[đd]enje voda|\bnuv\b/i.test(nazivDatoteke)) {
-    podrucje = 'Naknada za uređenje voda';
-  } else if (/vodni doprinos|\bvd\b/i.test(nazivDatoteke)) {
-    podrucje = 'Vodni doprinos';
-  } else if (/za[šs]titu voda|\bnzzv\b/i.test(nazivDatoteke)) {
-    podrucje = 'Naknada za zaštitu voda';
-  } else if (/kori[šs]tenje voda|\bnzkv\b/i.test(nazivDatoteke)) {
-    podrucje = 'Naknada za korištenje voda';
-  } else if (/koncesij/i.test(nazivDatoteke)) {
-    podrucje = 'Naknada za koncesiju';
-  } else if (/poni[šs]tavanje i ukidanje/i.test(nazivDatoteke)) {
-    podrucje = 'Poništavanje i ukidanje (ZUP)';
-  } else if (/obnova postupka/i.test(nazivDatoteke)) {
-    podrucje = 'Obnova postupka';
-  } else if (/ni[šs]tav/i.test(nazivDatoteke)) {
-    podrucje = 'Oglašavanje ništavim';
-  } else if (/zakup javnog vodnog dobra/i.test(nazivDatoteke)) {
-    podrucje = 'Zakup javnog vodnog dobra';
-  } else if (/tro[šs]kovi postupka/i.test(nazivDatoteke)) {
-    podrucje = 'Troškovi postupka';
-  } else if (/prigovor/i.test(nazivDatoteke)) {
-    podrucje = 'Rješenja po prigovoru';
+  const matchedMeta =
+    (bracketHeader
+      ? PREDMET_PODRUCJA.find((p) => p.praksaPattern && p.praksaPattern.test(bracketHeader))
+      : undefined) ||
+    PREDMET_PODRUCJA.find((p) => p.praksaPattern && p.praksaPattern.test(nazivDatoteke));
+  if (matchedMeta) {
+    podrucje = matchedMeta.praksaCategory;
   } else if (/zaklju[čc]ci/i.test(nazivDatoteke)) {
     podrucje = 'Zaključci (ZUP)';
+  } else if (/pru[žz]atelja javnih usluga/i.test(nazivDatoteke)) {
+    podrucje = 'Zaštita od postupanja pružatelja javnih usluga';
   } else if (isSudskaNaziv) {
     podrucje = 'Upravni sporovi';
   }

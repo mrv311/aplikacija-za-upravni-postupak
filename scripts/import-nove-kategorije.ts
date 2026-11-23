@@ -57,6 +57,7 @@ interface TargetFolder {
 }
 
 const TARGETS: TargetFolder[] = [
+  // Postojeće kategorije (provjera dopune bez duplikata)
   { relPath: 'ŽALBE NA VODNE NAKNADE/NAKNADA ZA ZAŠTITU VODA', categoryTag: 'Naknada za zaštitu voda' },
   { relPath: 'ŽALBE NA VODNE NAKNADE/NAKNADA ZA KORIŠTENJE VODA', categoryTag: 'Naknada za korištenje voda' },
   { relPath: 'NAKNADA ZA KONCESIJU', categoryTag: 'Naknada za koncesiju' },
@@ -69,6 +70,21 @@ const TARGETS: TargetFolder[] = [
   { relPath: 'ZAŠTITA OD POSTUPANJA PRUŽATELJA JAVNIH USLUGA_ČL_157 i 158_ZUP', categoryTag: 'Zaštita od postupanja pružatelja javnih usluga' },
   { relPath: 'ZAKUP JAVNOG VODNOG DOBRA - ŽALBE', categoryTag: 'Zakup javnog vodnog dobra' },
   { relPath: 'AKTI PO PRESUDAMA USTAVNOG SUDA', categoryTag: 'Akti po presudama Ustavnog suda' },
+
+  // 13 novih kategorija iz mape P O S A O
+  { relPath: 'VODOPRAVNI UVJETI', categoryTag: 'Vodopravni uvjeti' },
+  { relPath: 'VODOPRAVNE DOZVOLE', categoryTag: 'Vodopravne dozvole' },
+  { relPath: 'VODOPRAVNA POTVRDA', categoryTag: 'Vodopravna potvrda' },
+  { relPath: 'POTVRDE - NEZAKONITO IZGRAĐENE GRAĐEVINE', categoryTag: 'Potvrde - nezakonito izgrađene građevine' },
+  { relPath: 'POTVRDE - VODNE GRAĐEVINE', categoryTag: 'Potvrde - vodne građevine' },
+  { relPath: 'POTVRDE O PRAVOMOĆNOSTI I IZVRŠNOSTI', categoryTag: 'Potvrde o pravomoćnosti i izvršnosti' },
+  { relPath: 'RJEŠENJA O OVRSI', categoryTag: 'Rješenja o ovrsi' },
+  { relPath: 'ODUSTANAK OD ZAHTJEVA', categoryTag: 'Odustanak od zahtjeva' },
+  { relPath: 'NENADLEŽNOST', categoryTag: 'Nenadležnost' },
+  { relPath: 'POVRAĆAJ U PRIJAŠNJE STANJE', categoryTag: 'Povraćaj u prijašnje stanje' },
+  { relPath: 'OTKLANJANJE POGREŠAKA U RJEŠENJU ČL_104_ZUP', categoryTag: 'Otklanjanje pogrešaka u rješenju (čl. 104. ZUP)' },
+  { relPath: 'OBAVIJEST O RAZLOZIMA NEDONOŠENJA RJEŠENJA', categoryTag: 'Obavijest o razlozima nedonošenja rješenja' },
+  { relPath: 'NEUPRAVNO', categoryTag: 'Mišljenja i naputci (Neupravno)' },
 ];
 
 function getCanonicalDocKey(fileName: string): string {
@@ -244,27 +260,37 @@ async function getEmbedding(text: string, retries = 5): Promise<number[]> {
   return [];
 }
 
+function isValidYear(y: number): boolean {
+  const maxYear = new Date().getFullYear();
+  return y >= 1991 && y <= maxYear;
+}
+
 function extractYear(fileName: string, text: string, mtimeMs: number): string {
   // 1. Naziv datoteke: npr. 2021, 2019, za 2018
-  const fileYearMatch = fileName.match(/(19\d\d|20\d\d)/);
-  if (fileYearMatch) return fileYearMatch[1];
+  const fileYearMatch = fileName.match(/\b(199\d|20\d\d)\b/);
+  if (fileYearMatch && isValidYear(parseInt(fileYearMatch[1], 10))) {
+    return fileYearMatch[1];
+  }
 
   // 2. KLASA u tekstu: npr. UP/II-325-08/21-01 ili UP/II-325-08/19-01
   if (text) {
-    const klasaMatch = text.match(/UP\/[I|II].*?\/(\d{2})-\d+/i);
+    const klasaMatch = text.match(/UP\/(?:I|II).*?\/(\d{2})-\d+/i);
     if (klasaMatch) {
       const yy = parseInt(klasaMatch[1], 10);
-      if (yy >= 0 && yy <= 30) return `20${String(yy).padStart(2, '0')}`;
-      if (yy > 80 && yy <= 99) return `19${yy}`;
+      const fullYear = yy <= 30 ? 2000 + yy : yy >= 91 ? 1900 + yy : 0;
+      if (isValidYear(fullYear)) return String(fullYear);
     }
 
     // 3. Datum u tekstu (npr. "ožujka 2022.", "2021. godine")
-    const dateMatch = text.match(/\b(19\d\d|20\d\d)\b(?:\.|\s+godin)/i);
-    if (dateMatch) return dateMatch[1];
+    const dateMatch = text.match(/\b(199\d|20\d\d)\b(?:\.|\s+godin)/i);
+    if (dateMatch && isValidYear(parseInt(dateMatch[1], 10))) {
+      return dateMatch[1];
+    }
   }
 
   // 4. Fallback na mtime
-  return new Date(mtimeMs).getFullYear().toString();
+  const mtimeYear = new Date(mtimeMs).getFullYear();
+  return String(isValidYear(mtimeYear) ? mtimeYear : new Date().getFullYear());
 }
 
 interface ExistingDbState {
@@ -388,50 +414,51 @@ async function main() {
 
     let catImported = 0;
     let catSkipped = 0;
+    const CONCURRENCY = 2;
+    let cursor = 0;
 
-    for (let i = 0; i < chosen.length; i++) {
-      const item = chosen[i];
-      const fileIndex = i + 1;
+    const processOne = async (idx: number) => {
+      const item = chosen[idx];
+      const fileIndex = idx + 1;
       const fileId = String(fileIndex).padStart(2, '0');
-
-      process.stdout.write(`   [${fileIndex}/${chosen.length}] ${item.fileName.substring(0, 42).padEnd(42)} `);
+      const prefix = `   [${fileIndex}/${chosen.length}] ${item.fileName.substring(0, 42).padEnd(42)}`;
 
       // Brza provjera je li ovaj indeks kategorije već u bazi
       const indexKey = `${target.categoryTag}:${fileId}`;
       if (dbState.categoryIndexKeys.has(indexKey)) {
-        process.stdout.write(`⏭️ Već u bazi (#${fileId})\n`);
+        console.log(`${prefix} ⏭️ Već u bazi (#${fileId})`);
         catSkipped++;
         grandTotalSkippedDb++;
-        continue;
+        return;
       }
 
       // Pročitaj tekst dokumenta
       const rawText = await extractText(item.filePath);
       if (!rawText || rawText.trim().length < 60) {
-        process.stdout.write(`⚠️ Preskočeno (prazan ili nečitljiv tekst)\n`);
+        console.log(`${prefix} ⚠️ Preskočeno (prazan ili nečitljiv tekst)`);
         catSkipped++;
-        continue;
+        return;
       }
 
       // Odredi godinu
       const year = extractYear(item.fileName, rawText, item.mtime);
 
-      // Anonimizacija putem Gemini AI modela
-      process.stdout.write(`(Anonimizacija... `);
+      // Anonimizacija putem Gemini AI modela (nikada ne spremaj bez uspješne GDPR anonimizacije)
       const anon = await anonymizeDocument(rawText, item.fileName, target.categoryTag, year, fileIndex);
-      process.stdout.write(`${anon.anonymizedParty}) `);
-
+      if (anon.usedFallback) {
+        console.log(`${prefix} ⚠️ Preskočeno (AI anonimizacija nije uspjela — GDPR zaštita)`);
+        return;
+      }
       const storedName = anon.storedName;
 
       // Provjera točnog naziva u bazi
       if (dbState.storedNames.has(storedName)) {
-        process.stdout.write(`⏭️ Već u bazi\n`);
+        console.log(`${prefix} ⏭️ Već u bazi (${storedName})`);
         catSkipped++;
         grandTotalSkippedDb++;
-        continue;
+        return;
       }
 
-      // Provjera u Supabase bazi
       const { data: existing } = await supabase
         .from('praksa')
         .select('id')
@@ -441,52 +468,70 @@ async function main() {
       if (existing && existing.length > 0) {
         dbState.storedNames.add(storedName);
         dbState.categoryIndexKeys.add(indexKey);
-        process.stdout.write(`⏭️ Već u bazi\n`);
+        console.log(`${prefix} ⏭️ Već u bazi (${storedName})`);
         catSkipped++;
         grandTotalSkippedDb++;
-        continue;
+        return;
       }
 
       // Podjela u chunkove i embedding
       const chunks = chunkText(anon.anonymizedText);
-      let savedChunks = 0;
+      const rowsToInsert: Array<{
+        naziv_datoteke: string;
+        sadrzaj: string;
+        chunk_index: number;
+        ukupno_chunkova: number;
+        embedding: number[];
+      }> = [];
 
       for (let j = 0; j < chunks.length; j++) {
         const chunk = chunks[j];
-        await delay(350); // stabilna pauza radi rate limita
-
+        if (j > 0) await delay(120);
         try {
           const embedding = await getEmbedding(chunk);
-          const { error: insertErr } = await supabase.from('praksa').insert({
+          if (embedding.length !== 3072) {
+            console.error(`      ❌ Neočekivana dimenzija embeddinga (${embedding.length}) za ${storedName}`);
+            continue;
+          }
+          rowsToInsert.push({
             naziv_datoteke: storedName,
             sadrzaj: chunk,
             chunk_index: j,
             ukupno_chunkova: chunks.length,
-            embedding: embedding,
+            embedding,
           });
-
-          if (!insertErr) {
-            savedChunks++;
-          } else {
-            console.error(`\n      ❌ Greška inserta chunk ${j + 1}: ${insertErr.message}`);
-          }
         } catch (err: any) {
-          console.error(`\n      ❌ Greška embeddinga chunk ${j + 1}: ${err.message}`);
+          console.error(`      ❌ Greška embeddinga chunk ${j + 1} (${item.fileName}): ${err.message}`);
         }
       }
 
-      if (savedChunks > 0) {
-        dbState.storedNames.add(storedName);
-        dbState.categoryIndexKeys.add(indexKey);
-        process.stdout.write(`✅ Uvezeno (${savedChunks} chunkova)\n`);
-        catImported++;
-        grandTotalNewImported++;
+      if (rowsToInsert.length === chunks.length && rowsToInsert.length > 0) {
+        const { error: insertErr } = await supabase.from('praksa').insert(rowsToInsert);
+        if (!insertErr) {
+          dbState.storedNames.add(storedName);
+          dbState.categoryIndexKeys.add(indexKey);
+          console.log(`${prefix} ✅ ${storedName} (${rowsToInsert.length} ch.)`);
+          catImported++;
+          grandTotalNewImported++;
+        } else {
+          console.error(`${prefix} ❌ Greška inserta: ${insertErr.message}`);
+        }
       } else {
-        process.stdout.write(`❌ Nije uspjelo spremanje\n`);
+        console.log(
+          `${prefix} ⚠️ Preskočeno (nepotpun embedding: ${rowsToInsert.length}/${chunks.length} ch.)`
+        );
       }
 
       grandTotalProcessed++;
-    }
+    };
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY, chosen.length) }, async () => {
+      while (cursor < chosen.length) {
+        const current = cursor++;
+        await processOne(current);
+      }
+    });
+    await Promise.all(workers);
 
     console.log(`\n✨ Kategorija [${target.categoryTag}] dovršena: ${catImported} novo uvezeno, ${catSkipped} preskočeno.\n`);
   }
