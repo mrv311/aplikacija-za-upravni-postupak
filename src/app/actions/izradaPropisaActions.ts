@@ -44,8 +44,13 @@ const RAW_UPLOADS_BASE = path.join(process.cwd(), 'data', 'izrada-propisa');
 async function runGeminiOcrOnPdfBuffer(buffer: Buffer, fileName: string): Promise<string> {
   const { text } = await generateText({
     model: google('gemini-3.8-flash'),
+    providerOptions: {
+      google: {
+        thinkingConfig: { thinkingLevel: 'low' },
+      },
+    },
     system:
-      'Ti si precizni pravni OCR sustav za hrvatske službene dokumente (mišljenja ministarstava, UZZ-a, zapisnike i nacrte propisa). Prepiši vjerno cjeloviti tekst dokumenta uključujući zaglavlja, naziv tijela, KLASU, URBROJ, datum, naslove, sve jezične, nomotehničke i sadržajne primjedbe, članke i tablice. Vrati isključivo pročitani tekst bez dodatnih komentara.',
+      'Ti si precizni pravni OCR sustav za hrvatske službene dokumente (mišljenja ministarstava, UZZ-a, zapisnike i nacrte propisa). Prepiši vjerno cjeloviti tekst dokumenta uključujući zaglavlja, naziv tijela, KLASU, URBROJ, datum, naslove, sve jezične, nomotehničke i sadržajne primjedbe, članke i tablice. Vrati isključivo pročitani tekst bez ikakvog uvodnog komentara.',
     messages: [
       {
         role: 'user',
@@ -225,24 +230,57 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
         fileMtimeIso;
 
       const roleMeta = PROPIS_DOC_ROLE_MAP[role];
-      const doc = await addPropisDocument(projectId, {
-        naziv: file.name,
-        prikazniNaziv: file.name.replace(/\.[^.]+$/, ''),
-        uloga: role,
-        posiljatelj: detectedSender,
-        datumVerzije: detectedDate,
-        ekstenzija: ext,
-        velicinaBajta: file.size,
-        izvorDatoteke: 'upload',
-        lokalnaPutanja: savedRawPath,
-        izvorTeksta: finalIzvorTeksta,
-        needsOcr: finalNeedsOcr,
-        includeInAiContext: roleMeta.defaultInAiContext && !finalNeedsOcr,
-        rawText: finalRawText,
-        htmlTablesCount: parsed.htmlTablesCount,
-        parsedDraft: finalParsedDraft,
-        excelSheets: parsed.excelSheets,
-      });
+
+      // Ako već postoji prazan (needsOcr) zapis istog naziva iz ranijeg pokušaja, ažuriraj njega umjesto stvaranja duplikata
+      const existingDocs = await listPropisDocuments(projectId);
+      const matchingEmptyStubs = existingDocs.filter(
+        (d) =>
+          d.naziv.toLowerCase() === file.name.toLowerCase() &&
+          (d.needsOcr || (d.rawText || '').trim().length < 50)
+      );
+
+      let doc: PropisDocument;
+      if (!finalNeedsOcr && matchingEmptyStubs.length > 0) {
+        const primaryStub = matchingEmptyStubs[0];
+        const updated = await updatePropisDocument(projectId, primaryStub.id, {
+          uloga: role,
+          posiljatelj: detectedSender || primaryStub.posiljatelj,
+          datumVerzije: detectedDate || primaryStub.datumVerzije,
+          velicinaBajta: file.size,
+          lokalnaPutanja: savedRawPath || primaryStub.lokalnaPutanja,
+          izvorTeksta: finalIzvorTeksta,
+          needsOcr: false,
+          includeInAiContext: roleMeta.defaultInAiContext,
+          rawText: finalRawText,
+          htmlTablesCount: parsed.htmlTablesCount,
+          parsedDraft: finalParsedDraft,
+          excelSheets: parsed.excelSheets,
+        });
+        // Ukloni eventualne dodatne prazne duplikate istog naziva
+        for (const extra of matchingEmptyStubs.slice(1)) {
+          await deletePropisDocument(projectId, extra.id);
+        }
+        doc = updated || primaryStub;
+      } else {
+        doc = await addPropisDocument(projectId, {
+          naziv: file.name,
+          prikazniNaziv: file.name.replace(/\.[^.]+$/, ''),
+          uloga: role,
+          posiljatelj: detectedSender,
+          datumVerzije: detectedDate,
+          ekstenzija: ext,
+          velicinaBajta: file.size,
+          izvorDatoteke: 'upload',
+          lokalnaPutanja: savedRawPath,
+          izvorTeksta: finalIzvorTeksta,
+          needsOcr: finalNeedsOcr,
+          includeInAiContext: roleMeta.defaultInAiContext && !finalNeedsOcr,
+          rawText: finalRawText,
+          htmlTablesCount: parsed.htmlTablesCount,
+          parsedDraft: finalParsedDraft,
+          excelSheets: parsed.excelSheets,
+        });
+      }
 
       added.push(doc);
     } catch (err: any) {
