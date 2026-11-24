@@ -51,6 +51,7 @@ const KRATICE_ZAKONA: Record<string, RegExp> = {
   'Uredba o Tarifi upravnih pristojbi': /\bUTUP\w*\b/i,
   'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor':
     /\bJMNP\w*\b|nomotehni[čc]k\w+\s+pravil\w*/i,
+  'Zakon o zračnom prometu': /\bZZP\w*\b|zra[čc]n\w+\s+promet\w*|aerodrom\w*|zra[čc]n\w+\s+luk\w*/i,
 };
 
 export type ZakonClanak = RagZakonSource;
@@ -125,6 +126,7 @@ const LEGAL_CONCEPT_PATTERNS: Array<{
   { regex: /\bčl(?:anak|anka|\.)\s*129\b|\bukidanj\w+\s+zakonit\w*/i, label: 'poništavanje i ukidanje (čl. 129. ZUP)', stem: '129.', weight: 3.2 },
   { regex: /\btro[šs]kov\w+\s+postupk\w*|\btro[šs]kov\w+\s+upravnog\s+spora/i, label: 'troškovi postupka', stem: 'troškov', weight: 2.9 },
   { regex: /\bodgovor\w*\s+na\s+tu[žz]b\w*/i, label: 'odgovor na tužbu', stem: 'odgovor na tužbu', weight: 3.2 },
+  { regex: /\baerodrom\w*|\bzra[čc]n\w+\s+luk\w*|\buzletno[- ]sletn\w+/i, label: 'aerodrom / zračna luka (ZZP)', stem: 'aerodrom', weight: 3.1 },
 ];
 
 /**

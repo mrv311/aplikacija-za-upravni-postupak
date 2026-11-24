@@ -19,6 +19,7 @@ import {
   Check,
   Landmark,
   Loader2,
+  Plane,
 } from 'lucide-react';
 import { PROPISI_MAP, PROPISI_LIST, PropisDef } from '@/lib/propisi-config';
 import {
@@ -55,6 +56,7 @@ const PODRUCJE_ICONS: Record<string, React.ReactNode> = {
   'Gradnja, prostor i ozakonjenje': <Building2 className="w-5 h-5 text-amber-600" />,
   'Porezi i pristojbe': <Coins className="w-5 h-5 text-emerald-600" />,
   'Građansko, stvarno i zemljišnoknjižno pravo': <Landmark className="w-5 h-5 text-rose-600" />,
+  'Promet, infrastruktura i posebni propisi': <Plane className="w-5 h-5 text-sky-600" />,
 };
 
 /** Prirodno pravno sortiranje članaka (npr. 1, 2, ..., 186, 186a, 186b, ..., 187) */
@@ -327,6 +329,7 @@ export function PropisiTable({ articles }: { articles: ClanakItem[] }) {
               <option value="Gradnja, prostor i ozakonjenje">Gradnja, prostor i ozakonjenje</option>
               <option value="Porezi i pristojbe">Porezi i pristojbe</option>
               <option value="Građansko, stvarno i zemljišnoknjižno pravo">Građansko, stvarno i zemljišnoknjižno pravo</option>
+              <option value="Promet, infrastruktura i posebni propisi">Promet, infrastruktura i posebni propisi</option>
             </select>
 
             <select

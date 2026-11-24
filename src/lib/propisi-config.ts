@@ -6,7 +6,8 @@ export interface PropisDef {
     | 'Vodno pravo i naknade'
     | 'Gradnja, prostor i ozakonjenje'
     | 'Porezi i pristojbe'
-    | 'Građansko, stvarno i zemljišnoknjižno pravo';
+    | 'Građansko, stvarno i zemljišnoknjižno pravo'
+    | 'Promet, infrastruktura i posebni propisi';
   tip: 'Zakon' | 'Uredba' | 'Pravilnik' | 'Pravila';
   nn: string;
   izvor: 'zakon.hr' | 'lokalno';
@@ -270,6 +271,18 @@ export const PROPISI_LIST: PropisDef[] = [
     nn: 'NN 81/97, 109/02, 123/02, 153/02, 14/05, 60/10',
     izvor: 'lokalno',
     opis: 'Pravilnik o unutarnjem ustroju, vođenju zemljišnih knjiga i obavljanju drugih poslova u zemljišnoknjižnim odjelima sudova.'
+  },
+
+  // 6. PROMET, INFRASTRUKTURA I POSEBNI PROPISI
+  {
+    naziv: 'Zakon o zračnom prometu',
+    kratica: 'ZZP',
+    podrucje: 'Promet, infrastruktura i posebni propisi',
+    tip: 'Zakon',
+    nn: 'NN 69/09, 84/11, 54/13, 127/13, 92/14',
+    izvor: 'zakon.hr',
+    url: 'https://www.zakon.hr/z/177/zakon-o-zracnom-prometu',
+    opis: 'Uređuje civilno zrakoplovstvo, pojmove i razvrstavanje aerodroma i zračnih luka, sigurnost i zaštitu zračnog prometa, zaštitu okoliša te nadležnosti Ministarstva i Agencije.'
   }
 ];
 
