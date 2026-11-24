@@ -41,6 +41,24 @@ import type { LegalUIMessage } from '@/lib/ai-types';
 
 const RAW_UPLOADS_BASE = path.join(process.cwd(), 'data', 'izrada-propisa');
 
+async function runGeminiOcrOnPdfBuffer(buffer: Buffer, fileName: string): Promise<string> {
+  const { text } = await generateText({
+    model: google('gemini-3.8-flash'),
+    system:
+      'Ti si precizni pravni OCR sustav za hrvatske službene dokumente (mišljenja ministarstava, UZZ-a, zapisnike i nacrte propisa). Prepiši vjerno cjeloviti tekst dokumenta uključujući zaglavlja, naziv tijela, KLASU, URBROJ, datum, naslove, sve jezične, nomotehničke i sadržajne primjedbe, članke i tablice. Vrati isključivo pročitani tekst bez dodatnih komentara.',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: `Prepiši cjeloviti tekst ovog skeniranog dokumenta (${fileName}):` },
+          { type: 'file', data: buffer.toString('base64'), mediaType: 'application/pdf' },
+        ],
+      },
+    ],
+  });
+  return (text || '').trim();
+}
+
 function saveRawUploadForOcr(projectId: string, fileName: string, buffer: Buffer): string | undefined {
   try {
     const safeProj = projectId.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -121,13 +139,15 @@ export async function deletePropisProjectAction(projectId: string) {
 }
 
 /**
- * Višestruki upload dokumenata s 100% lokalnim parsiranjem (0 AI troška).
+ * Višestruki upload dokumenata s lokalnim parsiranjem (0 AI troška za tekstualne dokumente)
+ * i automatskim in-memory AI OCR-om za skenirane PDF-ove bez tekstualnog sloja (radi i na Vercelu!).
  */
 export async function uploadPropisDocumentsAction(formData: FormData) {
   const projectId = String(formData.get('projectId') || '').trim();
   const requestedRole = String(formData.get('uloga') || 'auto').trim();
   const customSender = String(formData.get('posiljatelj') || '').trim();
   const customDate = String(formData.get('datumVerzije') || '').trim();
+  const autoOcr = String(formData.get('autoOcr') ?? 'true') !== 'false';
   const files = formData.getAll('files') as File[];
 
   if (!projectId) return { error: 'Nedostaje ID projekta.' };
@@ -135,6 +155,7 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
 
   const added: PropisDocument[] = [];
   const errors: string[] = [];
+  let ocrCount = 0;
 
   for (const file of files) {
     try {
@@ -155,15 +176,43 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
 
       const parsed = await parsePropisBufferLocally(buffer, file.name, role);
 
+      let finalRawText = parsed.rawText;
+      let finalNeedsOcr = parsed.needsOcr;
+      let finalIzvorTeksta: PropisDocument['izvorTeksta'] = 'lokalni_parser';
+      let finalParsedDraft = parsed.parsedDraft;
+
+      // Ako je PDF skeniran (bez tekstualnog sloja), odmah u memoriji odradi Gemini AI OCR — radi 100% i na Vercelu!
+      if (parsed.needsOcr && ext === 'pdf' && autoOcr) {
+        try {
+          const ocrText = await runGeminiOcrOnPdfBuffer(buffer, file.name);
+          if (ocrText.length >= 20) {
+            finalRawText = ocrText;
+            finalNeedsOcr = false;
+            finalIzvorTeksta = 'rucni_ai_ocr';
+            ocrCount++;
+            if (role === 'aktualni_nacrt' || role === 'prethodna_verzija') {
+              const candidate = parseNormativeDraft(ocrText);
+              if (candidate.clanci.length > 0 || candidate.preambula.length > 0) {
+                finalParsedDraft = candidate;
+              }
+            }
+          }
+        } catch (ocrErr: any) {
+          errors.push(
+            `${file.name}: automatski AI OCR nije uspio (${ocrErr?.message || 'nepoznata greška'}) — dokument je spremljen pa možete naknadno pokrenuti AI OCR.`
+          );
+        }
+      }
+
       let savedRawPath: string | undefined;
-      if (parsed.needsOcr || ext === 'docx') {
+      if (finalNeedsOcr || ext === 'docx') {
         savedRawPath = saveRawUploadForOcr(projectId, file.name, buffer);
       }
 
       const detectedSender =
         customSender ||
         autoCls.sender ||
-        (role === 'misljenje' ? detectSenderFromText(parsed.rawText.slice(0, 1200)).label : undefined);
+        (role === 'misljenje' ? detectSenderFromText(finalRawText.slice(0, 1800)).label : undefined);
       const fileMtimeIso =
         file.lastModified && file.lastModified > 0
           ? new Date(file.lastModified).toISOString().slice(0, 10)
@@ -172,7 +221,7 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
         customDate ||
         autoCls.date ||
         extractDateFromFileName(file.name) ||
-        extractDateFromDocumentText(parsed.rawText) ||
+        extractDateFromDocumentText(finalRawText) ||
         fileMtimeIso;
 
       const roleMeta = PROPIS_DOC_ROLE_MAP[role];
@@ -186,18 +235,18 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
         velicinaBajta: file.size,
         izvorDatoteke: 'upload',
         lokalnaPutanja: savedRawPath,
-        izvorTeksta: 'lokalni_parser',
-        needsOcr: parsed.needsOcr,
-        includeInAiContext: roleMeta.defaultInAiContext && !parsed.needsOcr,
-        rawText: parsed.rawText,
+        izvorTeksta: finalIzvorTeksta,
+        needsOcr: finalNeedsOcr,
+        includeInAiContext: roleMeta.defaultInAiContext && !finalNeedsOcr,
+        rawText: finalRawText,
         htmlTablesCount: parsed.htmlTablesCount,
-        parsedDraft: parsed.parsedDraft,
+        parsedDraft: finalParsedDraft,
         excelSheets: parsed.excelSheets,
       });
 
       added.push(doc);
     } catch (err: any) {
-      errors.push(`${file.name}: ${err?.message || 'Greška pri lokalnom parsiranju.'}`);
+      errors.push(`${file.name}: ${err?.message || 'Greška pri parsiranju datoteke.'}`);
     }
   }
 
@@ -207,6 +256,7 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
   return {
     success: added.length > 0,
     added,
+    ocrCount,
     errors,
   };
 }
@@ -425,7 +475,8 @@ export async function deletePropisDocumentAction(projectId: string, docId: strin
 }
 
 /**
- * Opcionalni RUČNI AI OCR — pokreće se ISKLJUČIVO na izričit klik korisnika za skenirane PDF-ove bez tekstualnog sloja.
+ * Opcionalni RUČNI AI OCR — ako je PDF na disku (lokalno), čita ga izravno; ako nije (Vercel),
+ * vraća `needsFileReupload: true` kako bi klijent ponudio odabir PDF-a za in-memory AI OCR.
  */
 export async function runManualOcrOnPropisDocAction(projectId: string, docId: string) {
   const docs = await listPropisDocuments(projectId);
@@ -434,39 +485,31 @@ export async function runManualOcrOnPropisDocAction(projectId: string, docId: st
   if (!doc.lokalnaPutanja || !fs.existsSync(doc.lokalnaPutanja)) {
     return {
       error:
-        'Izvorna PDF datoteka nije dostupna na lokalnom disku za naknadni AI OCR (pokrenite lokalno ili zalijepite tekst ručno).',
+        'Odaberite izvorni PDF s vašeg računala kako bi AI OCR odmah pročitao skenirani tekst.',
+      needsFileReupload: true,
     };
   }
 
   try {
     const buffer = fs.readFileSync(doc.lokalnaPutanja);
-    const { text } = await generateText({
-      model: google('gemini-3.8-flash'),
-      system:
-        'Ti si precizni pravni OCR sustav za hrvatske službene dokumente (mišljenja ministarstava, UZZ-a, zapisnike i nacrte propisa). Prepiši vjerno sav tekst dokumenta uključujući zaglavlja, KLASU, URBROJ, datume, članke i tablice. Vrati isključivo pročitani tekst.',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: `Prepiši cjeloviti tekst ovog skeniranog dokumenta (${doc.naziv}):` },
-            { type: 'file', data: buffer.toString('base64'), mediaType: 'application/pdf' },
-          ],
-        },
-      ],
-    });
-
-    const clean = (text || '').trim();
+    const clean = await runGeminiOcrOnPdfBuffer(buffer, doc.naziv);
     if (!clean) return { error: 'AI OCR nije uspio očitati tekst iz skena.' };
 
     const parsedDraft =
       doc.uloga === 'aktualni_nacrt' || doc.uloga === 'prethodna_verzija'
         ? parseNormativeDraft(clean)
         : doc.parsedDraft;
+    const detectedSender =
+      doc.posiljatelj ||
+      (doc.uloga === 'misljenje' ? detectSenderFromText(clean.slice(0, 1800)).label : undefined);
+    const detectedDate = doc.datumVerzije || extractDateFromDocumentText(clean);
 
     const updated = await updatePropisDocument(projectId, docId, {
       rawText: clean,
       izvorTeksta: 'rucni_ai_ocr',
       needsOcr: false,
+      posiljatelj: detectedSender,
+      datumVerzije: detectedDate,
       includeInAiContext: PROPIS_DOC_ROLE_MAP[doc.uloga].defaultInAiContext,
       parsedDraft,
     });
@@ -475,6 +518,55 @@ export async function runManualOcrOnPropisDocAction(projectId: string, docId: st
     return { success: true, doc: updated };
   } catch (err: any) {
     return { error: err?.message || 'Greška pri AI OCR čitanju dokumenta.' };
+  }
+}
+
+/**
+ * In-memory AI OCR za već učitani skenirani PDF (radi 100% na Vercelu!):
+ * korisnik ponovno odabere isti PDF s računala, server ga očita Gemini OCR-om i ažurira dokument u Supabaseu.
+ */
+export async function runManualOcrFromUploadAction(formData: FormData) {
+  const projectId = String(formData.get('projectId') || '').trim();
+  const docId = String(formData.get('docId') || '').trim();
+  const file = formData.get('file') as File | null;
+
+  if (!projectId || !docId) return { error: 'Nedostaje ID projekta ili dokumenta.' };
+  if (!file) return { error: 'Niste odabrali PDF datoteku za AI OCR.' };
+
+  const docs = await listPropisDocuments(projectId);
+  const doc = docs.find((d) => d.id === docId);
+  if (!doc) return { error: 'Dokument nije pronađen.' };
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (buffer.length === 0) return { error: 'Odabrana PDF datoteka je prazna.' };
+
+    const clean = await runGeminiOcrOnPdfBuffer(buffer, file.name || doc.naziv);
+    if (!clean) return { error: 'AI OCR nije uspio očitati tekst iz skena.' };
+
+    const parsedDraft =
+      doc.uloga === 'aktualni_nacrt' || doc.uloga === 'prethodna_verzija'
+        ? parseNormativeDraft(clean)
+        : doc.parsedDraft;
+    const detectedSender =
+      doc.posiljatelj ||
+      (doc.uloga === 'misljenje' ? detectSenderFromText(clean.slice(0, 1800)).label : undefined);
+    const detectedDate = doc.datumVerzije || extractDateFromDocumentText(clean);
+
+    const updated = await updatePropisDocument(projectId, docId, {
+      rawText: clean,
+      izvorTeksta: 'rucni_ai_ocr',
+      needsOcr: false,
+      posiljatelj: detectedSender,
+      datumVerzije: detectedDate,
+      includeInAiContext: PROPIS_DOC_ROLE_MAP[doc.uloga].defaultInAiContext,
+      parsedDraft,
+    });
+
+    revalidatePath(`/izrada-propisa/${projectId}`);
+    return { success: true, doc: updated };
+  } catch (err: any) {
+    return { error: err?.message || 'Greška pri AI OCR čitanju poslane PDF datoteke.' };
   }
 }
 

@@ -41,6 +41,7 @@ import {
   updatePropisDocumentAction,
   deletePropisDocumentAction,
   runManualOcrOnPropisDocAction,
+  runManualOcrFromUploadAction,
   backfillDocumentMetadataAction,
 } from '@/app/actions/izradaPropisaActions';
 
@@ -89,10 +90,13 @@ export function DokumentiTab({
 
   // Upload state
   const [uploadRole, setUploadRole] = useState<'auto' | PropisDocRole>('auto');
+  const [autoOcrOnUpload, setAutoOcrOnUpload] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const ocrFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingOcrDoc, setPendingOcrDoc] = useState<PropisDocument | null>(null);
 
   // Skener referentne mape (OneDrive)
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -227,6 +231,7 @@ export function DokumentiTab({
     const fd = new FormData();
     fd.append('projectId', project.id);
     fd.append('uloga', uploadRole);
+    fd.append('autoOcr', autoOcrOnUpload ? 'true' : 'false');
     for (const f of files) {
       fd.append('files', f);
     }
@@ -240,11 +245,15 @@ export function DokumentiTab({
     }
 
     const addedCount = res.added?.length || 0;
+    const ocrPart =
+      res.ocrCount && res.ocrCount > 0
+        ? ` (${res.ocrCount} skenirani PDF automatski pročitan AI OCR-om)`
+        : ' (lokalno parsiranje · 0 AI troška)';
     const errPart =
       res.errors && res.errors.length > 0 ? ` Upozorenja: ${res.errors.join(' | ')}` : '';
     setFeedback({
       type: addedCount > 0 ? 'ok' : 'err',
-      text: `Lokalno parsirano (0 AI troška) i učitano ${addedCount} datoteka.${errPart}`,
+      text: `Učitano ${addedCount} datoteka${ocrPart}.${errPart}`,
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
     onRefresh();
@@ -343,6 +352,13 @@ export function DokumentiTab({
   };
 
   const handleRunManualOcr = async (doc: PropisDocument) => {
+    // Ako dokument nema lokalnu putanju na poslužitelju (npr. web verzija Vercel), odmah ponudi odabir PDF-a s računala za in-memory AI OCR
+    if (!doc.lokalnaPutanja) {
+      setPendingOcrDoc(doc);
+      setTimeout(() => ocrFileInputRef.current?.click(), 0);
+      return;
+    }
+
     if (
       !confirm(
         `Pokrenuti AI OCR čitanje (Gemini Flash) za skenirani PDF „${doc.prikazniNaziv}”?`
@@ -351,14 +367,55 @@ export function DokumentiTab({
       return;
     }
     setOcrLoadingId(doc.id);
+    setFeedback(null);
     const res = await runManualOcrOnPropisDocAction(project.id, doc.id);
     setOcrLoadingId(null);
+
+    if ((res as any).needsFileReupload) {
+      setPendingOcrDoc(doc);
+      setFeedback({
+        type: 'ok',
+        text: `Odaberite izvorni PDF za „${doc.prikazniNaziv}” s računala kako bi ga AI OCR odmah pročitao.`,
+      });
+      setTimeout(() => ocrFileInputRef.current?.click(), 0);
+      return;
+    }
+
     if (res.error) {
       setFeedback({ type: 'err', text: res.error });
     } else {
       setFeedback({
         type: 'ok',
         text: `AI OCR uspješno dovršen za „${doc.prikazniNaziv}”.`,
+      });
+      onRefresh();
+    }
+  };
+
+  const handleOcrFileSelected = async (file: File) => {
+    if (!pendingOcrDoc) return;
+    const targetDoc = pendingOcrDoc;
+    setPendingOcrDoc(null);
+    setOcrLoadingId(targetDoc.id);
+    setFeedback(null);
+
+    const fd = new FormData();
+    fd.append('projectId', project.id);
+    fd.append('docId', targetDoc.id);
+    fd.append('file', file);
+
+    const res = await runManualOcrFromUploadAction(fd);
+    setOcrLoadingId(null);
+    if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
+
+    if (res.error) {
+      setFeedback({ type: 'err', text: res.error });
+    } else {
+      setFeedback({
+        type: 'ok',
+        text: `AI OCR uspješno dovršen za „${targetDoc.prikazniNaziv}” (${(
+          res.doc?.rawText?.length || 0
+        ).toLocaleString('hr-HR')} znakova).`,
       });
       onRefresh();
     }
@@ -473,11 +530,20 @@ export function DokumentiTab({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Učitaj dokumente povjerenstva (lokalno parsiranje · 0 AI troška)
+                  Učitaj dokumente povjerenstva (lokalno + auto AI OCR za skenove)
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Povuci i ispusti ili odaberi više datoteka: <span className="font-mono">.docx</span> (čuva tablice), <span className="font-mono">.doc</span>, <span className="font-mono">.xlsx</span>, <span className="font-mono">.pdf</span>, <span className="font-mono">.txt</span>
                 </p>
+                <label className="inline-flex items-center gap-1.5 mt-2 text-[11px] font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoOcrOnUpload}
+                    onChange={(e) => setAutoOcrOnUpload(e.target.checked)}
+                    className="rounded border-slate-300 text-blue-600"
+                  />
+                  Automatski pokreni AI OCR ako je učitani PDF skeniran (radi i na web verziji)
+                </label>
               </div>
             </div>
 
@@ -505,6 +571,16 @@ export function DokumentiTab({
                   if (e.target.files?.length) handleUploadFiles(e.target.files);
                 }}
               />
+              <input
+                ref={ocrFileInputRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleOcrFileSelected(f);
+                }}
+              />
               <button
                 type="button"
                 disabled={uploading}
@@ -512,7 +588,7 @@ export function DokumentiTab({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs disabled:opacity-60 cursor-pointer"
               >
                 <UploadCloud className="w-3.5 h-3.5" />
-                {uploading ? 'Parsiranje...' : 'Odaberi datoteke'}
+                {uploading ? 'Obrada...' : 'Odaberi datoteke'}
               </button>
             </div>
           </div>
@@ -796,6 +872,11 @@ export function DokumentiTab({
                         type="button"
                         disabled={ocrLoadingId === doc.id}
                         onClick={() => handleRunManualOcr(doc)}
+                        title={
+                          doc.lokalnaPutanja
+                            ? 'Pokreni AI OCR na lokalnoj PDF datoteci'
+                            : 'Odaberi isti PDF s računala za trenutni AI OCR na web verziji'
+                        }
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold cursor-pointer disabled:opacity-60"
                       >
                         {ocrLoadingId === doc.id ? (
@@ -803,7 +884,11 @@ export function DokumentiTab({
                         ) : (
                           <ScanText className="w-3.5 h-3.5" />
                         )}
-                        Pokreni AI OCR
+                        {ocrLoadingId === doc.id
+                          ? 'AI OCR...'
+                          : doc.lokalnaPutanja
+                            ? 'Pokreni AI OCR'
+                            : 'AI OCR (odaberi PDF)'}
                       </button>
                     )}
 

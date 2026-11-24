@@ -461,6 +461,8 @@ export function PropisWorkspace({
               documents={documents}
               primjedbe={primjedbe}
               onPrimjedbeChange={setPrimjedbe}
+              onDocumentsChange={setDocuments}
+              onRefresh={() => router.refresh()}
             />
           )}
 

@@ -12,6 +12,7 @@ import { PROPISI_LIST } from '@/lib/propisi-config';
 import { PropisWorkspace } from '@/components/izrada-propisa/PropisWorkspace';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export default async function IzradaPropisaProjectPage({
   params,
