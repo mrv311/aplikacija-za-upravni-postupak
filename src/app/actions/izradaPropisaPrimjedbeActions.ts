@@ -601,7 +601,7 @@ ${formatPraksa(rag.praksa)}`,
     );
 
     await savePrimjedbe(params.projectId, updatedList);
-    revalidatePath(`/izrada-propisa/${params.projectId}`);
+    tryRevalidate(`/izrada-propisa/${params.projectId}`);
     return {
       success: true,
       item: updatedList.find((p) => p.id === item.id)!,
@@ -609,6 +609,180 @@ ${formatPraksa(rag.praksa)}`,
     };
   } catch (err: any) {
     return { error: err?.message || 'Greška pri generiranju prijedloga odgovora.' };
+  }
+}
+
+export interface PrimjedbaRefineTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/**
+ * Interaktivna AI radionica odgovora za pojedinu primjedbu:
+ * korisnik bira razinu agenta (Flash vs Pro) i smjer odluke, vodi višestupanjski razgovor s AI-jem
+ * uz puni RAG (Baza zakona: ZFVG, ZOV, ZZP, JMNP... + Baza prakse), a predloženi odgovor NE prepisuje
+ * tablicu dok korisnik izričito ne klikne „Primijeni odgovor u tablicu”.
+ */
+export async function refinePrimjedbaResponseChatAction(params: {
+  projectId: string;
+  primjedbaId: string;
+  modelPreference: 'flash' | 'pro';
+  zeljeniStatus?: PrimjedbaStatus | 'auto';
+  userInstruction: string;
+  currentDraft?: {
+    status: PrimjedbaStatus;
+    obrazlozenje: string;
+    predlozenaIzmjena?: string;
+    pravnaReferenca?: string;
+  };
+  history?: PrimjedbaRefineTurn[];
+}) {
+  const project = await getPropisProject(params.projectId);
+  if (!project) return { error: 'Projekt nije pronađen.' };
+
+  const all = await listPrimjedbe(params.projectId);
+  const item = all.find((p) => p.id === params.primjedbaId);
+  if (!item) return { error: 'Primjedba nije pronađena.' };
+
+  const docs = await listPropisDocuments(params.projectId);
+  const aktualniNacrt = docs.find((d) => d.uloga === 'aktualni_nacrt');
+  const izvorniDok = item.izvorniDokumentId
+    ? docs.find((d) => d.id === item.izvorniDokumentId)
+    : undefined;
+
+  const aiModel =
+    params.modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
+
+  try {
+    const ragQuery = [
+      item.clanakOznaka,
+      item.tijelo,
+      item.tekstPrimjedbe.slice(0, 1200),
+      params.userInstruction,
+      project.puniNazivAkta,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const rag = await searchKnowledge(ragQuery, {
+      zakoniCount: 10,
+      praksaCount: 6,
+      extraTextForRefs: `${aktualniNacrt?.rawText.slice(0, 16000) || ''}\n${
+        item.tekstPrimjedbe
+      }\n${params.userInstruction}\n${params.currentDraft?.obrazlozenje || ''}`,
+      casePodrucje: project.pravnoPodrucje || 'NUV',
+      filterScope: 'sve',
+    });
+
+    const historyText =
+      params.history && params.history.length > 0
+        ? params.history
+            .slice(-10)
+            .map((h) => `${h.role === 'user' ? 'SAVJETNIK' : 'AI SAVJETNIK'}: ${h.content}`)
+            .join('\n')
+        : '(Prvi krug razgovora za ovu primjedbu)';
+
+    const directionNote =
+      params.zeljeniStatus && params.zeljeniStatus !== 'auto'
+        ? `OBVEZNI SMJER ODLUKE KOJI TRAŽI SAVJETNIK: "${params.zeljeniStatus}" (poštuj ovaj smjer osim ako savjetnik u svojoj najnovijoj uputi izričito ne traži drugačije).`
+        : 'SMJER ODLUKE: Procijeni samostalno prema pravnom okviru i uputama savjetnika.';
+
+    const systemPrompt = `Ti si viši upravni savjetnik i nomotehničar u Ministarstvu zaštite okoliša i zelene tranzicije RH.
+Vodiš interaktivnu stručnu raspravu sa savjetnikom Ministarstva oko oblikovanja NAJBOLJEG službenog odgovora (Obrazloženja) u Tablici primjedbi na nacrt propisa.
+
+PRAVILA RADA:
+1. Dosljedno slijedi najnoviju uputu savjetnika (npr. ako traži da se primjedba odbije, djelomično prihvati, skrati, pooštri, pozove na konkretan zakon poput Zakona o zračnom prometu / ZFVG-a / JMNP-a ili izmeni formulacija članka).
+2. Koristi ISKLJUČIVO provjerene zakonske odredbe iz priloženih zakona iz Baze i prakse — citiraj točne članke i stavke (nikada ne izmišljaj brojeve članaka!).
+3. U polju "komentarSavjetniku" kratko i kolegijalno (2–4 rečenice) objasni savjetniku što si promijenio, na koje si se odredbe pozvao i eventualne nomotehničke/pravne opaske.
+4. U polju "obrazlozenje" napiši CJELOVITI, gotov službeni odgovor za 4. stupac Tablice primjedbi za Vladu RH (spreman za izravno spremanje bez potrebe da savjetnik sam sklapa dijelove!).
+5. Ako se primjedba prihvaća ili djelomično prihvaća, u "predlozenaIzmjena" napiši konkretan pročišćeni prijedlog izmijenjene rečenice/stavka članka (inače prazan string "").
+6. U "pravnaReferenca" sažeto navedi korištene propise i presude (npr. "čl. 2. i čl. 31. ZZP-a; čl. 20. ZFVG-a; čl. 41. JMNP-a").
+
+Vrati ISKLJUČIVO valjani JSON objekt (bez teksta izvan JSON-a):
+{
+  "komentarSavjetniku": "Kratki odgovor savjetniku u razgovoru (što je dorađeno i pravna napomena)",
+  "status": "Prihvaća se" | "Djelomično se prihvaća" | "Ne prihvaća se" | "Prima se na znanje" | "Na razmatranju",
+  "obrazlozenje": "Cjeloviti gotov tekst službenog obrazloženja za Tablicu primjedbi",
+  "predlozenaIzmjena": "Konkretan prijedlog izmijenjenog teksta odredbe ili prazan string",
+  "pravnaReferenca": "Popis korištenih članaka zakona i prakse"
+}`;
+
+    const userPrompt = `PROJEKT / AKT: ${project.puniNazivAkta}
+TIJELO / DIONIK: ${item.tijelo} (${item.kategorijaTijela})
+ČLANAK / ODREDBA: ${item.clanakOznaka}
+IZVORNA PRIMJEDBA:
+${item.tekstPrimjedbe}
+
+${
+  izvorniDok?.rawText
+    ? `ŠIRI KONTEKST IZVORNOG DOKUMENTA (${izvorniDok.prikazniNaziv}):\n${izvorniDok.rawText.slice(0, 6000)}\n`
+    : ''
+}
+TRENUTNI RADNI NACRT ODGOVORA:
+- Status: ${params.currentDraft?.status || item.status}
+- Obrazloženje: ${params.currentDraft?.obrazlozenje || item.obrazlozenje || '(još nije napisano)'}
+- Predložena izmjena: ${params.currentDraft?.predlozenaIzmjena || item.predlozenaIzmjena || '(nema)'}
+- Pravna referenca: ${params.currentDraft?.pravnaReferenca || item.pravnaReferenca || '(nema)'}
+
+${directionNote}
+
+DOSADAŠNJI RAZGOVOR OKO OVOG ODGOVORA:
+${historyText}
+
+NAJNOVIJA UPUTA / PITANJE SAVJETNIKA:
+${params.userInstruction}
+
+AKTUALNI NACRT PROPISA:
+${aktualniNacrt ? aktualniNacrt.rawText.slice(0, 22000) : '(Nema učitanog nacrta)'}
+
+MJERODAVNI ZAKONI IZ BAZE (uključujući ZFVG, ZOV, ZZP, JMNP itd.):
+${formatZakoni(rag.zakoni)}
+
+RELEVANTNA PRAKSA IZ BAZE:
+${formatPraksa(rag.praksa)}`;
+
+    const { text } = await generateText({
+      model: google(aiModel),
+      system: systemPrompt,
+      prompt: userPrompt,
+    });
+
+    const parsed = extractJsonObject<any>(text);
+    const nextStatus = VALID_STATUSES.has(parsed.status)
+      ? (parsed.status as PrimjedbaStatus)
+      : params.zeljeniStatus && params.zeljeniStatus !== 'auto'
+        ? params.zeljeniStatus
+        : params.currentDraft?.status || item.status;
+
+    const nextObrazlozenje = String(
+      parsed.obrazlozenje ?? params.currentDraft?.obrazlozenje ?? item.obrazlozenje ?? ''
+    ).trim();
+
+    return {
+      success: true,
+      modelUsed: params.modelPreference,
+      komentarSavjetniku: String(
+        parsed.komentarSavjetniku || 'Ažurirao sam prijedlog odgovora sukladno vašoj uputi.'
+      ).trim(),
+      draft: {
+        status: nextStatus,
+        obrazlozenje: nextObrazlozenje,
+        predlozenaIzmjena: String(parsed.predlozenaIzmjena || '').trim(),
+        pravnaReferenca: String(parsed.pravnaReferenca || '').trim(),
+      },
+      ragSources: {
+        zakoni: rag.zakoni.slice(0, 8).map((z) => ({
+          naziv_zakona: z.naziv_zakona,
+          clanak_broj: z.clanak_broj,
+        })),
+        praksa: rag.praksa.slice(0, 4).map((p) => ({
+          naziv: p.kratkiNaziv || p.naziv_datoteke || 'Odluka iz prakse',
+        })),
+      },
+    };
+  } catch (err: any) {
+    console.error('refinePrimjedbaResponseChatAction error:', err);
+    return { error: err?.message || 'Greška pri komunikaciji s AI agentom za doradu odgovora.' };
   }
 }
 

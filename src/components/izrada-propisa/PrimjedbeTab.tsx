@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Sparkles,
   Download,
@@ -24,6 +24,11 @@ import {
   ChevronRight,
   ChevronsUpDown,
   MessageSquare,
+  Send,
+  RotateCcw,
+  Zap,
+  Brain,
+  Scale,
 } from 'lucide-react';
 import {
   PRIMJEDBA_KATEGORIJE_TIJELA,
@@ -39,12 +44,23 @@ import {
   extractPrimjedbeFromDocsAction,
   importExistingPrimjedbeDocxAction,
   splitCombinedPrimjedbaAction,
-  suggestSinglePrimjedbaResponseAction,
+  refinePrimjedbaResponseChatAction,
   upsertPrimjedbaAction,
   deletePrimjedbaAction,
   clearAllPrimjedbeAction,
 } from '@/app/actions/izradaPropisaPrimjedbeActions';
 import { articleSortRank } from '@/lib/propis-article-parser';
+
+interface WorkshopMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  modelUsed?: 'flash' | 'pro';
+  ragSources?: {
+    zakoni: Array<{ naziv_zakona: string; clanak_broj: string }>;
+    praksa: Array<{ naziv: string }>;
+  };
+}
 
 function isSubstantivePrimjedba(item: PrimjedbaItem): boolean {
   const txt = (item.tekstPrimjedbe || '').trim();
@@ -153,11 +169,40 @@ export function PrimjedbeTab({
   } | null>(null);
   const [savingItem, setSavingItem] = useState(false);
 
-  // Per-row AI prijedlog odgovora i AI razvrstavanje spojenih primjedbi
-  const [suggestingId, setSuggestingId] = useState<string | null>(null);
+  // Per-row AI razvrstavanje i zadana razina AI agenta (Flash vs Pro)
+  const [defaultAiModel, setDefaultAiModel] = useState<'flash' | 'pro'>('flash');
   const [splittingId, setSplittingId] = useState<string | null>(null);
   const [exportingDocx, setExportingDocx] = useState(false);
   const [includeClanakCol, setIncludeClanakCol] = useState(true);
+
+  // Modal: Interaktivna „AI radionica odgovora” za pojedinu primjedbu (razgovor + izbor Flash/Pro + živi nacrt)
+  const [workshopItem, setWorkshopItem] = useState<PrimjedbaItem | null>(null);
+  const [workshopModel, setWorkshopModel] = useState<'flash' | 'pro'>('flash');
+  const [workshopDirection, setWorkshopDirection] = useState<'auto' | PrimjedbaStatus>('auto');
+  const [workshopDraft, setWorkshopDraft] = useState<{
+    status: PrimjedbaStatus;
+    obrazlozenje: string;
+    predlozenaIzmjena: string;
+    pravnaReferenca: string;
+  }>({
+    status: 'Na razmatranju',
+    obrazlozenje: '',
+    predlozenaIzmjena: '',
+    pravnaReferenca: '',
+  });
+  const [workshopMessages, setWorkshopMessages] = useState<WorkshopMessage[]>([]);
+  const [workshopInput, setWorkshopInput] = useState('');
+  const [workshopLoading, setWorkshopLoading] = useState(false);
+  const [workshopSaving, setWorkshopSaving] = useState(false);
+  const [workshopError, setWorkshopError] = useState<string | null>(null);
+  const [workshopShowFullRemark, setWorkshopShowFullRemark] = useState(false);
+  const workshopChatEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (workshopItem) {
+      workshopChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [workshopMessages, workshopLoading, workshopItem]);
 
   const opinionDocs = useMemo(
     () => documents.filter((d) => d.uloga === 'misljenje' && !d.needsOcr),
@@ -478,6 +523,7 @@ export function PrimjedbeTab({
     const res = await splitCombinedPrimjedbaAction({
       projectId: project.id,
       primjedbaId: item.id,
+      modelPreference: defaultAiModel,
     });
     setSplittingId(null);
     if (res.error) {
@@ -501,30 +547,110 @@ export function PrimjedbeTab({
     });
   };
 
-  const handleSuggestSingle = async (item: PrimjedbaItem) => {
-    setSuggestingId(item.id);
-    setFeedback(null);
-    const res = await suggestSinglePrimjedbaResponseAction({
-      projectId: project.id,
-      primjedbaId: item.id,
-      zeljeniStatus: item.status === 'Na razmatranju' ? undefined : item.status,
+  const openAiWorkshop = (item: PrimjedbaItem) => {
+    setWorkshopItem(item);
+    setWorkshopModel(defaultAiModel);
+    setWorkshopDirection(item.status === 'Na razmatranju' ? 'auto' : item.status);
+    setWorkshopDraft({
+      status: item.status,
+      obrazlozenje: item.obrazlozenje || '',
+      predlozenaIzmjena: item.predlozenaIzmjena || '',
+      pravnaReferenca: item.pravnaReferenca || '',
     });
-    setSuggestingId(null);
-    if (res.error) {
-      setFeedback({ type: 'err', text: res.error });
+    setWorkshopMessages([]);
+    setWorkshopInput('');
+    setWorkshopError(null);
+    setWorkshopShowFullRemark(false);
+  };
+
+  const handleSendWorkshopPrompt = async (
+    customPrompt?: string,
+    overrideDirection?: 'auto' | PrimjedbaStatus
+  ) => {
+    if (!workshopItem || workshopLoading) return;
+    const textToSend = (customPrompt ?? workshopInput).trim();
+    if (!textToSend) return;
+
+    const effectiveDirection = overrideDirection ?? workshopDirection;
+    if (overrideDirection) setWorkshopDirection(overrideDirection);
+
+    const userMsg: WorkshopMessage = {
+      id: `u-${Date.now()}`,
+      role: 'user',
+      content: textToSend,
+    };
+    const nextHistory = [...workshopMessages, userMsg];
+    setWorkshopMessages(nextHistory);
+    if (!customPrompt) setWorkshopInput('');
+    setWorkshopLoading(true);
+    setWorkshopError(null);
+
+    const res = await refinePrimjedbaResponseChatAction({
+      projectId: project.id,
+      primjedbaId: workshopItem.id,
+      modelPreference: workshopModel,
+      zeljeniStatus: effectiveDirection,
+      userInstruction: textToSend,
+      currentDraft: workshopDraft,
+      history: workshopMessages.map((m) => ({ role: m.role, content: m.content })),
+    });
+
+    setWorkshopLoading(false);
+
+    if (res.error || !res.draft) {
+      setWorkshopError(res.error || 'AI agent nije vratio valjan prijedlog.');
       return;
     }
+
+    setWorkshopDraft({
+      status: res.draft.status,
+      obrazlozenje: res.draft.obrazlozenje,
+      predlozenaIzmjena: res.draft.predlozenaIzmjena,
+      pravnaReferenca: res.draft.pravnaReferenca,
+    });
+    setWorkshopMessages((prev) => [
+      ...prev,
+      {
+        id: `a-${Date.now()}`,
+        role: 'assistant',
+        content: res.komentarSavjetniku || 'Ažurirao sam prijedlog odgovora desno.',
+        modelUsed: res.modelUsed,
+        ragSources: res.ragSources,
+      },
+    ]);
+  };
+
+  const handleApplyWorkshopDraft = async () => {
+    if (!workshopItem) return;
+    setWorkshopSaving(true);
+    const res = await upsertPrimjedbaAction(project.id, {
+      id: workshopItem.id,
+      tijelo: workshopItem.tijelo,
+      kategorijaTijela: workshopItem.kategorijaTijela,
+      clanakOznaka: workshopItem.clanakOznaka,
+      tekstPrimjedbe: workshopItem.tekstPrimjedbe,
+      status: workshopDraft.status,
+      obrazlozenje: workshopDraft.obrazlozenje.trim(),
+      predlozenaIzmjena: workshopDraft.predlozenaIzmjena.trim() || undefined,
+      pravnaReferenca: workshopDraft.pravnaReferenca.trim() || undefined,
+      izvorniDokumentId: workshopItem.izvorniDokumentId,
+      izvorniDokumentNaziv: workshopItem.izvorniDokumentNaziv,
+      izvorUnosa: workshopItem.izvorUnosa,
+    });
+    setWorkshopSaving(false);
     if (res.primjedbe) {
       onPrimjedbeChange(res.primjedbe);
       setExpandedItems((prev) => {
         const next = new Set(prev);
-        next.add(item.id);
+        next.add(workshopItem.id);
         return next;
       });
     }
+    const savedLabel = `${workshopItem.tijelo} — ${workshopItem.clanakOznaka}`;
+    setWorkshopItem(null);
     setFeedback({
       type: 'ok',
-      text: `Generiran AI prijedlog pravnog odgovora za primjedbu (${item.tijelo} — ${item.clanakOznaka}).`,
+      text: `Dorađeni odgovor je spremljen u Tablicu primjedbi (${savedLabel}).`,
     });
   };
 
@@ -647,11 +773,51 @@ export function PrimjedbeTab({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Globalni izbor razine AI agenta za Tablicu primjedbi */}
+            <div
+              className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-100 dark:bg-slate-800"
+              title="Zadana razina AI agenta za odgovore, razvrstavanje i izdvajanje primjedbi"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setDefaultAiModel('flash');
+                  setExtractModel('flash');
+                  setUploadOpinionModel('flash');
+                }}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
+                  defaultAiModel === 'flash'
+                    ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                }`}
+              >
+                <Zap className="w-3 h-3" />
+                Brzi (Flash)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDefaultAiModel('pro');
+                  setExtractModel('pro');
+                  setUploadOpinionModel('pro');
+                }}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
+                  defaultAiModel === 'pro'
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                }`}
+              >
+                <Brain className="w-3 h-3" />
+                Dubinski (Pro)
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => {
                 setUploadOpinionFiles([]);
                 setUploadOpinionSender('');
+                setUploadOpinionModel(defaultAiModel);
                 setUploadOpinionOpen(true);
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs cursor-pointer"
@@ -664,6 +830,7 @@ export function PrimjedbeTab({
               type="button"
               onClick={() => {
                 setSelectedOpinionIds(new Set(opinionDocs.map((d) => d.id)));
+                setExtractModel(defaultAiModel);
                 setAiExtractOpen(true);
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs cursor-pointer"
@@ -1038,7 +1205,7 @@ export function PrimjedbeTab({
                                   {showSplitBtn && (
                                     <button
                                       type="button"
-                                      disabled={splittingId === item.id || suggestingId === item.id}
+                                      disabled={splittingId === item.id}
                                       onClick={() => handleSplitCombined(item)}
                                       title="Automatski razdvoji spojeni unos na pojedinačne primjedbe po člancima i 1-na-1 upari postojeće odgovore"
                                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-[11px] font-semibold cursor-pointer disabled:opacity-50"
@@ -1056,17 +1223,13 @@ export function PrimjedbeTab({
 
                                   <button
                                     type="button"
-                                    disabled={suggestingId === item.id || splittingId === item.id}
-                                    onClick={() => handleSuggestSingle(item)}
-                                    title="Generiraj ili doradi pravni odgovor uz Bazu prakse i Bazu zakona"
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                                    disabled={splittingId === item.id}
+                                    onClick={() => openAiWorkshop(item)}
+                                    title="Otvori interaktivnu AI radionicu: izaberi Flash/Pro agenta, razgovaraj o odgovoru uz Bazu zakona i prakse te spremi tek kad si zadovoljan"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold cursor-pointer shadow-2xs disabled:opacity-50"
                                   >
-                                    {suggestingId === item.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <Wand2 className="w-3 h-3" />
-                                    )}
-                                    AI odgovor
+                                    <Wand2 className="w-3 h-3" />
+                                    AI radionica odgovora
                                   </button>
 
                                   <button
@@ -1126,7 +1289,7 @@ export function PrimjedbeTab({
                                       <span className="italic text-slate-400">
                                         {item.status === 'Prima se na znanje'
                                           ? 'Nije potreban poseban odgovor (primljeno na znanje / bez primjedbi).'
-                                          : 'Još nije upisan odgovor — kliknite „AI odgovor” ili „Uredi”.'}
+                                          : 'Još nije upisan odgovor — kliknite „AI radionica odgovora” ili „Uredi”.'}
                                       </span>
                                     )}
                                   </p>
@@ -1153,6 +1316,431 @@ export function PrimjedbeTab({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* MODAL: Interaktivna AI radionica odgovora (razgovor + izbor Flash/Pro + živi uređivi nacrt) */}
+      {workshopItem && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-[2px] flex items-center justify-center p-3 sm:p-5"
+          onClick={() => !workshopLoading && !workshopSaving && setWorkshopItem(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-6xl h-[88vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Zaglavlje radionice */}
+            <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    AI radionica odgovora
+                  </h3>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    {workshopItem.clanakOznaka}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate max-w-md">
+                    {workshopItem.tijelo}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Razgovarajte s AI agentom o najboljem odgovoru uz Bazu zakona (ZFVG, ZOV, ZZP, JMNP…) i Bazu prakse — u tablicu se sprema tek kad kliknete „Primijeni odgovor”.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {/* Izbor razine AI agenta (Flash vs Pro) */}
+                <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-900">
+                  <button
+                    type="button"
+                    disabled={workshopLoading}
+                    onClick={() => setWorkshopModel('flash')}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
+                      workshopModel === 'flash'
+                        ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <Zap className="w-3 h-3" />
+                    Brzi (Flash)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={workshopLoading}
+                    onClick={() => setWorkshopModel('pro')}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
+                      workshopModel === 'pro'
+                        ? 'bg-indigo-600 text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <Brain className="w-3 h-3" />
+                    Dubinski (Pro)
+                  </button>
+                </div>
+
+                {/* Smjer odluke */}
+                <select
+                  value={workshopDirection}
+                  onChange={(e) =>
+                    setWorkshopDirection(e.target.value as 'auto' | PrimjedbaStatus)
+                  }
+                  disabled={workshopLoading}
+                  className="px-2.5 py-1.5 text-[11px] font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+                >
+                  <option value="auto">Smjer: AI procjena (auto)</option>
+                  {PRIMJEDBA_STATUSI.map((st) => (
+                    <option key={st} value={st}>
+                      Smjer: {st}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  disabled={workshopLoading || workshopSaving}
+                  onClick={() => setWorkshopItem(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer disabled:opacity-40"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Glavno tijelo: Lijevo razgovor + kontekst primjedbe | Desno živi uređivi nacrt */}
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden">
+              {/* LIJEVI STUPAC: Primjedba + Interaktivni razgovor s AI agentom */}
+              <div className="lg:col-span-7 flex flex-col min-h-0 bg-slate-50/40 dark:bg-slate-950/30">
+                {/* Kontekst izvorne primjedbe */}
+                <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Izvorna primjedba ({workshopItem.tijelo})
+                    </span>
+                    {workshopItem.tekstPrimjedbe.length > 260 && (
+                      <button
+                        type="button"
+                        onClick={() => setWorkshopShowFullRemark((v) => !v)}
+                        className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      >
+                        {workshopShowFullRemark ? 'Sažmi' : 'Prikaži cijelu primjedbu'}
+                      </button>
+                    )}
+                  </div>
+                  <p
+                    className={`text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed ${
+                      workshopShowFullRemark ? 'max-h-40 overflow-y-auto' : 'line-clamp-3'
+                    }`}
+                  >
+                    {workshopItem.tekstPrimjedbe}
+                  </p>
+                </div>
+
+                {/* Razgovor s AI agentom */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {workshopMessages.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        Oblikujte odgovor kroz razgovor s AI savjetnikom
+                      </div>
+                      <p className="leading-relaxed">
+                        Odaberite razinu agenta gore (<strong>Brzi Flash</strong> ili{' '}
+                        <strong>Dubinski Pro</strong>), kliknite jednu od brzih uputa ispod ili upišite točno što želite (npr.{' '}
+                        <em>
+                          „Odbij pozivom na čl. 2. Zakona o zračnom prometu i čl. 20. ZFVG-a”
+                        </em>{' '}
+                        ili <em>„Prihvati samo jezični dio i predloži novu rečenicu”</em>).
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Svaki krug razgovora ažurira <strong>Živi nacrt odgovora</strong> na desnoj strani, koji možete dodatno ručno doraditi prije klika na <strong>„Primijeni odgovor u tablicu”</strong>.
+                      </p>
+                    </div>
+                  ) : (
+                    workshopMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed space-y-2 ${
+                            msg.role === 'user'
+                              ? 'bg-indigo-600 text-white rounded-br-sm'
+                              : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm shadow-2xs'
+                          }`}
+                        >
+                          {msg.role === 'assistant' && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                              {msg.modelUsed === 'pro' ? (
+                                <>
+                                  <Brain className="w-3 h-3" />
+                                  Gemini Pro (dubinska analiza)
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-3 h-3" />
+                                  Gemini Flash (brzi)
+                                </>
+                              )}
+                            </div>
+                          )}
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                          {msg.ragSources &&
+                            (msg.ragSources.zakoni.length > 0 ||
+                              msg.ragSources.praksa.length > 0) && (
+                              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1">
+                                {msg.ragSources.zakoni.slice(0, 5).map((z, i) => (
+                                  <span
+                                    key={`${z.naziv_zakona}-${z.clanak_broj}-${i}`}
+                                    className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800"
+                                  >
+                                    <Scale className="w-2.5 h-2.5" />
+                                    {z.naziv_zakona.length > 32
+                                      ? `${z.naziv_zakona.slice(0, 30)}…`
+                                      : z.naziv_zakona}{' '}
+                                    ({z.clanak_broj})
+                                  </span>
+                                ))}
+                                {msg.ragSources.praksa.length > 0 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800">
+                                    +{msg.ragSources.praksa.length} odluka iz prakse
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {workshopLoading && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        {workshopModel === 'pro'
+                          ? 'Gemini Pro dubinski provjerava zakone, praksu i oblikuje odgovor...'
+                          : 'Gemini Flash priprema prijedlog odgovora...'}
+                      </div>
+                    </div>
+                  )}
+
+                  {workshopError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {workshopError}
+                    </div>
+                  )}
+                  <div ref={workshopChatEndRef} />
+                </div>
+
+                {/* Brzi 1-klik čipovi + polje za razgovor */}
+                <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2 shrink-0">
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      {
+                        label: 'Predloži odgovor',
+                        prompt:
+                          'Sastavi cjelovit prijedlog službenog odgovora Ministarstva na ovu primjedbu uz provjeru svih mjerodavnih zakona iz baze i sudske prakse.',
+                        dir: undefined as 'auto' | PrimjedbaStatus | undefined,
+                      },
+                      {
+                        label: 'Odbij (zakonski)',
+                        prompt:
+                          'Odbij ovu primjedbu uz čvrsto pravno i nomotehničko obrazloženje pozivom na točne članke važećih zakona iz baze (ZFVG, ZOV, ZZP, JMNP).',
+                        dir: 'Ne prihvaća se' as PrimjedbaStatus,
+                      },
+                      {
+                        label: 'Prihvati + prijedlog članka',
+                        prompt:
+                          'Prihvati ovu primjedbu, kratko obrazloži prihvaćanje i predloži čistu, nomotehnički ispravnu novu formulaciju odredbe.',
+                        dir: 'Prihvaća se' as PrimjedbaStatus,
+                      },
+                      {
+                        label: 'Djelomično prihvati',
+                        prompt:
+                          'Djelomično prihvati ovu primjedbu: uvaži opravdani jezični ili nomotehnički dio, a pravno argumentirano odbij dio koji nije prihvatljiv.',
+                        dir: 'Djelomično se prihvaća' as PrimjedbaStatus,
+                      },
+                      {
+                        label: 'Skrati za Vladu RH',
+                        prompt:
+                          'Skrati i zgusni trenutni prijedlog odgovora u formalan, jezgrovit stil Tablice primjedbi za Vladu RH bez gubitka ključnih pravnih argumenata.',
+                        dir: undefined as 'auto' | PrimjedbaStatus | undefined,
+                      },
+                    ].map((chip) => (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        disabled={workshopLoading}
+                        onClick={() => handleSendWorkshopPrompt(chip.prompt, chip.dir)}
+                        className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300 border border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-40 transition-colors"
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <textarea
+                      rows={2}
+                      value={workshopInput}
+                      disabled={workshopLoading}
+                      onChange={(e) => setWorkshopInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendWorkshopPrompt();
+                        }
+                      }}
+                      placeholder="Upišite uputu AI agentu (npr. 'Pozovi se na čl. 2. Zakona o zračnom prometu i objasni zašto zadržavamo postojeći pojam…') — Enter za slanje"
+                      className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={workshopLoading || !workshopInput.trim()}
+                      onClick={() => handleSendWorkshopPrompt()}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold disabled:opacity-40 cursor-pointer shrink-0"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      Pošalji
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESNI STUPAC: Živi uređivi nacrt odgovora za Tablicu primjedbi */}
+              <div className="lg:col-span-5 flex flex-col min-h-0 bg-white dark:bg-slate-900">
+                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white">
+                    Živi nacrt odgovora (spreman za tablicu)
+                  </span>
+                  <button
+                    type="button"
+                    disabled={workshopLoading || workshopSaving}
+                    onClick={() =>
+                      setWorkshopDraft({
+                        status: workshopItem.status,
+                        obrazlozenje: workshopItem.obrazlozenje || '',
+                        predlozenaIzmjena: workshopItem.predlozenaIzmjena || '',
+                        pravnaReferenca: workshopItem.pravnaReferenca || '',
+                      })
+                    }
+                    title="Vrati izvorni spremljeni tekst iz tablice"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Vrati izvorno
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Status prihvaćenosti
+                    </label>
+                    <select
+                      value={workshopDraft.status}
+                      onChange={(e) =>
+                        setWorkshopDraft((prev) => ({
+                          ...prev,
+                          status: e.target.value as PrimjedbaStatus,
+                        }))
+                      }
+                      className={`w-full px-3 py-2 text-xs font-bold rounded-xl border ${
+                        STATUS_BADGE[workshopDraft.status]
+                      }`}
+                    >
+                      {PRIMJEDBA_STATUSI.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Obrazloženje / Službeni odgovor Ministarstva (možete i ručno doraditi)
+                    </label>
+                    <textarea
+                      rows={9}
+                      value={workshopDraft.obrazlozenje}
+                      onChange={(e) =>
+                        setWorkshopDraft((prev) => ({
+                          ...prev,
+                          obrazlozenje: e.target.value,
+                        }))
+                      }
+                      placeholder="Ovdje će se pojaviti prijedlog odgovora AI agenta. Možete ga uređivati i nastaviti razgovor lijevo..."
+                      className="w-full px-3 py-2 text-xs leading-relaxed rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Prijedlog izmijenjenog teksta članka (opcionalno)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={workshopDraft.predlozenaIzmjena}
+                      onChange={(e) =>
+                        setWorkshopDraft((prev) => ({
+                          ...prev,
+                          predlozenaIzmjena: e.target.value,
+                        }))
+                      }
+                      placeholder="Ako se primjedba prihvaća ili djelomično prihvaća..."
+                      className="w-full px-3 py-2 text-xs leading-relaxed rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Pravna osnova / praksa
+                    </label>
+                    <input
+                      type="text"
+                      value={workshopDraft.pravnaReferenca}
+                      onChange={(e) =>
+                        setWorkshopDraft((prev) => ({
+                          ...prev,
+                          pravnaReferenca: e.target.value,
+                        }))
+                      }
+                      placeholder="npr. čl. 2. ZZP-a, čl. 20. ZFVG-a, čl. 41. JMNP-a"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Podnožje za potvrdu / odustajanje */}
+                <div className="px-4 py-3 bg-slate-50 dark:bg-slate-950/70 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={workshopSaving}
+                    onClick={() => setWorkshopItem(null)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    Odustani
+                  </button>
+                  <button
+                    type="button"
+                    disabled={workshopSaving || workshopLoading}
+                    onClick={handleApplyWorkshopDraft}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 cursor-pointer"
+                  >
+                    {workshopSaving ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    Primijeni odgovor u tablicu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
