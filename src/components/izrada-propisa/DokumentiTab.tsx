@@ -22,6 +22,9 @@ import {
   Save,
   ScanText,
   Cpu,
+  Calendar,
+  Pencil,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   PROPIS_DOC_ROLES,
@@ -38,6 +41,7 @@ import {
   updatePropisDocumentAction,
   deletePropisDocumentAction,
   runManualOcrOnPropisDocAction,
+  backfillDocumentMetadataAction,
 } from '@/app/actions/izradaPropisaActions';
 
 interface DokumentiTabProps {
@@ -54,6 +58,21 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+function formatDateHr(value?: string): string {
+  if (!value) return '';
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}.${isoMatch[2]}.${isoMatch[1]}.`;
+  }
+  const dt = new Date(value);
+  if (!Number.isNaN(dt.getTime())) {
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    return `${d}.${m}.${dt.getFullYear()}.`;
+  }
+  return value;
+}
+
 export function DokumentiTab({
   project,
   documents,
@@ -62,6 +81,11 @@ export function DokumentiTab({
 }: DokumentiTabProps) {
   const [roleFilter, setRoleFilter] = useState<'sve' | PropisDocRole>('sve');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'role_date' | 'date_desc' | 'date_asc' | 'name'>('role_date');
+  const [editingDateDocId, setEditingDateDocId] = useState<string | null>(null);
+  const [inlineDateValue, setInlineDateValue] = useState('');
+  const [savingInlineDate, setSavingInlineDate] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
 
   // Upload state
   const [uploadRole, setUploadRole] = useState<'auto' | PropisDocRole>('auto');
@@ -131,12 +155,62 @@ export function DokumentiTab({
         );
       })
       .sort((a, b) => {
+        if (sortBy === 'date_desc') {
+          return (b.datumVerzije || '0000-00-00').localeCompare(a.datumVerzije || '0000-00-00') ||
+            b.createdAt.localeCompare(a.createdAt);
+        }
+        if (sortBy === 'date_asc') {
+          return (a.datumVerzije || '9999-99-99').localeCompare(b.datumVerzije || '9999-99-99') ||
+            a.createdAt.localeCompare(b.createdAt);
+        }
+        if (sortBy === 'name') {
+          return a.prikazniNaziv.localeCompare(b.prikazniNaziv, 'hr');
+        }
         if (roleOrder[a.uloga] !== roleOrder[b.uloga]) {
           return roleOrder[a.uloga] - roleOrder[b.uloga];
         }
-        return (b.datumVerzije || b.createdAt).localeCompare(a.datumVerzije || a.createdAt);
+        return (b.datumVerzije || '0000-00-00').localeCompare(a.datumVerzije || '0000-00-00') ||
+          b.createdAt.localeCompare(a.createdAt);
       });
-  }, [documents, roleFilter, searchQuery]);
+  }, [documents, roleFilter, searchQuery, sortBy]);
+
+  const missingDatesCount = useMemo(
+    () => documents.filter((d) => !d.datumVerzije).length,
+    [documents]
+  );
+
+  const handleSaveInlineDate = async (doc: PropisDocument) => {
+    setSavingInlineDate(true);
+    const trimmed = inlineDateValue.trim() || undefined;
+    const res = await updatePropisDocumentAction(project.id, doc.id, {
+      datumVerzije: trimmed,
+    });
+    setSavingInlineDate(false);
+    setEditingDateDocId(null);
+    if (!res.error) {
+      onDocumentsChange(
+        documents.map((d) => (d.id === doc.id ? { ...d, datumVerzije: trimmed } : d))
+      );
+      onRefresh();
+    }
+  };
+
+  const handleBackfillMetadata = async () => {
+    setBackfilling(true);
+    setFeedback(null);
+    const res = await backfillDocumentMetadataAction(project.id);
+    setBackfilling(false);
+    if (res.success && res.docs) {
+      onDocumentsChange(res.docs);
+      setFeedback({
+        type: 'ok',
+        text: `Lokalna analiza dovršena (0 AI troška): automatski popunjeno ${res.updatedDates} datuma akata${
+          res.updatedRoles ? `, ispravljeno ${res.updatedRoles} uloga` : ''
+        }${res.updatedSenders ? `, prepoznato ${res.updatedSenders} pošiljatelja` : ''}.`,
+      });
+      onRefresh();
+    }
+  };
 
   const activeAiChars = useMemo(() => {
     return documents
@@ -497,7 +571,38 @@ export function DokumentiTab({
             ))}
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {missingDatesCount > 0 && (
+              <button
+                type="button"
+                disabled={backfilling}
+                onClick={handleBackfillMetadata}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                title="Automatski pročitaj datume iz naziva i zaglavlja već učitanih dokumenata (0 AI troška)"
+              >
+                {backfilling ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Calendar className="w-3.5 h-3.5" />
+                )}
+                Auto-otkrij datume ({missingDatesCount})
+              </button>
+            )}
+
+            <div className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2 py-1">
+              <ArrowUpDown className="w-3 h-3 text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="text-[11px] font-semibold bg-transparent text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+              >
+                <option value="role_date">Po ulozi i datumu</option>
+                <option value="date_desc">Datum akta (najnoviji)</option>
+                <option value="date_asc">Datum akta (najstariji)</option>
+                <option value="name">Naziv (A–Ž)</option>
+              </select>
+            </div>
+
             <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
               <Sparkles className="w-3.5 h-3.5" />
               U AI kontekstu:{' '}
@@ -505,7 +610,7 @@ export function DokumentiTab({
               dok. (~{Math.round(activeAiChars / 1000)}k zn.)
             </div>
 
-            <div className="relative w-56">
+            <div className="relative w-52">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -584,11 +689,6 @@ export function DokumentiTab({
                             {doc.posiljatelj}
                           </span>
                         )}
-                        {doc.datumVerzije && (
-                          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-mono">
-                            {doc.datumVerzije}
-                          </span>
-                        )}
                         {doc.needsOcr ? (
                           <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                             <AlertTriangle className="w-3 h-3" />
@@ -614,7 +714,59 @@ export function DokumentiTab({
                         {doc.prikazniNaziv}
                       </button>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {/* Jasan redak s datumom akta + datumom dodavanja odmah ispod naziva */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-slate-500 dark:text-slate-400">
+                        {editingDateDocId === doc.id ? (
+                          <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-700 rounded-lg px-2 py-0.5">
+                            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                            <input
+                              type="date"
+                              value={inlineDateValue}
+                              onChange={(e) => setInlineDateValue(e.target.value)}
+                              className="text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 text-slate-900 dark:text-white"
+                            />
+                            <button
+                              type="button"
+                              disabled={savingInlineDate}
+                              onClick={() => handleSaveInlineDate(doc)}
+                              className="px-2 py-0.5 rounded bg-blue-600 text-white text-[11px] font-semibold cursor-pointer"
+                            >
+                              {savingInlineDate ? '...' : 'Spremi'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingDateDocId(null)}
+                              className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingDateDocId(doc.id);
+                              setInlineDateValue(doc.datumVerzije || '');
+                            }}
+                            title="Kliknite za izmjenu datuma akta"
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-semibold transition-colors cursor-pointer ${
+                              doc.datumVerzije
+                                ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-blue-400'
+                                : 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 hover:bg-amber-100'
+                            }`}
+                          >
+                            <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                            {doc.datumVerzije
+                              ? `Datum akta: ${formatDateHr(doc.datumVerzije)}`
+                              : 'Dodaj datum akta'}
+                            <Pencil className="w-2.5 h-2.5 opacity-60 ml-0.5" />
+                          </button>
+                        )}
+
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                          Učitano: {formatDateHr(doc.createdAt)}
+                        </span>
+                        <span>·</span>
                         <span>{formatBytes(doc.velicinaBajta)}</span>
                         <span>{(doc.rawText?.length || 0).toLocaleString('hr-HR')} znakova</span>
                         {doc.parsedDraft && doc.parsedDraft.clanci.length > 0 && (
@@ -981,11 +1133,11 @@ export function DokumentiTab({
                     className="px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 w-56"
                   />
                   <input
-                    type="text"
+                    type="date"
                     value={editDate}
                     onChange={(e) => setEditDate(e.target.value)}
-                    placeholder="Datum (YYYY-MM-DD)"
-                    className="px-2.5 py-1 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 w-36"
+                    title="Datum akta / verzije"
+                    className="px-2.5 py-1 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 w-40"
                   />
                 </div>
               </div>

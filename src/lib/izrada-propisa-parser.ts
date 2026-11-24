@@ -323,33 +323,41 @@ export function detectSenderFromText(text: string): {
   return { category: 'Ostalo' };
 }
 
-export function extractDateFromFileName(name: string): string | undefined {
-  // Traži npr. 11. studenog 2026, 13.5.2026, 13_5_2026, 28102026
-  const monthNames: Record<string, string> = {
-    siječnja: '01', sijecnja: '01', siječanj: '01',
-    veljače: '02', veljace: '02', veljača: '02',
-    ožujka: '03', ozujka: '03', ožujak: '03',
-    travnja: '04', travanj: '04',
-    svibnja: '05', svibanj: '05',
-    lipnja: '06', lipanj: '06',
-    srpnja: '07', srpanj: '07',
-    kolovoza: '08', kolovoz: '08',
-    rujna: '09', rujan: '09',
-    listopada: '10', listopad: '10',
-    studenog: '11', studenoga: '11', studeni: '11',
-    prosinca: '12', prosinac: '12',
-  };
+const HR_MONTH_MAP: Record<string, string> = {
+  siječnja: '01', sijecnja: '01', siječanj: '01', sijecanj: '01',
+  veljače: '02', veljace: '02', veljača: '02', veljaca: '02',
+  ožujka: '03', ozujka: '03', ožujak: '03', ozujak: '03',
+  travnja: '04', travanj: '04',
+  svibnja: '05', svibanj: '05',
+  lipnja: '06', lipanj: '06',
+  srpnja: '07', srpanj: '07',
+  kolovoza: '08', kolovoz: '08',
+  rujna: '09', rujan: '09',
+  listopada: '10', listopad: '10',
+  studenog: '11', studenoga: '11', studeni: '11',
+  prosinca: '12', prosinac: '12',
+};
 
+const HR_MONTH_REGEX_PART =
+  'siječnj?a|sijecnj?a|siječanj|sijecanj|veljač[ae]|veljac[ae]|ožujk?a|ozujk?a|ožujak|ozujak|travnj?a|travanj|svibnj?a|svibanj|lipnj?a|lipanj|srpnj?a|srpanj|kolovoz[a]?|rujn?a|rujan|listopad[a]?|studenog[a]?|studeni|prosinc?a|prosinac';
+
+export function extractDateFromFileName(name: string): string | undefined {
+  if (!name) return undefined;
+
+  // 1. "11. studenog 2026" / "13. svibanj 2026"
   const wordDate = name.match(
-    /(\d{1,2})\.\s*(siječnj?a|sijecnj?a|siječanj|veljač[ae]|veljac[ae]|ožujk?a|ozujk?a|ožujak|travnj?a|travanj|svibnj?a|svibanj|lipnj?a|lipanj|srpnj?a|srpanj|kolovoz[a]?|rujn?a|rujan|listopad[a]?|studenog[a]?|studeni|prosinc?a|prosinac)\s*(20\d{2})/i
+    new RegExp(`(\\d{1,2})\\.\\s*(${HR_MONTH_REGEX_PART})\\s*(20\\d{2})`, 'i')
   );
   if (wordDate) {
-    const d = wordDate[1].padStart(2, '0');
-    const m = monthNames[wordDate[2].toLowerCase()] || '01';
-    return `${wordDate[3]}-${m}-${d}`;
+    const d = Number(wordDate[1]);
+    const m = HR_MONTH_MAP[wordDate[2].toLowerCase()] || '01';
+    if (d >= 1 && d <= 31) {
+      return `${wordDate[3]}-${m}-${String(d).padStart(2, '0')}`;
+    }
   }
 
-  const numDate = name.match(/(?<!\d)(\d{1,2})[._-](\d{1,2})[._-](20\d{2})(?!\d)/);
+  // 2. Numerički datum s 1 ili više separatora (npr. 13.5.2026, 23_11__2026, 14_4_2026)
+  const numDate = name.match(/(?<!\d)(\d{1,2})[._-]+(\d{1,2})[._-]+(20\d{2})(?!\d)/);
   if (numDate) {
     const day = Number(numDate[1]);
     const month = Number(numDate[2]);
@@ -358,12 +366,86 @@ export function extractDateFromFileName(name: string): string | undefined {
     }
   }
 
+  // 3. Zbijeni DDMMYYYY (npr. 28102026)
   const compact = name.match(/(?<!\d)(\d{2})(\d{2})(20\d{2})(?!\d)/);
   if (compact) {
     const day = Number(compact[1]);
     const month = Number(compact[2]);
     if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
       return `${compact[3]}-${compact[2]}-${compact[1]}`;
+    }
+  }
+
+  // 4. Dan.mjesec bez godine + godina negdje drugdje u nazivu (npr. "SVIBANJ 2026_dino 11.5.", "UREDBA 2026_16_2_")
+  // Pažnja: ne koristiti \b jer "_" u "2026_dino" je word-znak u JS regexu!
+  const yearAnywhere = name.match(/(?<!\d)(202[0-9])(?!\d)/)?.[1];
+  if (yearAnywhere) {
+    const dmMatch = name.match(/(?<!\d)(\d{1,2})[._](\d{1,2})[._](?!\d)/);
+    if (dmMatch) {
+      const day = Number(dmMatch[1]);
+      const month = Number(dmMatch[2]);
+      if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+        return `${yearAnywhere}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+
+    // 5. Samo mjesec + godina (npr. "ožujak 2026", "studeni 2026", "svibanj 2026")
+    const monthYear = name.match(
+      new RegExp(`(${HR_MONTH_REGEX_PART})\\s*[_-]?\\s*(20\\d{2})`, 'i')
+    );
+    if (monthYear) {
+      const m = HR_MONTH_MAP[monthYear[1].toLowerCase()];
+      if (m) return `${monthYear[2]}-${m}-01`;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Lokalno (0 AI troška) pronalazi službeni datum akta iz zaglavlja / prvih 2.800 znakova teksta dokumenta
+ * (npr. "Zagreb, 08. svibnja 2026.", "Datum i mjesto održavanja: 20. studenoga 2025.", "PRIJEDLOG OD 13. SIJEČNJA 2026.").
+ */
+export function extractDateFromDocumentText(rawText: string): string | undefined {
+  if (!rawText) return undefined;
+  const head = rawText.slice(0, 2800);
+
+  // Prioritet 1: Zaglavlje s gradom ili oznakom "Datum" / "PRIJEDLOG OD"
+  const priorityWord = head.match(
+    new RegExp(
+      `(?:Zagreb|Split|Rijeka|Osijek|Datum(?:\\s+i\\s+mjesto)?\\s+odr[žz]avanja|PRIJEDLOG\\s+OD|dana)\\s*[:,]?\\s*(\\d{1,2})\\.\\s*(${HR_MONTH_REGEX_PART})\\s*(20\\d{2})`,
+      'i'
+    )
+  );
+  if (priorityWord) {
+    const d = Number(priorityWord[1]);
+    const m = HR_MONTH_MAP[priorityWord[2].toLowerCase()];
+    if (m && d >= 1 && d <= 31) {
+      return `${priorityWord[3]}-${m}-${String(d).padStart(2, '0')}`;
+    }
+  }
+
+  // Prioritet 2: Prvi puni datum s mjesecom riječima u prvih 1.500 znakova (npr. "6. svibnja 2026.")
+  const anyWord = head.slice(0, 1500).match(
+    new RegExp(`(\\d{1,2})\\.\\s*(${HR_MONTH_REGEX_PART})\\s*(202[4-9])`, 'i')
+  );
+  if (anyWord) {
+    const d = Number(anyWord[1]);
+    const m = HR_MONTH_MAP[anyWord[2].toLowerCase()];
+    if (m && d >= 1 && d <= 31) {
+      return `${anyWord[3]}-${m}-${String(d).padStart(2, '0')}`;
+    }
+  }
+
+  // Prioritet 3: Numerički datum DD.MM.YYYY. u zaglavlju (npr. "Zagreb, 14.05.2026." ili "vrijedi od 01.07.2024.")
+  const numHeader = head.slice(0, 1200).match(
+    /(?:Zagreb|Datum|od)\s*[:,]?\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(202[4-9])\.?/i
+  );
+  if (numHeader) {
+    const d = Number(numHeader[1]);
+    const m = Number(numHeader[2]);
+    if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
+      return `${numHeader[3]}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     }
   }
 
@@ -425,24 +507,7 @@ export function classifyPropisFile(
     };
   }
 
-  // 4. Mišljenja TDU / UZZ / dionika
-  if (
-    /mi[šs]ljenje|mi_ljenje|primjedb|o[čc]itovanje/i.test(lower) ||
-    (/primjedbe tijela/i.test(relLower) && !/tablica/i.test(lower))
-  ) {
-    // Izbjegni duplikate iz root mape ako su uredno numerirani u "za kabinet ministrice" ili u "studeni 2026"
-    const isInCabinet = /za kabinet ministrice/i.test(relLower);
-    const isStudeni = /studeni 2026/i.test(relLower) && ext !== 'doc'; // preferiraj .pdf ili .doc jednom
-    const isStudeniDoc = /studeni 2026/i.test(relLower) && ext === 'pdf';
-    return {
-      role: 'misljenje',
-      sender: senderInfo.label,
-      date,
-      recommended: isInCabinet || isStudeniDoc || (isStudeni && ext === 'docx'),
-    };
-  }
-
-  // 5. Nacrti teksta propisa (Aktualni vs. Prethodne verzije)
+  // 4. Nacrti teksta propisa — provjeri PRIJE općeg pravila za mišljenja kako "Nakon primjedbi TDU... NP Uredbe" ne bi završilo u mišljenjima!
   if (/tekst\s+np\s+uredbe|nakon\s+primjedbi\s+tdu.*np\s+uredbe|uredba\s+nuv/i.test(lower)) {
     const isLatestNov =
       /studeni 2026/i.test(relLower) && /11\.\s*studenog\s*2026\.docx$/i.test(lower);
@@ -454,6 +519,22 @@ export function classifyPropisFile(
       role: isLatestNov ? 'aktualni_nacrt' : 'prethodna_verzija',
       date,
       recommended: isLatestNov || isMayFinal || isFebSession,
+    };
+  }
+
+  // 5. Mišljenja TDU / UZZ / dionika
+  if (
+    /mi[šs]ljenje|mi_ljenje|primjedb|o[čc]itovanje/i.test(lower) ||
+    (/primjedbe tijela/i.test(relLower) && !/tablica/i.test(lower))
+  ) {
+    const isInCabinet = /za kabinet ministrice/i.test(relLower);
+    const isStudeni = /studeni 2026/i.test(relLower) && ext !== 'doc';
+    const isStudeniDoc = /studeni 2026/i.test(relLower) && ext === 'pdf';
+    return {
+      role: 'misljenje',
+      sender: senderInfo.label,
+      date,
+      recommended: isInCabinet || isStudeniDoc || (isStudeni && ext === 'docx'),
     };
   }
 

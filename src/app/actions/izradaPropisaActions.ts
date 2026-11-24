@@ -12,6 +12,7 @@ import {
   savePropisProject,
   deletePropisProject,
   listPropisDocuments,
+  savePropisDocuments,
   addPropisDocument,
   updatePropisDocument,
   deletePropisDocument,
@@ -24,6 +25,7 @@ import {
   scanLocalPropisFolder,
   detectSenderFromText,
   extractDateFromFileName,
+  extractDateFromDocumentText,
   SUPPORTED_PROPIS_EXTENSIONS,
 } from '@/lib/izrada-propisa-parser';
 import { parseNormativeDraft } from '@/lib/propis-article-parser';
@@ -162,7 +164,16 @@ export async function uploadPropisDocumentsAction(formData: FormData) {
         customSender ||
         autoCls.sender ||
         (role === 'misljenje' ? detectSenderFromText(parsed.rawText.slice(0, 1200)).label : undefined);
-      const detectedDate = customDate || autoCls.date || extractDateFromFileName(file.name);
+      const fileMtimeIso =
+        file.lastModified && file.lastModified > 0
+          ? new Date(file.lastModified).toISOString().slice(0, 10)
+          : undefined;
+      const detectedDate =
+        customDate ||
+        autoCls.date ||
+        extractDateFromFileName(file.name) ||
+        extractDateFromDocumentText(parsed.rawText) ||
+        fileMtimeIso;
 
       const roleMeta = PROPIS_DOC_ROLE_MAP[role];
       const doc = await addPropisDocument(projectId, {
@@ -311,7 +322,18 @@ export async function importFromLocalFolderAction(
         (sel.uloga === 'misljenje'
           ? detectSenderFromText(`${fileName}\n${parsed.rawText.slice(0, 1200)}`).label
           : undefined);
-      const detectedDate = sel.datumVerzije || extractDateFromFileName(fileName);
+      const statMtime = (() => {
+        try {
+          return fs.statSync(sel.fullPath).mtime.toISOString().slice(0, 10);
+        } catch {
+          return undefined;
+        }
+      })();
+      const detectedDate =
+        sel.datumVerzije ||
+        extractDateFromFileName(fileName) ||
+        extractDateFromDocumentText(parsed.rawText) ||
+        statMtime;
       const roleMeta = PROPIS_DOC_ROLE_MAP[sel.uloga];
 
       const doc = await addPropisDocument(projectId, {
@@ -472,4 +494,102 @@ export async function savePropisChatHistoryAction(projectId: string, messages: L
 export async function clearPropisChatHistoryAction(projectId: string) {
   await writePropisChatHistory(projectId, []);
   return { success: true };
+}
+
+/**
+ * Lokalno (0 AI troška) automatski prepoznaje i popunjava nedostajuće datume akata i pošiljatelje
+ * iz naziva datoteke i zaglavlja već učitanih dokumenata u projektu.
+ */
+export async function backfillDocumentMetadataAction(projectId: string) {
+  const [project, docs] = await Promise.all([
+    getPropisProject(projectId),
+    listPropisDocuments(projectId),
+  ]);
+
+  // Ako smo lokalno i postoji referentna mapa, izgradi mapu fileName -> mtime kao zadnji fallback
+  const localMtimeByName = new Map<string, string>();
+  if (!process.env.VERCEL && project?.referentnaMapa && fs.existsSync(project.referentnaMapa)) {
+    try {
+      const scanned = scanLocalPropisFolder(project.referentnaMapa, new Set());
+      for (const s of scanned) {
+        const key = s.fileName.toLowerCase();
+        if (!localMtimeByName.has(key)) {
+          localMtimeByName.set(key, s.modifiedAt.slice(0, 10));
+        }
+      }
+    } catch {
+      // Ignore fs errors
+    }
+  }
+
+  let updatedDates = 0;
+  let updatedRoles = 0;
+  let updatedSenders = 0;
+  const now = new Date().toISOString();
+
+  const nextDocs = docs.map((d) => {
+    let nextDate = d.datumVerzije;
+    if (!nextDate) {
+      const fromName = extractDateFromFileName(d.naziv) || extractDateFromFileName(d.prikazniNaziv);
+      const fromText = extractDateFromDocumentText(d.rawText);
+      const fromDisk = localMtimeByName.get(d.naziv.toLowerCase());
+      const detected = fromName || fromText || fromDisk;
+      if (detected) {
+        nextDate = detected;
+        updatedDates++;
+      }
+    }
+
+    let nextRole = d.uloga;
+    let nextParsedDraft = d.parsedDraft;
+    // Ispravi nacrte "Nakon primjedbi TDU i dionika NP Uredbe..." ako su pogrešno upali u "misljenje"
+    if (
+      d.uloga === 'misljenje' &&
+      /nakon\s+primjedbi\s+tdu.*np\s+uredbe/i.test(d.naziv)
+    ) {
+      nextRole = 'prethodna_verzija';
+      const candidate = parseNormativeDraft(d.rawText);
+      if (candidate.clanci.length > 0) nextParsedDraft = candidate;
+      updatedRoles++;
+    }
+
+    let nextSender = d.posiljatelj;
+    if (nextRole === 'misljenje' && !nextSender) {
+      const s = detectSenderFromText(`${d.naziv}\n${d.rawText.slice(0, 1200)}`).label;
+      if (s) {
+        nextSender = s;
+        updatedSenders++;
+      }
+    }
+
+    if (
+      nextDate !== d.datumVerzije ||
+      nextRole !== d.uloga ||
+      nextSender !== d.posiljatelj
+    ) {
+      return {
+        ...d,
+        datumVerzije: nextDate,
+        uloga: nextRole,
+        posiljatelj: nextSender,
+        parsedDraft: nextParsedDraft,
+        updatedAt: now,
+      };
+    }
+    return d;
+  });
+
+  if (updatedDates > 0 || updatedRoles > 0 || updatedSenders > 0) {
+    await savePropisDocuments(projectId, nextDocs);
+    revalidatePath('/izrada-propisa');
+    revalidatePath(`/izrada-propisa/${projectId}`);
+  }
+
+  return {
+    success: true,
+    updatedDates,
+    updatedRoles,
+    updatedSenders,
+    docs: nextDocs,
+  };
 }

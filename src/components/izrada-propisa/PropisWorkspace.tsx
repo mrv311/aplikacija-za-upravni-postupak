@@ -16,6 +16,8 @@ import {
   Loader2,
   Save,
   ScrollText,
+  HelpCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   PROPIS_FAZE_POSTUPKA,
@@ -80,8 +82,9 @@ export function PropisWorkspace({
   useEffect(() => setStressTests(initialStressTests), [initialStressTests]);
   useEffect(() => setDeliverables(initialDeliverables), [initialDeliverables]);
 
-  // Modal postavki projekta
+  // Modal postavki projekta + sklopivi Vodič za rad (6 koraka)
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [setForm, setSetForm] = useState({
     naziv: project.naziv,
@@ -238,6 +241,19 @@ export function PropisWorkspace({
 
               <button
                 type="button"
+                onClick={() => setGuideOpen((v) => !v)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold cursor-pointer transition-colors ${
+                  guideOpen
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50'
+                }`}
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                Kako koristiti (Vodič)
+              </button>
+
+              <button
+                type="button"
                 onClick={() => {
                   setSetForm({
                     naziv: project.naziv,
@@ -321,7 +337,104 @@ export function PropisWorkspace({
 
       {/* Sadržaj aktivne kartice */}
       <div className="flex-1 px-5 sm:px-8 py-5">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto space-y-5">
+          {/* Sklopivi interaktivni vodič: Kako koristiti modul u 6 koraka */}
+          {guideOpen && (
+            <div className="bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-blue-600" />
+                    Vodič za rad s modulom „Izrada propisa” (redoslijed u 6 koraka)
+                  </h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    Kliknite bilo koji korak ispod da biste se izravno prebacili na tu funkcionalnost.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGuideOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
+                {[
+                  {
+                    step: '1',
+                    tab: 'dokumenti' as WorkspaceTab,
+                    title: 'Dokumenti i Aktualni nacrt',
+                    done: Boolean(aktualniNacrt),
+                    desc: 'Učitajte dokumente i postavite najnoviju verziju kao „Aktualni nacrt” (zvjezdica). Označite kvačicom „U AI kontekstu” samo ključne dokumente koje AI treba čitati (npr. tarife i zadnja mišljenja) — ostale slobodno isključite.',
+                  },
+                  {
+                    step: '2',
+                    tab: 'chat' as WorkspaceTab,
+                    title: 'AI Pravni Chat (+ Baza prakse)',
+                    done: false,
+                    desc: 'Pitajte AI bilo što o nacrtu: usklađenost s ZFVG-om, rizike iz 2.200+ presuda i II. stupnja ili brifing za sjednicu. AI automatski vuče članke zakona i stvarne odluke u Pravni inspektor.',
+                  },
+                  {
+                    step: '3',
+                    tab: 'primjedbe' as WorkspaceTab,
+                    title: 'Tablica primjedbi TDU / UZZ',
+                    done: primjedbe.length > 0,
+                    desc: 'Kliknite „Uvezi Word tablicu (0 AI)” za uvoz već postojeće tablice ili „AI izdvoji iz mišljenja” da AI sam razbije PDF mišljenja po člancima i predloži odgovore. Sve izvezite u gotov Word (.docx).',
+                  },
+                  {
+                    step: '4',
+                    tab: 'diff' as WorkspaceTab,
+                    title: 'Usporedba verzija (Diff)',
+                    done: draftVersionsCount >= 2,
+                    desc: 'Odaberite dvije verzije nacrta (npr. svibanj vs. studeni, ili važeću Uredbu NN 82/10 iz Baze zakona) za trenutni pregled izmjena po člancima (0 AI) i izvoz Redline ili Tablice promjena u .docx.',
+                  },
+                  {
+                    step: '5',
+                    tab: 'stress' as WorkspaceTab,
+                    title: 'Pravni Stress-test (JMNP + Praksa)',
+                    done: stressTests.length > 0,
+                    desc: 'Lokalni skener odmah (0 AI) hvata zagrade, neslaganja NN brojeva i razlike tarifa. Gumb „Pokreni dubinski AI Stress-test” dodatno testira nacrt kroz JMNP, ZFVG/ZOV i sudsku praksu s prijedlozima preformulacija.',
+                  },
+                  {
+                    step: '6',
+                    tab: 'generatori' as WorkspaceTab,
+                    title: 'Generatori: Obrazloženje, FactSheet, Podloga',
+                    done: deliverables.length > 0,
+                    desc: 'Jednim klikom generirajte Obrazloženje (Opći dio + Uz čl. 1.–N.), službeni 8-rubrični FactSheet ili Podlogu za kabinet ministrice, doradite u uređivaču i preuzmite čist .docx.',
+                  },
+                ].map((s) => (
+                  <button
+                    key={s.step}
+                    type="button"
+                    onClick={() => setActiveTab(s.tab)}
+                    className={`text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                      activeTab === s.tab
+                        ? 'bg-blue-600/10 border-blue-400 dark:border-blue-600'
+                        : 'bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {s.step}
+                        </span>
+                        {s.title}
+                      </span>
+                      {s.done && (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {s.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'dokumenti' && (
             <DokumentiTab
               project={project}
