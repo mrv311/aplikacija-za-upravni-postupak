@@ -86,8 +86,147 @@ function canSplitCombinedItem(item: PrimjedbaItem): boolean {
 
 function getRemarkPreview(text: string): string {
   const clean = (text || '').replace(/\s+/g, ' ').trim();
-  if (clean.length <= 135) return clean;
-  return `${clean.slice(0, 132).trimEnd()}…`;
+  if (clean.length <= 145) return clean;
+  return `${clean.slice(0, 142).trimEnd()}…`;
+}
+
+interface BodyVisualTheme {
+  cardBorder: string;
+  headerBg: string;
+  titleText: string;
+  avatarBg: string;
+  pillClass: string;
+  rowIndentBorder: string;
+  chevronColor: string;
+}
+
+const SUBSTANTIVE_BODY_THEMES: BodyVisualTheme[] = [
+  {
+    cardBorder: 'border-l-4 border-l-indigo-600 border-indigo-200/80 dark:border-indigo-900/70',
+    headerBg: 'bg-indigo-50/75 hover:bg-indigo-100/70 dark:bg-indigo-950/45 dark:hover:bg-indigo-950/70',
+    titleText: 'text-indigo-950 dark:text-indigo-100',
+    avatarBg: 'bg-indigo-600 text-white',
+    pillClass: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-200 dark:border-indigo-800',
+    rowIndentBorder: 'border-l-indigo-300 dark:border-l-indigo-800',
+    chevronColor: 'text-indigo-600 dark:text-indigo-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-teal-600 border-teal-200/80 dark:border-teal-900/70',
+    headerBg: 'bg-teal-50/75 hover:bg-teal-100/70 dark:bg-teal-950/45 dark:hover:bg-teal-950/70',
+    titleText: 'text-teal-950 dark:text-teal-100',
+    avatarBg: 'bg-teal-600 text-white',
+    pillClass: 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-950/80 dark:text-teal-200 dark:border-teal-800',
+    rowIndentBorder: 'border-l-teal-300 dark:border-l-teal-800',
+    chevronColor: 'text-teal-600 dark:text-teal-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-amber-600 border-amber-200/80 dark:border-amber-900/70',
+    headerBg: 'bg-amber-50/75 hover:bg-amber-100/70 dark:bg-amber-950/40 dark:hover:bg-amber-950/65',
+    titleText: 'text-amber-950 dark:text-amber-100',
+    avatarBg: 'bg-amber-600 text-white',
+    pillClass: 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800',
+    rowIndentBorder: 'border-l-amber-300 dark:border-l-amber-800',
+    chevronColor: 'text-amber-600 dark:text-amber-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-violet-600 border-violet-200/80 dark:border-violet-900/70',
+    headerBg: 'bg-violet-50/75 hover:bg-violet-100/70 dark:bg-violet-950/45 dark:hover:bg-violet-950/70',
+    titleText: 'text-violet-950 dark:text-violet-100',
+    avatarBg: 'bg-violet-600 text-white',
+    pillClass: 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950/80 dark:text-violet-200 dark:border-violet-800',
+    rowIndentBorder: 'border-l-violet-300 dark:border-l-violet-800',
+    chevronColor: 'text-violet-600 dark:text-violet-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-emerald-600 border-emerald-200/80 dark:border-emerald-900/70',
+    headerBg: 'bg-emerald-50/75 hover:bg-emerald-100/70 dark:bg-emerald-950/45 dark:hover:bg-emerald-950/70',
+    titleText: 'text-emerald-950 dark:text-emerald-100',
+    avatarBg: 'bg-emerald-600 text-white',
+    pillClass: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800',
+    rowIndentBorder: 'border-l-emerald-300 dark:border-l-emerald-800',
+    chevronColor: 'text-emerald-600 dark:text-emerald-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-rose-600 border-rose-200/80 dark:border-rose-900/70',
+    headerBg: 'bg-rose-50/75 hover:bg-rose-100/70 dark:bg-rose-950/40 dark:hover:bg-rose-950/65',
+    titleText: 'text-rose-950 dark:text-rose-100',
+    avatarBg: 'bg-rose-600 text-white',
+    pillClass: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800',
+    rowIndentBorder: 'border-l-rose-300 dark:border-l-rose-800',
+    chevronColor: 'text-rose-600 dark:text-rose-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-cyan-600 border-cyan-200/80 dark:border-cyan-900/70',
+    headerBg: 'bg-cyan-50/75 hover:bg-cyan-100/70 dark:bg-cyan-950/45 dark:hover:bg-cyan-950/70',
+    titleText: 'text-cyan-950 dark:text-cyan-100',
+    avatarBg: 'bg-cyan-600 text-white',
+    pillClass: 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-800',
+    rowIndentBorder: 'border-l-cyan-300 dark:border-l-cyan-800',
+    chevronColor: 'text-cyan-600 dark:text-cyan-400',
+  },
+  {
+    cardBorder: 'border-l-4 border-l-orange-600 border-orange-200/80 dark:border-orange-900/70',
+    headerBg: 'bg-orange-50/75 hover:bg-orange-100/70 dark:bg-orange-950/40 dark:hover:bg-orange-950/65',
+    titleText: 'text-orange-950 dark:text-orange-100',
+    avatarBg: 'bg-orange-600 text-white',
+    pillClass: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/80 dark:text-orange-200 dark:border-orange-800',
+    rowIndentBorder: 'border-l-orange-300 dark:border-l-orange-800',
+    chevronColor: 'text-orange-600 dark:text-orange-400',
+  },
+];
+
+const MUTED_BODY_THEME: BodyVisualTheme = {
+  cardBorder: 'border-l-4 border-l-slate-300 dark:border-l-slate-700 border-slate-200 dark:border-slate-800',
+  headerBg: 'bg-slate-50/70 hover:bg-slate-100/80 dark:bg-slate-900/80 dark:hover:bg-slate-800/70',
+  titleText: 'text-slate-600 dark:text-slate-400',
+  avatarBg: 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200',
+  pillClass: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  rowIndentBorder: 'border-l-slate-200 dark:border-l-slate-700',
+  chevronColor: 'text-slate-400',
+};
+
+const ARTICLE_GROUP_THEME: BodyVisualTheme = {
+  cardBorder: 'border-l-4 border-l-slate-800 dark:border-l-slate-300 border-slate-200 dark:border-slate-800',
+  headerBg: 'bg-slate-100/80 hover:bg-slate-200/60 dark:bg-slate-800/70 dark:hover:bg-slate-800',
+  titleText: 'text-slate-900 dark:text-white',
+  avatarBg: 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900',
+  pillClass: 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600',
+  rowIndentBorder: 'border-l-slate-300 dark:border-l-slate-700',
+  chevronColor: 'text-slate-700 dark:text-slate-300',
+};
+
+function getBodyMonogram(name: string): string {
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('ured za zakonodavstv')) return 'UZZ';
+  if (lower.includes('udruga gradova')) return 'UG';
+  if (lower.includes('zajednica općin')) return 'HZO';
+  if (lower.includes('zajednica županij')) return 'HZŽ';
+  if (lower.includes('mora, prometa') || lower.includes('mmpi')) return 'MMPI';
+  if (lower.includes('financij')) return 'MFIN';
+  if (lower.includes('gospodarstv') && lower.includes('ministarstv')) return 'MINGO';
+  if (lower.includes('poljoprivred')) return 'MPŠR';
+  if (lower.includes('prostorn') && lower.includes('graditelj')) return 'MPGI';
+  if (lower.includes('vanjskih i europskih')) return 'MVEP';
+  if (lower.includes('hrvatske vode')) return 'HV';
+  if (lower.includes('obrane')) return 'MORH';
+  if (lower.includes('unutarnjih poslova')) return 'MUP';
+  if (lower.includes('pravosuđa')) return 'MPUDT';
+  if (lower.includes('zdravstva')) return 'MIZ';
+  if (lower.includes('znanosti')) return 'MZOM';
+  if (lower.includes('kulture')) return 'MKM';
+  if (lower.includes('turizma')) return 'MINTS';
+  if (lower.includes('rada,')) return 'MROSP';
+  if (lower.includes('branitelja')) return 'MHB';
+  if (lower.includes('demografije')) return 'MDU';
+  const stop = new Set(['u', 'i', 'za', 'od', 'na', 'o', 'te', 'republike', 'hrvatske', 'vlade', 'rh']);
+  const letters = (name || '')
+    .split(/[\s,–-]+/)
+    .map((w) => w.replace(/[^a-zA-ZčćžšđČĆŽŠĐ]/g, ''))
+    .filter((w) => w.length > 0 && !stop.has(w.toLowerCase()))
+    .slice(0, 3)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+  return letters || 'TD';
 }
 
 interface PrimjedbeTabProps {
@@ -228,6 +367,23 @@ export function PrimjedbeTab({
     () => Array.from(new Set(primjedbe.map((p) => p.tijelo))).sort((a, b) => a.localeCompare(b, 'hr')),
     [primjedbe]
   );
+
+  // Dosljedna mapa boja po tijelu: svako tijelo s konkretnim primjedbama dobiva svoju zasebnu boju
+  const bodyThemeMap = useMemo(() => {
+    const map = new Map<string, BodyVisualTheme>();
+    const substantiveBodies = uniqueBodies.filter((body) =>
+      primjedbe.some((p) => p.tijelo === body && isSubstantivePrimjedba(p))
+    );
+    substantiveBodies.forEach((body, idx) => {
+      map.set(body, SUBSTANTIVE_BODY_THEMES[idx % SUBSTANTIVE_BODY_THEMES.length]);
+    });
+    for (const body of uniqueBodies) {
+      if (!map.has(body)) {
+        map.set(body, MUTED_BODY_THEME);
+      }
+    }
+    return map;
+  }, [uniqueBodies, primjedbe]);
 
   const stats = useMemo(() => {
     const s = {
@@ -1017,303 +1173,373 @@ export function PrimjedbeTab({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {grouped.map(([groupTitle, items]) => {
+        <div className="space-y-4">
+          {grouped.map(([groupTitle, items], groupIdx) => {
             const isGroupCollapsed = collapsedGroups.has(groupTitle);
             const groupPrih = items.filter((i) => i.status === 'Prihvaća se').length;
             const groupDjel = items.filter((i) => i.status === 'Djelomično se prihvaća').length;
             const groupOdb = items.filter((i) => i.status === 'Ne prihvaća se').length;
             const groupZnanje = items.filter((i) => i.status === 'Prima se na znanje').length;
             const allInGroupOpen = items.every((i) => expandedItems.has(i.id));
+            const groupHasSubstantive = items.some((i) => isSubstantivePrimjedba(i));
+            const prevGroupHadSubstantive =
+              groupIdx > 0 && grouped[groupIdx - 1][1].some((i) => isSubstantivePrimjedba(i));
+            const showNonSubstantiveDivider =
+              groupBy === 'tijelo' && !groupHasSubstantive && prevGroupHadSubstantive;
+
+            const theme =
+              groupBy === 'tijelo'
+                ? bodyThemeMap.get(groupTitle) || MUTED_BODY_THEME
+                : ARTICLE_GROUP_THEME;
+            const groupCategory = groupBy === 'tijelo' ? items[0]?.kategorijaTijela : undefined;
 
             return (
-              <div
-                key={groupTitle}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs"
-              >
-                {/* Zaglavlje grupe (razina 1 harmonike) */}
+              <React.Fragment key={groupTitle}>
+                {showNonSubstantiveDivider && (
+                  <div className="flex items-center gap-3 pt-2 pb-0.5">
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Tijela bez primjedbi / mišljenje još nije dostavljeno
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                )}
+
                 <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleGroup(groupTitle)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleGroup(groupTitle);
-                    }
-                  }}
-                  className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none transition-colors"
+                  className={`bg-white dark:bg-slate-900 border rounded-2xl overflow-hidden transition-all ${
+                    theme.cardBorder
+                  } ${groupHasSubstantive ? 'shadow-sm' : 'shadow-none opacity-90'}`}
                 >
-                  <div className="flex flex-wrap items-center gap-2 min-w-0">
-                    {isGroupCollapsed ? (
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    )}
-                    <span className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wide">
-                      {groupTitle}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {items.length} {items.length === 1 ? 'primjedba' : 'primjedbi'}
-                    </span>
-                    {groupPrih > 0 && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
-                        {groupPrih} prihvaćeno
-                      </span>
-                    )}
-                    {groupDjel > 0 && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800">
-                        {groupDjel} djelomično
-                      </span>
-                    )}
-                    {groupOdb > 0 && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800">
-                        {groupOdb} odbijeno
-                      </span>
-                    )}
-                    {groupZnanje > 0 && (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
-                        {groupZnanje} na znanje
-                      </span>
+                  {/* Zaglavlje grupe (razina 1 harmonike — izražen naslov, monogram i boja po tijelu) */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => toggleGroup(groupTitle)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleGroup(groupTitle);
+                      }
+                    }}
+                    className={`px-4 ${
+                      groupHasSubstantive ? 'py-3.5' : 'py-2.5'
+                    } ${theme.headerBg} ${
+                      !isGroupCollapsed ? 'border-b border-slate-200/80 dark:border-slate-800' : ''
+                    } flex flex-wrap items-center justify-between gap-2.5 cursor-pointer select-none transition-colors`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2.5 min-w-0">
+                      {isGroupCollapsed ? (
+                        <ChevronRight className={`w-4 h-4 shrink-0 ${theme.chevronColor}`} />
+                      ) : (
+                        <ChevronDown className={`w-4 h-4 shrink-0 ${theme.chevronColor}`} />
+                      )}
+
+                      {groupBy === 'tijelo' ? (
+                        <span
+                          className={`inline-flex items-center justify-center min-w-9 h-7 px-1.5 rounded-lg text-[10.5px] font-extrabold tracking-tight shrink-0 shadow-2xs ${theme.avatarBg}`}
+                        >
+                          {getBodyMonogram(groupTitle)}
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${theme.avatarBg}`}
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                        </span>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span
+                          className={`${
+                            groupHasSubstantive
+                              ? 'text-sm sm:text-[15px] font-extrabold tracking-tight'
+                              : 'text-xs font-bold'
+                          } ${theme.titleText}`}
+                        >
+                          {groupTitle}
+                        </span>
+
+                        {groupCategory && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/80 dark:bg-slate-900/70 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                            {groupCategory}
+                          </span>
+                        )}
+
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/90 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
+                          {items.length} {items.length === 1 ? 'primjedba' : 'primjedbi'}
+                        </span>
+
+                        {groupPrih > 0 && (
+                          <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            {groupPrih} prihvaćeno
+                          </span>
+                        )}
+                        {groupDjel > 0 && (
+                          <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            {groupDjel} djelomično
+                          </span>
+                        )}
+                        {groupOdb > 0 && (
+                          <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-rose-100/90 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                            {groupOdb} odbijeno
+                          </span>
+                        )}
+                        {groupZnanje > 0 && (
+                          <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-sky-100/90 dark:bg-sky-950/70 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                            {groupZnanje} na znanje
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {!isGroupCollapsed && items.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleAllItemsInGroup(items);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white/80 dark:bg-slate-900/70 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 cursor-pointer shrink-0"
+                      >
+                        <ChevronsUpDown className="w-3 h-3" />
+                        {allInGroupOpen ? 'Sažmi stavke' : 'Otvori sve stavke'}
+                      </button>
                     )}
                   </div>
 
-                  {!isGroupCollapsed && items.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleAllItemsInGroup(items);
-                      }}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100/70 dark:hover:bg-blue-950/60 cursor-pointer"
-                    >
-                      <ChevronsUpDown className="w-3 h-3" />
-                      {allInGroupOpen ? 'Sažmi stavke' : 'Otvori sve stavke'}
-                    </button>
-                  )}
-                </div>
+                  {/* Lista harmonika stavki unutar grupe (razina 2 harmonike) */}
+                  {!isGroupCollapsed && (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {items.map((item, idx) => {
+                        const isOpen = expandedItems.has(item.id);
+                        const showSplitBtn = canSplitCombinedItem(item);
+                        const showCombinedBanner =
+                          item.tekstPrimjedbe.length > 900 && item.obrazlozenje.length > 400;
+                        const hasAnswer = item.obrazlozenje.trim().length > 0;
+                        const itemBodyTheme = bodyThemeMap.get(item.tijelo) || MUTED_BODY_THEME;
 
-                {/* Lista harmonika stavki unutar grupe (razina 2 harmonike) */}
-                {!isGroupCollapsed && (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {items.map((item, idx) => {
-                      const isOpen = expandedItems.has(item.id);
-                      const showSplitBtn = canSplitCombinedItem(item);
-                      const showCombinedBanner =
-                        item.tekstPrimjedbe.length > 900 && item.obrazlozenje.length > 400;
-                      const hasAnswer = item.obrazlozenje.trim().length > 0;
-
-                      return (
-                        <div
-                          key={item.id}
-                          className={`transition-colors ${
-                            isOpen ? 'bg-blue-50/20 dark:bg-blue-950/15' : ''
-                          }`}
-                        >
-                          {/* Klikabilna harmonika traka pojedinačne primjedbe */}
+                        return (
                           <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => toggleItem(item.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                toggleItem(item.id);
-                              }
-                            }}
-                            className="px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-slate-50/90 dark:hover:bg-slate-800/40 cursor-pointer select-none"
+                            key={item.id}
+                            className={`transition-colors ${
+                              isOpen ? 'bg-slate-50/70 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'
+                            }`}
                           >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              {isOpen ? (
-                                <ChevronDown className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                              )}
-
-                              {items.length > 1 && (
-                                <span className="text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
-                                  #{idx + 1}
-                                </span>
-                              )}
-
-                              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
-                                {item.clanakOznaka}
-                              </span>
-
-                              {groupBy === 'clanak' && (
-                                <span className="text-xs font-bold text-slate-900 dark:text-white shrink-0 max-w-52 truncate">
-                                  {item.tijelo}
-                                </span>
-                              )}
-
-                              <span className="text-xs text-slate-600 dark:text-slate-300 truncate min-w-0">
-                                {getRemarkPreview(item.tekstPrimjedbe)}
-                              </span>
-                            </div>
-
+                            {/* Klikabilna harmonika traka pojedinačne primjedbe */}
                             <div
-                              className="flex items-center gap-1.5 shrink-0"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {hasAnswer && (
-                                <span
-                                  title="Upisan odgovor / obrazloženje Ministarstva"
-                                  className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800"
-                                >
-                                  <MessageSquare className="w-2.5 h-2.5" />
-                                  Odgovor
-                                </span>
-                              )}
-
-                              <select
-                                value={item.status}
-                                onChange={(e) =>
-                                  handleQuickStatusChange(item, e.target.value as PrimjedbaStatus)
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => toggleItem(item.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleItem(item.id);
                                 }
-                                className={`px-2 py-1 text-[11px] font-bold rounded-lg border cursor-pointer ${
-                                  STATUS_BADGE[item.status]
-                                }`}
-                              >
-                                {PRIMJEDBA_STATUSI.map((st) => (
-                                  <option key={st} value={st}>
-                                    {st}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
+                              }}
+                              className="pl-5 pr-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer select-none"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                {isOpen ? (
+                                  <ChevronDown className={`w-4 h-4 shrink-0 ${theme.chevronColor}`} />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                )}
 
-                          {/* Otvoreni sadržaj harmonike: cijela primjedba + cijeli odgovor + akcije */}
-                          {isOpen && (
-                            <div className="px-4 pb-4 pt-2 space-y-2.5 border-t border-slate-100 dark:border-slate-800/80">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-                                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                                    {item.tijelo}
+                                {items.length > 1 && (
+                                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums shrink-0 w-5">
+                                    #{idx + 1}
                                   </span>
-                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                                    {item.kategorijaTijela}
-                                  </span>
-                                  {item.izvorniDokumentNaziv && (
-                                    <span className="truncate max-w-xs" title={item.izvorniDokumentNaziv}>
-                                      Izvor: {item.izvorniDokumentNaziv}
+                                )}
+
+                                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shrink-0 tracking-tight">
+                                  {item.clanakOznaka}
+                                </span>
+
+                                {groupBy === 'clanak' && (
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded-md border shrink-0 max-w-56 truncate ${itemBodyTheme.pillClass}`}
+                                  >
+                                    <span className="font-extrabold">
+                                      {getBodyMonogram(item.tijelo)}
                                     </span>
-                                  )}
-                                </div>
+                                    <span className="truncate font-semibold">{item.tijelo}</span>
+                                  </span>
+                                )}
 
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                  {showSplitBtn && (
+                                <span className="text-[13px] text-slate-700 dark:text-slate-200 truncate min-w-0">
+                                  {getRemarkPreview(item.tekstPrimjedbe)}
+                                </span>
+                              </div>
+
+                              <div
+                                className="flex items-center gap-2 shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {hasAnswer && (
+                                  <span
+                                    title="Upisan odgovor / obrazloženje Ministarstva"
+                                    className="hidden sm:inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800"
+                                  >
+                                    <MessageSquare className="w-2.5 h-2.5" />
+                                    Odgovor
+                                  </span>
+                                )}
+
+                                <select
+                                  value={item.status}
+                                  onChange={(e) =>
+                                    handleQuickStatusChange(item, e.target.value as PrimjedbaStatus)
+                                  }
+                                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border cursor-pointer ${
+                                    STATUS_BADGE[item.status]
+                                  }`}
+                                >
+                                  {PRIMJEDBA_STATUSI.map((st) => (
+                                    <option key={st} value={st}>
+                                      {st}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Otvoreni sadržaj harmonike: cijela primjedba + cijeli odgovor + akcije */}
+                            {isOpen && (
+                              <div className={`pl-6 pr-4 pb-4 pt-3 space-y-3 border-t border-slate-100 dark:border-slate-800/80 ml-4 border-l-2 ${theme.rowIndentBorder}`}>
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex flex-wrap items-center gap-2 text-[11.5px] text-slate-500 dark:text-slate-400">
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border ${itemBodyTheme.pillClass}`}
+                                    >
+                                      {item.tijelo}
+                                    </span>
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10.5px] font-medium">
+                                      {item.kategorijaTijela}
+                                    </span>
+                                    {item.izvorniDokumentNaziv && (
+                                      <span className="truncate max-w-xs text-[11px]" title={item.izvorniDokumentNaziv}>
+                                        Izvor: {item.izvorniDokumentNaziv}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    {showSplitBtn && (
+                                      <button
+                                        type="button"
+                                        disabled={splittingId === item.id}
+                                        onClick={() => handleSplitCombined(item)}
+                                        title="Automatski razdvoji spojeni unos na pojedinačne primjedbe po člancima i 1-na-1 upari postojeće odgovore"
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                                      >
+                                        {splittingId === item.id ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <Scissors className="w-3 h-3" />
+                                        )}
+                                        {splittingId === item.id
+                                          ? 'Razvrstavam...'
+                                          : 'Razvrstaj po člancima'}
+                                      </button>
+                                    )}
+
                                     <button
                                       type="button"
                                       disabled={splittingId === item.id}
-                                      onClick={() => handleSplitCombined(item)}
-                                      title="Automatski razdvoji spojeni unos na pojedinačne primjedbe po člancima i 1-na-1 upari postojeće odgovore"
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                                      onClick={() => openAiWorkshop(item)}
+                                      title="Otvori interaktivnu AI radionicu: izaberi Flash/Pro agenta, razgovaraj o odgovoru uz Bazu zakona i prakse te spremi tek kad si zadovoljan"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold cursor-pointer shadow-2xs disabled:opacity-50"
                                     >
-                                      {splittingId === item.id ? (
-                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                      ) : (
-                                        <Scissors className="w-3 h-3" />
-                                      )}
-                                      {splittingId === item.id
-                                        ? 'Razvrstavam...'
-                                        : 'Razvrstaj po člancima'}
+                                      <Wand2 className="w-3 h-3" />
+                                      AI radionica odgovora
                                     </button>
-                                  )}
 
-                                  <button
-                                    type="button"
-                                    disabled={splittingId === item.id}
-                                    onClick={() => openAiWorkshop(item)}
-                                    title="Otvori interaktivnu AI radionicu: izaberi Flash/Pro agenta, razgovaraj o odgovoru uz Bazu zakona i prakse te spremi tek kad si zadovoljan"
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold cursor-pointer shadow-2xs disabled:opacity-50"
-                                  >
-                                    <Wand2 className="w-3 h-3" />
-                                    AI radionica odgovora
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditModal({
-                                        id: item.id,
-                                        tijelo: item.tijelo,
-                                        kategorijaTijela: item.kategorijaTijela,
-                                        clanakOznaka: item.clanakOznaka,
-                                        tekstPrimjedbe: item.tekstPrimjedbe,
-                                        status: item.status,
-                                        obrazlozenje: item.obrazlozenje,
-                                        predlozenaIzmjena: item.predlozenaIzmjena || '',
-                                        pravnaReferenca: item.pravnaReferenca || '',
-                                      })
-                                    }
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer"
-                                  >
-                                    <Pencil className="w-3 h-3" />
-                                    Uredi
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteItem(item.id)}
-                                    title="Obriši stavku"
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {showCombinedBanner && (
-                                <div className="px-3 py-2 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/80 text-[11px] text-amber-900 dark:text-amber-200">
-                                  Ovaj unos sadrži više spojenih primjedbi i odgovora iz jedne ćelije Word tablice. Kliknite{' '}
-                                  <strong>„Razvrstaj po člancima”</strong> da se svaka primjedba automatski odvoji i upari sa svojim točnim statusom i odgovorom.
-                                </div>
-                              )}
-
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
-                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/70 space-y-1">
-                                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                    Primjedba / Mišljenje
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setEditModal({
+                                          id: item.id,
+                                          tijelo: item.tijelo,
+                                          kategorijaTijela: item.kategorijaTijela,
+                                          clanakOznaka: item.clanakOznaka,
+                                          tekstPrimjedbe: item.tekstPrimjedbe,
+                                          status: item.status,
+                                          obrazlozenje: item.obrazlozenje,
+                                          predlozenaIzmjena: item.predlozenaIzmjena || '',
+                                          pravnaReferenca: item.pravnaReferenca || '',
+                                        })
+                                      }
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-800 cursor-pointer"
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                      Uredi
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteItem(item.id)}
+                                      title="Obriši stavku"
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                   </div>
-                                  <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                                    {item.tekstPrimjedbe}
-                                  </p>
                                 </div>
 
-                                <div className="p-3 rounded-xl bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/60 space-y-1.5">
-                                  <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-                                    Obrazloženje / Prijedlog odgovora
+                                {showCombinedBanner && (
+                                  <div className="px-3 py-2 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/80 text-[11px] text-amber-900 dark:text-amber-200">
+                                    Ovaj unos sadrži više spojenih primjedbi i odgovora iz jedne ćelije Word tablice. Kliknite{' '}
+                                    <strong>„Razvrstaj po člancima”</strong> da se svaka primjedba automatski odvoji i upari sa svojim točnim statusom i odgovorom.
                                   </div>
-                                  <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                                    {item.obrazlozenje || (
-                                      <span className="italic text-slate-400">
-                                        {item.status === 'Prima se na znanje'
-                                          ? 'Nije potreban poseban odgovor (primljeno na znanje / bez primjedbi).'
-                                          : 'Još nije upisan odgovor — kliknite „AI radionica odgovora” ili „Uredi”.'}
-                                      </span>
+                                )}
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                                  <div className="p-3.5 rounded-xl bg-stone-50/90 dark:bg-slate-800/60 border border-stone-200/90 dark:border-slate-700 space-y-1.5">
+                                    <div className="text-[10.5px] font-extrabold uppercase tracking-wider text-stone-500 dark:text-slate-400">
+                                      Primjedba / Mišljenje
+                                    </div>
+                                    <p className="text-[13px] text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed">
+                                      {item.tekstPrimjedbe}
+                                    </p>
+                                  </div>
+
+                                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 border-l-4 border-l-emerald-500 space-y-2 shadow-2xs">
+                                    <div className="text-[10.5px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                      Obrazloženje / Odgovor Ministarstva
+                                    </div>
+                                    <p className="text-[13px] text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed">
+                                      {item.obrazlozenje || (
+                                        <span className="italic text-slate-400 text-xs">
+                                          {item.status === 'Prima se na znanje'
+                                            ? 'Nije potreban poseban odgovor (primljeno na znanje / bez primjedbi).'
+                                            : 'Još nije upisan odgovor — kliknite „AI radionica odgovora” ili „Uredi”.'}
+                                        </span>
+                                      )}
+                                    </p>
+                                    {item.predlozenaIzmjena && (
+                                      <div className="pt-2 mt-2 border-t border-slate-200/80 dark:border-slate-800 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg">
+                                        <strong>Prijedlog izmjene teksta:</strong>{' '}
+                                        {item.predlozenaIzmjena}
+                                      </div>
                                     )}
-                                  </p>
-                                  {item.predlozenaIzmjena && (
-                                    <div className="pt-1.5 mt-1.5 border-t border-blue-200/60 dark:border-blue-800/60 text-[11px] text-emerald-800 dark:text-emerald-300">
-                                      <strong>Prijedlog izmjene teksta:</strong>{' '}
-                                      {item.predlozenaIzmjena}
-                                    </div>
-                                  )}
-                                  {item.pravnaReferenca && (
-                                    <div className="text-[10.5px] text-indigo-700 dark:text-indigo-300 font-medium">
-                                      Pravna osnova / praksa: {item.pravnaReferenca}
-                                    </div>
-                                  )}
+                                    {item.pravnaReferenca && (
+                                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium pt-0.5">
+                                        <span className="font-bold text-slate-500 dark:text-slate-400">
+                                          Pravna osnova / praksa:
+                                        </span>{' '}
+                                        {item.pravnaReferenca}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </React.Fragment>
             );
           })}
         </div>
