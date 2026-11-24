@@ -61,7 +61,7 @@ function htmlToStructuredText(html: string): { text: string; tablesCount: number
           $(tr)
             .children('th, td')
             .each((__, td) => {
-              // Očuvaj prijelome odlomaka unutar ćelija kao razmak ili "; "
+              // Očuvaj prijelome odlomaka unutar ćelija s <br> kako bi struktura više primjedbi preživjela GFM tablicu
               const cellParagraphs: string[] = [];
               const ps = $(td).find('p');
               if (ps.length > 0) {
@@ -73,7 +73,7 @@ function htmlToStructuredText(html: string): { text: string; tablesCount: number
                 const t = cleanInlineCell($(td).text());
                 if (t) cellParagraphs.push(t);
               }
-              cells.push(cellParagraphs.join(' '));
+              cells.push(cellParagraphs.join(' <br> '));
             });
           if (cells.some((c) => c.length > 0)) {
             rows.push(cells);
@@ -653,10 +653,22 @@ function inferArticleFromCommentText(text: string): string {
   return best.st ? `Članak ${best.art}. st. ${best.st}.` : `Članak ${best.art}.`;
 }
 
+export type ParsedImportedPrimjedba = Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'> & {
+  rawStatusColumn?: string;
+};
+
 function normalizePrimjedbaStatus(raw: string, commentText = ''): PrimjedbaStatus {
   const lower = (raw || '').toLowerCase().trim();
   if (!lower) {
-    if (/^\s*(?:nema\s+primjedb|bez\s+primjedb|suglasni\s+smo|daje\s+se\s+suglasnost)/i.test(commentText)) {
+    const cleanComment = (commentText || '').trim();
+    if (
+      /^\s*(?:nema\s+primjedb|bez\s+primjedb|suglasn[iao]\b|daje\s+se\s+suglasnost|nemamo\s+primjedb)/i.test(
+        cleanComment
+      ) ||
+      (cleanComment.length < 200 &&
+        /(?:nema\s+primjedb|bez\s+primjedb|suglasn[iao]\s+s\s+nacrtom)/i.test(cleanComment) &&
+        !/predla[žz]emo|uz\s+članak|primjedba\s+na/i.test(cleanComment))
+    ) {
       return 'Prima se na znanje';
     }
     return 'Na razmatranju';
@@ -671,17 +683,110 @@ function normalizePrimjedbaStatus(raw: string, commentText = ''): PrimjedbaStatu
 }
 
 /**
+ * Iz sirovog stupca "Prihvaćenost primjedbi" izdvaja sve pojedinačne statuse u točnom redoslijedu
+ * (npr. "Ne prihvaća se Primljeno na znanje Prihvaća se ..." -> niz od 8 statusa).
+ */
+export function extractStatusListFromRaw(raw: string): PrimjedbaStatus[] {
+  if (!raw || !raw.trim()) return [];
+  const regex =
+    /(djelomi[čc]no\s+(?:se\s+)?prihva[ćc]a|ne\s+prihva[ćc]a(?:\s+se)?|prihva[ćc]a(?:\s+se)?|primljeno\s+na\s+znanje|prima\s+se\s+na\s+znanje|odbija\s+se|usvaja\s+se)/gi;
+  const statuses: PrimjedbaStatus[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(raw)) !== null) {
+    statuses.push(normalizePrimjedbaStatus(m[1]));
+  }
+  return statuses;
+}
+
+/**
+ * Provjerava sadrži li jedan unos više spojenih primjedbi / odgovora iz jedne ćelije Word tablice.
+ */
+export function looksLikeCombinedPrimjedba(
+  tekstPrimjedbe: string,
+  obrazlozenje = '',
+  rawStatusColumn = ''
+): boolean {
+  if (extractStatusListFromRaw(rawStatusColumn).length >= 2) {
+    return true;
+  }
+  const text = tekstPrimjedbe || '';
+  const uzClanakMatches = text.match(/uz\s+član(?:ak|ke)\s+\d+/gi) || [];
+  if (uzClanakMatches.length >= 2) return true;
+
+  if (text.length > 520) {
+    const artNums = new Set<string>();
+    const artRegex = /(?:članak|članka|članku|člankom|članke|čl\.)\s*(\d+)/gi;
+    let m: RegExpExecArray | null;
+    while ((m = artRegex.exec(text)) !== null) {
+      artNums.add(m[1]);
+    }
+    if (artNums.size >= 2) return true;
+    if (text.length > 1000 && (obrazlozenje || '').length > 450) return true;
+  }
+  return false;
+}
+
+/**
+ * Pronalazi izvorni stupac "Prihvaćenost primjedbi" (Col 3) za određeno tijelo unutar spremljene Markdown tablice dokumenta,
+ * kako bi AI razvrstavanje moglo upariti TOČNE izvorne statuse čak i za već uvezene spojene retke.
+ */
+export function extractRawStatusCellFromTableMarkdown(
+  rawText: string,
+  tijelo: string,
+  tekstPrimjedbeSnippet?: string
+): string {
+  if (!rawText || !tijelo) return '';
+  const targetBody = tijelo.toLowerCase().replace(/\s+/g, ' ').trim();
+  const snippet = (tekstPrimjedbeSnippet || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+
+  const lines = rawText.split(/\r?\n/);
+  let fallbackMatch = '';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue;
+    const cells = trimmed
+      .slice(1, -1)
+      .split(/(?<!\\)\|/)
+      .map((c) => c.replace(/\\\|/g, '|').replace(/<br\s*\/?>/gi, '\n').trim());
+    if (cells.length < 3) continue;
+
+    const col0 = cells[0].toLowerCase().replace(/\s+/g, ' ').trim();
+    const col1 = (cells[1] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const col2 = (cells[2] || '').trim();
+    if (!col2) continue;
+
+    if (col0 === targetBody || (col0 && (col0.includes(targetBody) || targetBody.includes(col0)))) {
+      if (snippet && col1.includes(snippet)) {
+        return col2;
+      }
+      if (!fallbackMatch || col2.length > fallbackMatch.length) {
+        fallbackMatch = col2;
+      }
+    }
+  }
+  return fallbackMatch;
+}
+
+/**
  * Lokalno parsira Word tablicu primjedbi (4 stupca: TDU/Dionici | Primjedbe | Prihvaćenost | Obrazloženje)
  * iz .docx datoteke ili iz već parsiranog Markdown teksta dokumenta (0 AI troška).
  */
 export async function parseExistingPrimjedbeFromDocxBuffer(
   buffer: Buffer,
   sourceDocId: string,
-  sourceDocName: string
-): Promise<Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'>[]> {
+  sourceDocName: string,
+  options?: { skipEmptyRows?: boolean }
+): Promise<{ items: ParsedImportedPrimjedba[]; skippedEmptyCount: number }> {
+  const skipEmptyRows = options?.skipEmptyRows ?? true;
   const htmlRes = await mammoth.convertToHtml({ buffer });
   const $ = cheerio.load(htmlRes.value || '');
-  const items: Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'>[] = [];
+  const items: ParsedImportedPrimjedba[] = [];
+  let skippedEmptyCount = 0;
 
   $('table').each((_, table) => {
     let lastTijelo = '';
@@ -728,11 +833,15 @@ export async function parseExistingPrimjedbeFromDocxBuffer(
 
         // Ako ćelija sadrži više zasebnih primjedbi i jednak broj statusa (kao UZZ redak u stvarnoj tablici!),
         // razdvoji ih u pojedinačne strukturirane stavke po člancima!
-        if (col1Paras.length > 1 && col2Paras.length === col1Paras.length) {
+        if (
+          col1Paras.length > 1 &&
+          col2Paras.length === col1Paras.length &&
+          (col3Paras.length === 0 || col3Paras.length === col1Paras.length)
+        ) {
           for (let i = 0; i < col1Paras.length; i++) {
             const primjedbaTxt = col1Paras[i];
             const statusTxt = col2Paras[i] || '';
-            const obrTxt = col3Paras[i] || (i === col1Paras.length - 1 ? col3Paras.slice(i).join('\n\n') : '');
+            const obrTxt = col3Paras[i] || '';
             items.push({
               tijelo,
               kategorijaTijela: senderInfo.category,
@@ -743,30 +852,37 @@ export async function parseExistingPrimjedbeFromDocxBuffer(
               izvorniDokumentId: sourceDocId,
               izvorniDokumentNaziv: sourceDocName,
               izvorUnosa: 'lokalni_docx_uvoz',
+              rawStatusColumn: statusTxt,
             });
           }
         } else {
           const fullPrimjedba = col1Paras.join('\n\n').trim();
-          const fullStatus = col2Paras.join(' ').trim();
+          const fullStatus = col2Paras.join('\n').trim();
           const fullObr = col3Paras.join('\n\n').trim();
-          if (!fullPrimjedba && !fullObr) return;
+          if (!fullPrimjedba && !fullObr && !fullStatus) {
+            if (skipEmptyRows) {
+              skippedEmptyCount++;
+              return;
+            }
+          }
 
           items.push({
             tijelo,
             kategorijaTijela: senderInfo.category,
             clanakOznaka: inferArticleFromCommentText(fullPrimjedba),
-            tekstPrimjedbe: fullPrimjedba || '(Bez primjedbi / opće očitovanje)',
+            tekstPrimjedbe: fullPrimjedba || '(Mišljenje još nije zaprimljeno)',
             status: normalizePrimjedbaStatus(fullStatus, fullPrimjedba),
             obrazlozenje: fullObr,
             izvorniDokumentId: sourceDocId,
             izvorniDokumentNaziv: sourceDocName,
             izvorUnosa: 'lokalni_docx_uvoz',
+            rawStatusColumn: fullStatus,
           });
         }
       });
   });
 
-  return items;
+  return { items, skippedEmptyCount };
 }
 
 /**
@@ -775,11 +891,20 @@ export async function parseExistingPrimjedbeFromDocxBuffer(
 export function parseExistingPrimjedbeFromMarkdown(
   rawText: string,
   sourceDocId: string,
-  sourceDocName: string
-): Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'>[] {
+  sourceDocName: string,
+  options?: { skipEmptyRows?: boolean }
+): { items: ParsedImportedPrimjedba[]; skippedEmptyCount: number } {
+  const skipEmptyRows = options?.skipEmptyRows ?? true;
   const lines = (rawText || '').split(/\r?\n/);
-  const items: Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'>[] = [];
+  const items: ParsedImportedPrimjedba[] = [];
+  let skippedEmptyCount = 0;
   let lastTijelo = '';
+
+  const splitBr = (cell: string): string[] =>
+    (cell || '')
+      .split(/<br\s*\/?>/i)
+      .map((s) => s.trim())
+      .filter(Boolean);
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -791,31 +916,70 @@ export function parseExistingPrimjedbeFromMarkdown(
 
     if (cells.length < 2) continue;
     if (cells.every((c) => /^[-:\s]+$/.test(c))) continue;
-    if (/tdu|dionici|tijelo/i.test(cells[0]) && /primjedb|mi[šs]ljenj/i.test(cells[1])) {
+    if (/tdu|dionici|tijelo|predlagatelj/i.test(cells[0]) && /primjedb|mi[šs]ljenj/i.test(cells[1])) {
       continue;
     }
 
-    const tijelo = cells[0] || lastTijelo;
-    if (cells[0]) lastTijelo = cells[0];
-    const tekstPrimjedbe = cells[1] || '';
-    const statusRaw = cells[2] || '';
-    const obrazlozenje = cells[3] || '';
+    const col0 = splitBr(cells[0]).join(' ');
+    const col1Paras = splitBr(cells[1] || '');
+    const col2Paras = splitBr(cells[2] || '');
+    const col3Paras = splitBr(cells[3] || '');
 
-    if (!tijelo && !tekstPrimjedbe) continue;
+    const tijelo = col0 || lastTijelo;
+    if (col0) lastTijelo = col0;
+
+    if (!tijelo && col1Paras.length === 0) continue;
+
+    const fullPrimjedba = col1Paras.join('\n\n').trim();
+    const fullStatus = col2Paras.join('\n').trim();
+    const fullObr = col3Paras.join('\n\n').trim();
+
+    if (!fullPrimjedba && !fullObr && !fullStatus) {
+      if (skipEmptyRows) {
+        skippedEmptyCount++;
+        continue;
+      }
+    }
+
     const senderInfo = detectSenderFromText(tijelo);
 
-    items.push({
-      tijelo: tijelo || 'Nepoznato tijelo',
-      kategorijaTijela: senderInfo.category,
-      clanakOznaka: inferArticleFromCommentText(tekstPrimjedbe),
-      tekstPrimjedbe: tekstPrimjedbe || '(Bez primjedbi)',
-      status: normalizePrimjedbaStatus(statusRaw, tekstPrimjedbe),
-      obrazlozenje,
-      izvorniDokumentId: sourceDocId,
-      izvorniDokumentNaziv: sourceDocName,
-      izvorUnosa: 'lokalni_docx_uvoz',
-    });
+    if (
+      col1Paras.length > 1 &&
+      col2Paras.length === col1Paras.length &&
+      (col3Paras.length === 0 || col3Paras.length === col1Paras.length)
+    ) {
+      for (let i = 0; i < col1Paras.length; i++) {
+        const primjedbaTxt = col1Paras[i];
+        const statusTxt = col2Paras[i] || '';
+        const obrTxt = col3Paras[i] || '';
+        items.push({
+          tijelo: tijelo || 'Nepoznato tijelo',
+          kategorijaTijela: senderInfo.category,
+          clanakOznaka: inferArticleFromCommentText(primjedbaTxt),
+          tekstPrimjedbe: primjedbaTxt,
+          status: normalizePrimjedbaStatus(statusTxt, primjedbaTxt),
+          obrazlozenje: obrTxt,
+          izvorniDokumentId: sourceDocId,
+          izvorniDokumentNaziv: sourceDocName,
+          izvorUnosa: 'lokalni_docx_uvoz',
+          rawStatusColumn: statusTxt,
+        });
+      }
+    } else {
+      items.push({
+        tijelo: tijelo || 'Nepoznato tijelo',
+        kategorijaTijela: senderInfo.category,
+        clanakOznaka: inferArticleFromCommentText(fullPrimjedba),
+        tekstPrimjedbe: fullPrimjedba || '(Mišljenje još nije zaprimljeno)',
+        status: normalizePrimjedbaStatus(fullStatus, fullPrimjedba),
+        obrazlozenje: fullObr,
+        izvorniDokumentId: sourceDocId,
+        izvorniDokumentNaziv: sourceDocName,
+        izvorUnosa: 'lokalni_docx_uvoz',
+        rawStatusColumn: fullStatus,
+      });
+    }
   }
 
-  return items;
+  return { items, skippedEmptyCount };
 }

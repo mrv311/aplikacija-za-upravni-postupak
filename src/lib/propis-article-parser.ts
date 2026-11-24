@@ -162,17 +162,25 @@ export function parseNormativeDraft(rawText: string): ParsedDraftStructure {
 }
 
 /**
- * Prirodni ključ za sortiranje članaka (Opće primjedbe -> 1 -> 2 -> 2a -> 3 ... -> Završne/Obrazloženje)
+ * Prirodni ključ za sortiranje članaka (Opće/uvodno -> 1 -> 2 -> 2. st. 10. -> 2a -> 3 ... -> Završne/Obrazloženje)
  */
 export function articleSortRank(label: string): number {
   const lower = (label || '').toLowerCase().trim();
-  if (!lower || lower.includes('opć') || lower.includes('opcen') || lower.includes('preambul')) {
+  if (
+    !lower ||
+    lower.includes('opć') ||
+    lower.includes('opcen') ||
+    lower.includes('uvod') ||
+    lower.includes('preambul')
+  ) {
     return 0;
   }
   if (lower.includes('obrazlo')) return 9999;
-  const m = lower.match(/(\d+)\s*\.?\s*([a-z])?/);
+  const m = lower.match(/(?:član\w*\s*|čl\.?\s*)?(\d+)(?:\.?([a-z])(?![a-zčćžšđ]))?/i);
   if (!m) return 9000;
   const num = parseInt(m[1], 10);
   const letterBonus = m[2] ? (m[2].charCodeAt(0) - 96) * 0.01 : 0;
-  return num + letterBonus;
+  const stavakMatch = lower.match(/(?:stavak|stavka|stavku|stavkom|stavke|st\.)\s*(\d+)/i);
+  const stavakBonus = stavakMatch ? parseInt(stavakMatch[1], 10) * 0.0001 : 0;
+  return num + letterBonus + stavakBonus;
 }

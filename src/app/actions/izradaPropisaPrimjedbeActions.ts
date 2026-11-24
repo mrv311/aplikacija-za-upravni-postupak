@@ -17,6 +17,10 @@ import {
   parseExistingPrimjedbeFromDocxBuffer,
   parseExistingPrimjedbeFromMarkdown,
   detectSenderFromText,
+  extractStatusListFromRaw,
+  extractRawStatusCellFromTableMarkdown,
+  looksLikeCombinedPrimjedba,
+  type ParsedImportedPrimjedba,
 } from '@/lib/izrada-propisa-parser';
 import { articleSortRank } from '@/lib/propis-article-parser';
 import type {
@@ -25,6 +29,14 @@ import type {
   PrimjedbaKategorijaTijela,
   PrimjedbaStatus,
 } from '@/lib/izrada-propisa-types';
+
+function tryRevalidate(p: string) {
+  try {
+    revalidatePath(p);
+  } catch {
+    // Izvan Next.js HTTP zahtjeva (npr. CLI skripta) revalidatePath nije dostupan
+  }
+}
 
 function extractJsonArray<T = any>(raw: string): T[] {
   const cleaned = (raw || '')
@@ -68,50 +80,303 @@ const VALID_KATEGORIJE = new Set<PrimjedbaKategorijaTijela>([
 ]);
 
 /**
- * Lokalni uvoz postojeće Word tablice primjedbi (0 AI troška).
+ * Interno: AI razdvaja JEDAN spojeni redak iz Word tablice primjedbi u zasebne stavke po člancima,
+ * vjerno prenoseći SVAKU pojedinačnu primjedbu i uparujući je 1-na-1 s TOČNIM izvornim statusom
+ * i TOČNIM odgovarajućim dijelom postojećeg obrazloženja (bez izmišljanja i bez gubitka teksta).
  */
-export async function importExistingPrimjedbeDocxAction(projectId: string, docId: string) {
+async function aiSplitCombinedRow(params: {
+  tijelo: string;
+  kategorijaTijela: PrimjedbaKategorijaTijela;
+  tekstPrimjedbe: string;
+  obrazlozenje: string;
+  currentStatus: PrimjedbaStatus;
+  rawStatusColumn?: string;
+  modelPreference?: 'flash' | 'pro';
+}): Promise<
+  Array<{
+    clanakOznaka: string;
+    tekstPrimjedbe: string;
+    status: PrimjedbaStatus;
+    obrazlozenje: string;
+    predlozenaIzmjena?: string;
+  }>
+> {
+  const aiModel =
+    params.modelPreference === 'pro' ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
+  const extractedStatuses = extractStatusListFromRaw(params.rawStatusColumn || '');
+
+  const systemPrompt = `Ti si viši stručni savjetnik i nomotehničar u Ministarstvu zaštite okoliša i zelene tranzicije RH.
+Tvoj je zadatak RAZDVOJITI JEDAN spojeni unos iz Word tablice primjedbi (u kojem su sve primjedbe i svi odgovori za isto tijelo spojeni u jednoj ćeliji) u ZASEBNE, čiste stavke — po jednu za svaku pojedinu primjedbu/članak — te SVAKU primjedbu točno 1-na-1 upariti s njezinim izvornim statusom prihvaćenosti i njezinim TOČNIM dijelom postojećeg obrazloženja (odgovora Ministarstva).
+
+STROGA PRAVILA (NULTA IZMIŠLJOTINA, NULTI GUBITAK TEKSTA):
+1. NE izmišljaj nove odgovore niti ne dopisuj vlastite zaključke! Koristi ISKLJUČIVO tekst koji već postoji u ulaznom polju PRIMJEDBA i ulaznom polju OBRAZLOŽENJE.
+2. Prenesi POTPUNI izvorni tekst svake pojedine primjedbe i POTPUNI izvorni tekst njezinog odgovora — ne skraćuj, ne parafraziraj i ne briši rečenice! (Smiješ samo uredno razdvojiti naslov od teksta novim retkom radi preglednosti.)
+3. OPĆI / UVODNI DIO: Ako na početku PRIMJEDBE postoji opći uvodni odlomak (npr. opća pohvala strukture) i/ili na početku OBRAZLOŽENJA postoji opća uvodna napomena Ministarstva (npr. o sudjelovanju u Povjerenstvu, ranijim konzultacijama i mišljenju iz veljače), izdvoji ih zajedno kao PRVU stavku s:
+   - "clanakOznaka": "Opće / uvodno"
+   - "status": "Prima se na znanje"
+4. TOČNO UPARIVANJE STATUSA I ODGOVORA:
+   - Ako je dostavljen izvorni popis statusa iz stupca "Prihvaćenost primjedbi", poštuj redoslijed i značenje tih statusa za pojedine članke!
+   - Kada je pojedina primjedba tek podrška ili "nemamo dodatnih primjedbi" (status "Prima se na znanje" / "Primljeno na znanje") i u OBRAZLOŽENJU nema posebnog protuodgovora za nju, ostavi "obrazlozenje": "" — NIKADA ne lijepi odgovor koji sadržajno pripada sljedećem članku!
+   - Svaki odgovor iz OBRAZLOŽENJA upari SADRŽAJNO s točno onom primjedbom/člankom na koju se odnosi (npr. odgovor o Tarifnom razredu 8. ide uz čl. 2. st. 10.; odgovor o izgrađenom građevinskom zemljištu ide uz čl. 4.; odgovor o člancima 14. i 15. ZFVG-a ide uz čl. 6.; odgovor o pojmu "glavna djelatnost" ide uz čl. 6. st. 2.; odgovor o izdvojenoj poslovnoj jedinici ide uz čl. 6. st. 3.; odgovor o poslovima naplate i 10 % ide uz čl. 7.).
+5. OZNAKA ČLANKA ("clanakOznaka"): koristi kratku i preciznu oznaku prikladnu za sortiranje, npr.:
+   - "Opće / uvodno"
+   - "Članak 2. st. 10."
+   - "Članak 3. i 4."
+   - "Članak 4."
+   - "Članak 5."
+   - "Članak 6."
+   - "Članak 6. st. 2."
+   - "Članak 6. st. 3."
+   - "Članak 7."
+6. PREDLOŽENA IZMJENA: Ako postojeće obrazloženje izričito citira novi prijedlog odredbe (npr. Predlaže se da odredba članka 4. glasi: „...“), zadrži puni tekst u "obrazlozenje", a citirani novi tekst odredbe dodatno upiši u "predlozenaIzmjena". Inače ostavi "predlozenaIzmjena": "".
+7. PROVJERAVAJ POTPUNOST: Svaka rečenica iz izvornih polja PRIMJEDBA i OBRAZLOŽENJE mora biti raspoređena u neku od vraćenih stavki.
+
+Vrati ISKLJUČIVO valjani JSON niz objekata (bez teksta izvan JSON-a):
+[
+  {
+    "clanakOznaka": "npr. Članak 4.",
+    "tekstPrimjedbe": "Potpuni izvorni tekst ove pojedinačne primjedbe",
+    "status": "Prihvaća se" | "Djelomično se prihvaća" | "Ne prihvaća se" | "Prima se na znanje" | "Na razmatranju",
+    "obrazlozenje": "Potpuni izvorni tekst odgovarajućeg odgovora Ministarstva (ili prazan string ako za 'Prima se na znanje' nema zasebnog odgovora)",
+    "predlozenaIzmjena": "Eventualna izričito citirana nova formulacija članka iz obrazloženja ili prazan string"
+  }
+]`;
+
+  const userPrompt = `TIJELO / DIONIK: ${params.tijelo} (${params.kategorijaTijela})
+${
+  extractedStatuses.length > 0
+    ? `IZVORNI STUPAC "PRIHVAĆENOST PRIMJEDBI" (${extractedStatuses.length} statusa po redu):
+${extractedStatuses.map((s, idx) => `${idx + 1}. ${s}`).join('\n')}
+(Sirovi tekst stupca: ${params.rawStatusColumn})`
+    : `TRENUTNI ZBIRNI STATUS: ${params.currentStatus}`
+}
+
+SPOJENI TEKST PRIMJEDBI (stupac "Primjedbe/Mišljenja"):
+${params.tekstPrimjedbe}
+
+SPOJENI TEKST ODGOVORA (stupac "Obrazloženje"):
+${params.obrazlozenje || '(Nema upisanog obrazloženja)'}`;
+
+  const { text } = await generateText({
+    model: google(aiModel),
+    system: systemPrompt,
+    prompt: userPrompt,
+  });
+
+  const parsed = extractJsonArray<any>(text);
+  const cleaned = parsed
+    .map((raw) => {
+      const rawStatus = String(raw.status || '').trim() as PrimjedbaStatus;
+      const status = VALID_STATUSES.has(rawStatus) ? rawStatus : params.currentStatus;
+      const tekstPrimjedbe = String(raw.tekstPrimjedbe || '').trim();
+      const obrazlozenje = String(raw.obrazlozenje || '').trim();
+      const clanakOznaka = String(raw.clanakOznaka || 'Opće primjedbe').trim();
+      const predlozenaIzmjena = String(raw.predlozenaIzmjena || '').trim() || undefined;
+      return { clanakOznaka, tekstPrimjedbe, status, obrazlozenje, predlozenaIzmjena };
+    })
+    .filter((item) => item.tekstPrimjedbe.length > 0 || item.obrazlozenje.length > 0);
+
+  return cleaned;
+}
+
+/**
+ * Uvoz postojeće Word tablice primjedbi — lokalno parsiranje + opcionalno pametno AI razdvajanje
+ * spojenih redaka (gdje je više primjedbi i odgovora istog tijela u jednoj ćeliji Word tablice).
+ */
+export async function importExistingPrimjedbeDocxAction(
+  projectId: string,
+  docId: string,
+  options?: { smartAiSplit?: boolean; skipEmptyRows?: boolean }
+) {
+  const smartAiSplit = options?.smartAiSplit ?? true;
+  const skipEmptyRows = options?.skipEmptyRows ?? true;
+
   const docs = await listPropisDocuments(projectId);
   const doc = docs.find((d) => d.id === docId);
   if (!doc) return { error: 'Dokument nije pronađen.' };
 
   try {
-    let extracted: Omit<PrimjedbaItem, 'id' | 'createdAt' | 'updatedAt'>[] = [];
+    let parsedResult: { items: ParsedImportedPrimjedba[]; skippedEmptyCount: number } = {
+      items: [],
+      skippedEmptyCount: 0,
+    };
 
     if (doc.lokalnaPutanja && fs.existsSync(doc.lokalnaPutanja) && doc.ekstenzija === 'docx') {
-      const buf = fs.readFileSync(doc.lokalnaPutanja);
-      extracted = await parseExistingPrimjedbeFromDocxBuffer(buf, doc.id, doc.prikazniNaziv);
+      try {
+        const buf = fs.readFileSync(doc.lokalnaPutanja);
+        if (buf.length > 0) {
+          parsedResult = await parseExistingPrimjedbeFromDocxBuffer(buf, doc.id, doc.prikazniNaziv, {
+            skipEmptyRows,
+          });
+        }
+      } catch {
+        // Fallback na spremljeni Markdown rawText (npr. ako je datoteka zaključana u Wordu ili OneDrive stub)
+      }
     }
 
-    if (extracted.length === 0) {
-      extracted = parseExistingPrimjedbeFromMarkdown(doc.rawText, doc.id, doc.prikazniNaziv);
+    if (parsedResult.items.length === 0) {
+      parsedResult = parseExistingPrimjedbeFromMarkdown(doc.rawText, doc.id, doc.prikazniNaziv, {
+        skipEmptyRows,
+      });
     }
 
-    if (extracted.length === 0) {
+    if (parsedResult.items.length === 0) {
       return {
         error:
-          'U odabranom dokumentu nije pronađena prepoznatljiva tablica primjedbi (TDU/Dionici | Primjedbe | Prihvaćenost | Obrazloženje).',
+          'U odabranom dokumentu nije pronađena prepoznatljiva tablica s upisanim primjedbama (TDU/Dionici | Primjedbe | Prihvaćenost | Obrazloženje).',
       };
     }
 
-    const existing = await listPrimjedbe(projectId);
     const now = new Date().toISOString();
-    const added: PrimjedbaItem[] = extracted.map((item) => ({
-      ...item,
-      id: crypto.randomUUID(),
-      createdAt: now,
-      updatedAt: now,
-    }));
+    const added: PrimjedbaItem[] = [];
+    let splitMegaRowsCount = 0;
 
+    for (const row of parsedResult.items) {
+      const { rawStatusColumn, ...baseFields } = row;
+      const shouldSplit =
+        smartAiSplit &&
+        looksLikeCombinedPrimjedba(baseFields.tekstPrimjedbe, baseFields.obrazlozenje, rawStatusColumn);
+
+      if (shouldSplit) {
+        try {
+          const splitParts = await aiSplitCombinedRow({
+            tijelo: baseFields.tijelo,
+            kategorijaTijela: baseFields.kategorijaTijela,
+            tekstPrimjedbe: baseFields.tekstPrimjedbe,
+            obrazlozenje: baseFields.obrazlozenje,
+            currentStatus: baseFields.status,
+            rawStatusColumn,
+          });
+          if (splitParts.length >= 2) {
+            splitMegaRowsCount++;
+            for (const part of splitParts) {
+              added.push({
+                ...baseFields,
+                id: crypto.randomUUID(),
+                clanakOznaka: part.clanakOznaka,
+                tekstPrimjedbe: part.tekstPrimjedbe,
+                status: part.status,
+                obrazlozenje: part.obrazlozenje,
+                predlozenaIzmjena: part.predlozenaIzmjena,
+                createdAt: now,
+                updatedAt: now,
+              });
+            }
+            continue;
+          }
+        } catch (splitErr) {
+          console.error('Auto AI split fallback for row:', baseFields.tijelo, splitErr);
+        }
+      }
+
+      added.push({
+        ...baseFields,
+        id: crypto.randomUUID(),
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    const existing = await listPrimjedbe(projectId);
     const merged = [...existing, ...added].sort(
       (a, b) => articleSortRank(a.clanakOznaka) - articleSortRank(b.clanakOznaka)
     );
     await savePrimjedbe(projectId, merged);
     revalidatePath(`/izrada-propisa/${projectId}`);
 
-    return { success: true, importedCount: added.length, primjedbe: merged };
+    return {
+      success: true,
+      importedCount: added.length,
+      splitMegaRowsCount,
+      skippedEmptyCount: parsedResult.skippedEmptyCount,
+      primjedbe: merged,
+    };
   } catch (err: any) {
-    return { error: err?.message || 'Greška pri lokalnom uvozu Word tablice.' };
+    return { error: err?.message || 'Greška pri uvozu Word tablice.' };
+  }
+}
+
+/**
+ * 1-klik AI razvrstavanje JEDNOG spojenog unosa u Tablici primjedbi na pojedinačne stavke po člancima,
+ * uz vjerno uparivanje izvornih statusa i postojećih odgovora bez gubitka teksta.
+ */
+export async function splitCombinedPrimjedbaAction(params: {
+  projectId: string;
+  primjedbaId: string;
+  modelPreference?: 'flash' | 'pro';
+}) {
+  const all = await listPrimjedbe(params.projectId);
+  const idx = all.findIndex((p) => p.id === params.primjedbaId);
+  if (idx === -1) return { error: 'Primjedba nije pronađena.' };
+
+  const target = all[idx];
+
+  try {
+    // Ako postoji izvorni dokument (npr. uvezena Word tablica), izvuci izvorni stupac "Prihvaćenost primjedbi"
+    // kako bismo sačuvali sve izvorne statuse po redoslijedu!
+    let rawStatusColumn = '';
+    if (target.izvorniDokumentId) {
+      const docs = await listPropisDocuments(params.projectId);
+      const srcDoc = docs.find((d) => d.id === target.izvorniDokumentId);
+      if (srcDoc?.rawText) {
+        rawStatusColumn = extractRawStatusCellFromTableMarkdown(
+          srcDoc.rawText,
+          target.tijelo,
+          target.tekstPrimjedbe
+        );
+      }
+    }
+
+    const splitParts = await aiSplitCombinedRow({
+      tijelo: target.tijelo,
+      kategorijaTijela: target.kategorijaTijela,
+      tekstPrimjedbe: target.tekstPrimjedbe,
+      obrazlozenje: target.obrazlozenje,
+      currentStatus: target.status,
+      rawStatusColumn,
+      modelPreference: params.modelPreference,
+    });
+
+    if (splitParts.length < 2) {
+      return {
+        error:
+          'Ovaj unos sadrži samo jednu cjelovitu primjedbu i nije ga potrebno dodatno razdvajati.',
+      };
+    }
+
+    const now = new Date().toISOString();
+    const replacements: PrimjedbaItem[] = splitParts.map((part) => ({
+      id: crypto.randomUUID(),
+      tijelo: target.tijelo,
+      kategorijaTijela: target.kategorijaTijela,
+      clanakOznaka: part.clanakOznaka,
+      tekstPrimjedbe: part.tekstPrimjedbe,
+      status: part.status,
+      obrazlozenje: part.obrazlozenje,
+      predlozenaIzmjena: part.predlozenaIzmjena || target.predlozenaIzmjena,
+      pravnaReferenca: target.pravnaReferenca,
+      izvorniDokumentId: target.izvorniDokumentId,
+      izvorniDokumentNaziv: target.izvorniDokumentNaziv,
+      izvorUnosa: target.izvorUnosa,
+      createdAt: target.createdAt,
+      updatedAt: now,
+    }));
+
+    const next = [...all.slice(0, idx), ...replacements, ...all.slice(idx + 1)].sort(
+      (a, b) => articleSortRank(a.clanakOznaka) - articleSortRank(b.clanakOznaka)
+    );
+
+    await savePrimjedbe(params.projectId, next);
+    tryRevalidate(`/izrada-propisa/${params.projectId}`);
+
+    return {
+      success: true,
+      splitCount: replacements.length,
+      primjedbe: next,
+    };
+  } catch (err: any) {
+    console.error('splitCombinedPrimjedbaAction error:', err);
+    return { error: err?.message || 'Greška pri razvrstavanju spojene primjedbe po člancima.' };
   }
 }
 
