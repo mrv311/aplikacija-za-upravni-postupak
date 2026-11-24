@@ -7,7 +7,7 @@ export interface PropisDef {
     | 'Gradnja, prostor i ozakonjenje'
     | 'Porezi i pristojbe'
     | 'Građansko, stvarno i zemljišnoknjižno pravo';
-  tip: 'Zakon' | 'Uredba' | 'Pravilnik';
+  tip: 'Zakon' | 'Uredba' | 'Pravilnik' | 'Pravila';
   nn: string;
   izvor: 'zakon.hr' | 'lokalno';
   url?: string;
@@ -79,6 +79,16 @@ export const PROPISI_LIST: PropisDef[] = [
     izvor: 'zakon.hr',
     url: 'https://www.zakon.hr/z/126/zakon-o-pravu-na-pristup-informacijama',
     opis: 'Ostvarivanje prava na pristup informacijama i ponovnu uporabu informacija tijela javne vlasti.'
+  },
+  {
+    naziv: 'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor',
+    kratica: 'JMNP',
+    podrucje: 'Opći upravni propisi',
+    tip: 'Pravila',
+    nn: 'NN 74/15',
+    izvor: 'lokalno',
+    url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2015_07_74_1410.html',
+    opis: 'Službena pravno-metodološka i nomotehnička pravila za izradu zakona, uredbi, pravilnika i drugih propisa RH (struktura, preambula, članci, jezik, navođenje, prijelazne i završne odredbe).'
   },
 
   // 2. VODNO PRAVO I NAKNADE

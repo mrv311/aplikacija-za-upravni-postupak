@@ -49,6 +49,8 @@ const KRATICE_ZAKONA: Record<string, RegExp> = {
   'Uredba o visini naknade za zaštitu voda': /\bU-?NZZV\w*\b/i,
   'Uredba o uredskom poslovanju': /\bUUP\w*\b/i,
   'Uredba o Tarifi upravnih pristojbi': /\bUTUP\w*\b/i,
+  'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor':
+    /\bJMNP\w*\b|nomotehni[čc]k\w+\s+pravil\w*/i,
 };
 
 export type ZakonClanak = RagZakonSource;

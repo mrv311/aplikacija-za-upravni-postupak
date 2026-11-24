@@ -51,9 +51,11 @@ const VALID_SEVS = new Set<StressTestSeverity>([
   'ok',
 ]);
 
+const JMNP_LAW_NAME =
+  'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor';
+
 /**
- * Dohvaća ključne matične članke (ZFVG čl. 17.–22., 69.–71. i ZOV) izravno iz tablice `zakoni`
- * kako bi Stress-test uvijek imao punu zakonsku podlogu za provjeru granica ovlaštenja.
+ * Dohvaća ključne matične članke (ZFVG čl. 17.–22., 69.–70.) izravno iz tablice `zakoni`.
  */
 async function fetchCoreMandateLawArticles(): Promise<string> {
   try {
@@ -76,6 +78,44 @@ async function fetchCoreMandateLawArticles(): Promise<string> {
     if (!data || data.length === 0) return '';
     return data
       .map((r: any) => `[${r.naziv_zakona} — ${r.clanak_broj}]\n${r.tekst}`)
+      .join('\n\n');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Dohvaća ključne odredbe JMNP-a (NN 74/15) izravno iz tablice `zakoni` kako bi AI Stress-test
+ * i generatori citirali stvarni, važeći službeni tekst JMNP-a.
+ */
+async function fetchCoreJmnpArticles(): Promise<string> {
+  try {
+    const { data } = await supabase
+      .from('zakoni')
+      .select('clanak_broj, tekst')
+      .eq('naziv_zakona', JMNP_LAW_NAME)
+      .in('clanak_broj', [
+        'Članak 5.',
+        'Članak 6.',
+        'Članak 7.',
+        'Članak 10.',
+        'Članak 12.',
+        'Članak 17.',
+        'Članak 20.',
+        'Članak 21.',
+        'Članak 29.',
+        'Članak 31.',
+        'Članak 32.',
+        'Članak 37.',
+        'Članak 39.',
+        'Članak 41.',
+        'Članak 43.',
+        'Članak 44.',
+      ]);
+
+    if (!data || data.length === 0) return '';
+    return data
+      .map((r: any) => `[JMNP (NN 74/15) — ${r.clanak_broj}]\n${r.tekst}`)
       .join('\n\n');
   } catch {
     return '';
@@ -115,9 +155,10 @@ export async function runStressTestAction(params: {
     params.modelPreference === 'flash' ? 'gemini-3.8-flash' : 'gemini-3.1-pro-preview';
 
   try {
-    // Paralelno povuci: (a) ključne članke ZFVG-a, (b) RAG iz Baze prakse fokusiran na sudsku i NUV praksu
-    const [coreZfvgText, ragSudska, ragNuv] = await Promise.all([
+    // Paralelno povuci: (a) ključne članke ZFVG-a, (b) ključne članke JMNP-a (NN 74/15), (c) RAG iz Baze prakse
+    const [coreZfvgText, coreJmnpText, ragSudska, ragNuv] = await Promise.all([
       fetchCoreMandateLawArticles(),
+      fetchCoreJmnpArticles(),
       searchKnowledge(
         `${project.puniNazivAkta} ruševina neupotrebljiv zabrana korištenja poslovni prostor u stanu nije u upotrebi građevinsko zemljište NKD temeljna djelatnost prijelazne odredbe`,
         {
@@ -208,6 +249,9 @@ ${localFindings.map((f) => `- [${f.severity}] ${f.clanak}: ${f.naslov} — ${f.o
 
 KLJUČNI ČLANCI ZFVG-a (ZAKONSKO OVLAŠTENJE):
 ${coreZfvgText || '(Pogledaj <zakoni> ispod)'}
+
+SLUŽBENI TEKST KLJUČNIH ČLANAKA JMNP-a (NN 74/15) IZ BAZE PROPISA:
+${coreJmnpText || '(Koristi JMNP NN 74/15 iz <zakoni>)'}
 
 DODATNI ZAKONI IZ BAZE:
 <zakoni>

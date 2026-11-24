@@ -43,7 +43,7 @@ export interface GroupedPropis {
   naziv: string;
   kratica: string;
   podrucje: string;
-  tip: 'Zakon' | 'Uredba' | 'Pravilnik';
+  tip: 'Zakon' | 'Uredba' | 'Pravilnik' | 'Pravila';
   nn: string;
   opis: string;
   clanci: ClanakItem[];

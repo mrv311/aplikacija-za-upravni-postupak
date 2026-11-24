@@ -155,6 +155,7 @@ function buildDefaultUredbaNuvProject(): PropisProject {
     puniNazivAkta: 'Nacrt prijedloga Uredbe o visini naknade za uređenje voda',
     vrstaAkta: 'Uredba',
     maticniPropisi: [
+      'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor',
       'Zakon o financiranju vodnoga gospodarstva',
       'Zakon o vodama',
       'Uredba o visini naknade za uređenje voda',

@@ -80,6 +80,10 @@ const LAW_BASE_SLUGS: Record<string, { slug: string; url: string }> = {
     slug: '2019_07_66_1286',
     url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2019_07_66_1286.html',
   },
+  'Jedinstvena metodološko-nomotehnička pravila za izradu akata koje donosi Hrvatski sabor': {
+    slug: '2015_07_74_1410',
+    url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2015_07_74_1410.html',
+  },
 };
 
 async function build() {

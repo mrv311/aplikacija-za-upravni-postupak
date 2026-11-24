@@ -31,8 +31,8 @@ export function runLocalStressChecks(
       clanak: 'Preambula',
       naslov: 'Nedostaje standardna uvodna rečenica s pravnom osnovom',
       opis:
-        'Prema čl. 13. JMNP-a (NN 74/15), podzakonski akt mora započinjati uvodnom rečenicom „Na temelju članka ... Zakona o ...“ s točnim navođenjem donositelja.',
-      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 13.–15.',
+        'Prema čl. 5. JMNP-a (NN 74/15), podzakonski akt mora započinjati preambulom („Na temelju članka ... Zakona o ...“) s točnim navođenjem zakonske osnove i donositelja.',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 5. (Preambula)',
     });
   }
 
@@ -43,7 +43,7 @@ export function runLocalStressChecks(
       clanak: 'Cijeli tekst',
       naslov: 'Nisu prepoznati numerirani članci („Članak 1.“)',
       opis: 'Lokalni parser nije pronašao oznake članaka u standardnom formatu „Članak 1.“.',
-      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 20.',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 29. (Članak)',
     });
     return findings;
   }
@@ -59,7 +59,7 @@ export function runLocalStressChecks(
         clanak: cl.oznaka,
         naslov: `Duplicirana oznaka članka (${cl.oznaka})`,
         opis: `Članak ${cl.oznaka} pojavljuje se više puta u tekstu nacrta.`,
-        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 20.',
+        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 29. (Članak)',
       });
     }
     seenKeys.add(cl.key);
@@ -75,7 +75,7 @@ export function runLocalStressChecks(
         clanak: `Članak ${numericArts[i]}.`,
         naslov: `Prekid slijeda numeracije članaka (${numericArts[i - 1]}. → ${numericArts[i]}.)`,
         opis: `Između Članka ${numericArts[i - 1]}. i Članka ${numericArts[i]}. nedostaje redni broj članka.`,
-        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 20.',
+        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 29. (Članak)',
       });
     }
   }
@@ -97,7 +97,7 @@ export function runLocalStressChecks(
           clanak: cl.oznaka,
           naslov: `Nepravilan redoslijed stavaka (${stavakMatches.join(', ')})`,
           opis: `U ${cl.oznaka} očekivan je redoslijed stavaka (1), (2)...; pronađen je stavak (${stavakMatches[i]}) na poziciji ${i + 1}.`,
-          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 21.',
+          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 31. (Stavak)',
         });
         break;
       }
@@ -117,7 +117,7 @@ export function runLocalStressChecks(
           clanak: cl.oznaka,
           naslov: `Unutarnje upućivanje na nepostojeći stavak ${refNum}.`,
           opis: `${cl.oznaka} upućuje na „${ref[0]}“, ali taj članak ima ukupno ${maxStavak} stavaka.`,
-          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 44. — točnost unutarnjih upućivanja',
+          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 39. i 43. (Precizni izričaj i navođenje)',
         });
       }
     }
@@ -135,7 +135,7 @@ export function runLocalStressChecks(
           clanak: cl.oznaka,
           naslov: `Upućivanje na nepostojeći Članak ${ref[1]}.`,
           opis: `${cl.oznaka} poziva se na „${ref[0]}“, ali Članak ${ref[1]}. ne postoji u ovom nacrtu.`,
-          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 44.',
+          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 39. i 43.',
         });
       }
     }
@@ -160,7 +160,7 @@ export function runLocalStressChecks(
         clanak: cl.oznaka,
         naslov: 'Korištenje opisnog teksta u zagradama u normativnoj odredbi',
         opis: `U ${cl.oznaka} pronađen je opisni tekst u zagradama: „(${inner})“. Ured za zakonodavstvo Vlade RH (UZZ) dosljedno traži brisanje zagrada u normativnom dijelu i preformuliranje sadržaja kao sastavnog dijela rečenice (npr. uz „odnosno“ ili zasebnim stavkom).`,
-        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15) i ustaljena praksa UZZ-a',
+        pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 37., 39. i 41. (Jasni izričaj i stil) te praksa UZZ-a',
         prijedlogPreformulacije: `Ukloniti zagrade oko „${inner}“ i ugraditi uvjet izravno u tekst odredbe (npr. „..., odnosno ...“).`,
       });
     }
@@ -173,7 +173,7 @@ export function runLocalStressChecks(
       clanak: 'Članak 2.',
       naslov: `NKD oznake u zagradama (${nkdBracketsCount} pojavljivanja)`,
       opis: `U tekstu nacrta pronađeno je ${nkdBracketsCount} NKD šifri navedenih u zagradama (npr. (B), (08.93), (G)). Provjerite hoće li UZZ ponovno tražiti navođenje bez zagrada (npr. „oznaka B“ ili u zasebnoj tablici/prilogu).`,
-      pravnaOsnovaIliPraksa: 'Prethodna praksa UZZ-a na Nacrt prijedloga Uredbe',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 41. i 44. te prethodna praksa UZZ-a',
     });
   }
 
@@ -207,7 +207,7 @@ export function runLocalStressChecks(
           }${
             missingInPre.length > 0 ? ` U Preambuli nedostaju brojevi: ${missingInPre.join(', ')}.` : ''
           }`,
-          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 46. — točno citiranje izmjena propisa',
+          pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 43. (Navođenje) i čl. 51. (Pozivanje na osnovni propis)',
           prijedlogPreformulacije: `Uskladiti popis brojeva Narodnih novina na oba mjesta: („Narodne novine“, br. ${pNums
             .map((n) => `${n}.`)
             .join(', ')
@@ -231,7 +231,7 @@ export function runLocalStressChecks(
       naslov: 'Provjeriti postojanje prijelazne odredbe za započete upravne postupke',
       opis:
         'U zadnjim člancima nije jasno prepoznata standardna prijelazna odredba o dovršetku upravnih postupaka započetih prije stupanja na snagu novog propisa.',
-      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 36.–38.',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 20. (Prijelazne odredbe)',
     });
   }
 
@@ -243,7 +243,7 @@ export function runLocalStressChecks(
       naslov: 'Nedostaje izričita odredba o prestanku važenja starog propisa',
       opis:
         'Kada se donosi novi cjeloviti propis, nužno je izričito propisati da danom stupanja na snagu prestaje važiti dosadašnji propis s točnim brojevima Narodnih novina.',
-      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 40.',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 21. (Završne odredbe)',
     });
   }
 
@@ -254,7 +254,7 @@ export function runLocalStressChecks(
       clanak: 'Završna odredba',
       naslov: 'Nedostaje standardna klauzula o objavi u „Narodnim novinama“ i stupanju na snagu',
       opis: 'Završni članak mora sadržavati odredbu o objavi u „Narodnim novinama“ i danu stupanja na snagu.',
-      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 41.–42.',
+      pravnaOsnovaIliPraksa: 'JMNP (NN 74/15), čl. 21. (Završne odredbe)',
     });
   }
 
