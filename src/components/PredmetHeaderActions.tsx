@@ -43,16 +43,18 @@ import {
   type PredmetIshod,
   type PredmetPodrucje,
   PREDMET_FAZE,
-  PREDMET_ISHODI,
   calculateZupDeadline,
   decodeDocLabel,
+  detectIshodFromText,
   formatIsoDateHr,
+  getIshodMeta,
   getPodrucjeLabel,
   getPodrucjeFullLabel,
   getPodrucjeBadgeClass,
 } from '@/lib/predmet-meta';
 import { getStatusBadge } from '@/components/StatusBadge';
 import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
+import { IshodSelectOptions } from '@/components/IshodSelectOptions';
 
 export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) {
   const router = useRouter();
@@ -107,7 +109,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
   const isArchived = predmet.status === 'arhiviran';
   const deadline = !isArchived ? calculateZupDeadline(predmet.datum_predaje_zalbe) : null;
   const fazaMeta = PREDMET_FAZE.find((f) => f.value === faza) || PREDMET_FAZE[0];
-  const ishodMeta = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
+  const ishodMeta = getIshodMeta(predmet.ishod);
 
   const handleFazaChange = async (novaFaza: PredmetFaza) => {
     setFaza(novaFaza);
@@ -172,14 +174,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
           setSelectedPublishDocId(rjesenjeDoc.id);
           setAutoPublishToPraksa(true);
 
-          const textLower = (rjesenjeDoc.raw_text || '').toLowerCase();
-          if (textLower.includes('poništava se') || textLower.includes('uvažava se')) {
-            setIshod('Poništeno rješenje');
-          } else if (textLower.includes('odbacuje se')) {
-            setIshod('Odbačena žalba');
-          } else if (textLower.includes('odbija se')) {
-            setIshod('Odbijena žalba');
-          }
+          setIshod(detectIshodFromText(rjesenjeDoc.raw_text));
         } else {
           setAutoPublishToPraksa(false);
         }
@@ -365,11 +360,14 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
 
         {isArchived && predmet.ishod && (
           <span
+            title={ishodMeta?.label || predmet.ishod}
             className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
-              ishodMeta ? ishodMeta.badgeClass : 'bg-slate-100 text-slate-700 border-slate-200'
+              ishodMeta
+                ? ishodMeta.badgeClass
+                : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
             }`}
           >
-            {predmet.ishod}
+            {ishodMeta ? ishodMeta.shortLabel : predmet.ishod}
           </span>
         )}
 
@@ -658,6 +656,21 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
                 </p>
               </div>
 
+              {isArchived && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Ishod postupka
+                  </label>
+                  <select
+                    value={ishod}
+                    onChange={(e) => setIshod(e.target.value as PredmetIshod)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                  >
+                    <IshodSelectOptions labelMode="full" currentValue={ishod} />
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
                   Interna bilješka
@@ -741,11 +754,7 @@ export function PredmetHeaderActions({ predmet }: { predmet: EnrichedPredmet }) 
                     onChange={(e) => setIshod(e.target.value as PredmetIshod)}
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                   >
-                    {PREDMET_ISHODI.map((i) => (
-                      <option key={i.value} value={i.value}>
-                        {i.label}
-                      </option>
-                    ))}
+                    <IshodSelectOptions labelMode="full" currentValue={ishod} />
                   </select>
                 </div>
 

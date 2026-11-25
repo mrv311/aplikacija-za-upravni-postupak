@@ -540,38 +540,287 @@ export const PREDMET_FAZE: {
   },
 ];
 
+export type PredmetIshodGroupId = 'zalbeni' | 'obustave_procesni' | 'posebni_ostalo';
+
+export type PredmetIshodSummaryBucket = 'odbijeno' | 'ponisteno' | 'ostali';
+
 export type PredmetIshod =
   | 'Odbijena žalba'
   | 'Poništeno rješenje'
+  | 'Poništeno i meritorno riješeno / izmijenjeno'
+  | 'Djelomično poništeno / izmijenjeno'
   | 'Odbačena žalba'
-  | 'Obustava / Ostalo';
+  | 'Obustava postupka — odustanak od žalbe'
+  | 'Obustava postupka — ostali razlozi'
+  | 'Oglašeno ništavim'
+  | 'Ustupljeno nadležnom tijelu'
+  | 'Riješeno po izvanrednom pravnom lijeku'
+  | 'Ispravak / Zaključak / Potvrda'
+  | 'Neupravni akt / Mišljenje / Dopis'
+  | 'Ostalo'
+  | 'Obustava / Ostalo'
+  | (string & {});
 
-export const PREDMET_ISHODI: {
+export interface PredmetIshodMeta {
   value: PredmetIshod;
   label: string;
+  shortLabel: string;
+  group: PredmetIshodGroupId;
+  summaryBucket: PredmetIshodSummaryBucket;
   badgeClass: string;
+  chartColor: string;
+}
+
+export const PREDMET_ISHODI_GRUPE: {
+  id: PredmetIshodGroupId;
+  label: string;
 }[] = [
+  { id: 'zalbeni', label: 'Redoviti žalbeni ishodi (čl. 114.–118. ZUP)' },
+  { id: 'obustave_procesni', label: 'Obustave i procesni ishodi' },
+  { id: 'posebni_ostalo', label: 'Posebni postupci i neupravno' },
+];
+
+export const PREDMET_ISHODI: PredmetIshodMeta[] = [
+  // 1. Redoviti žalbeni ishodi (čl. 114.–118. ZUP)
   {
     value: 'Odbijena žalba',
     label: 'Odbijena žalba (čl. 116. ZUP)',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    shortLabel: 'Odbijena žalba',
+    group: 'zalbeni',
+    summaryBucket: 'odbijeno',
+    badgeClass:
+      'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+    chartColor: '#10b981',
   },
   {
     value: 'Poništeno rješenje',
-    label: 'Poništeno / izmijenjeno rješenje (čl. 117. ZUP)',
-    badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    label: 'Poništeno rješenje i vraćeno na ponovni postupak (čl. 117. st. 2. ZUP)',
+    shortLabel: 'Poništeno i vraćeno',
+    group: 'zalbeni',
+    summaryBucket: 'ponisteno',
+    badgeClass:
+      'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800',
+    chartColor: '#6366f1',
+  },
+  {
+    value: 'Poništeno i meritorno riješeno / izmijenjeno',
+    label: 'Poništeno i meritorno riješeno / izmijenjeno (čl. 117. st. 1. / čl. 118. ZUP)',
+    shortLabel: 'Poništeno / izmijenjeno',
+    group: 'zalbeni',
+    summaryBucket: 'ponisteno',
+    badgeClass:
+      'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800',
+    chartColor: '#8b5cf6',
+  },
+  {
+    value: 'Djelomično poništeno / izmijenjeno',
+    label: 'Djelomično poništeno / izmijenjeno (čl. 117.–118. ZUP)',
+    shortLabel: 'Djelomično poništeno',
+    group: 'zalbeni',
+    summaryBucket: 'ponisteno',
+    badgeClass:
+      'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
+    chartColor: '#3b82f6',
   },
   {
     value: 'Odbačena žalba',
     label: 'Odbačena žalba (čl. 114. ZUP)',
-    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    shortLabel: 'Odbačena žalba',
+    group: 'zalbeni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+    chartColor: '#f59e0b',
+  },
+
+  // 2. Obustave i procesni ishodi
+  {
+    value: 'Obustava postupka — odustanak od žalbe',
+    label: 'Obustava postupka — odustanak od žalbe (čl. 115. st. 2. / čl. 46. ZUP)',
+    shortLabel: 'Obustava (odustanak od žalbe)',
+    group: 'obustave_procesni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800',
+    chartColor: '#06b6d4',
   },
   {
-    value: 'Obustava / Ostalo',
-    label: 'Obustava postupka / Ostalo',
-    badgeClass: 'bg-slate-100 text-slate-700 border-slate-200',
+    value: 'Obustava postupka — ostali razlozi',
+    label: 'Obustava postupka — ostali razlozi (čl. 46. / čl. 113. ZUP)',
+    shortLabel: 'Obustava (ostalo)',
+    group: 'obustave_procesni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
+    chartColor: '#0ea5e9',
+  },
+  {
+    value: 'Oglašeno ništavim',
+    label: 'Oglašeno ništavim (čl. 128. ZUP)',
+    shortLabel: 'Oglašeno ništavim',
+    group: 'obustave_procesni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
+    chartColor: '#f43f5e',
+  },
+  {
+    value: 'Ustupljeno nadležnom tijelu',
+    label: 'Ustupljeno nadležnom tijelu (čl. 18. ZUP)',
+    shortLabel: 'Ustupljeno (nenadležnost)',
+    group: 'obustave_procesni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800',
+    chartColor: '#f97316',
+  },
+
+  // 3. Posebni postupci i neupravno
+  {
+    value: 'Riješeno po izvanrednom pravnom lijeku',
+    label: 'Riješeno po izvanrednom pravnom lijeku (čl. 123., 129.–132. ZUP)',
+    shortLabel: 'Izvanredni pravni lijek',
+    group: 'posebni_ostalo',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800',
+    chartColor: '#a855f7',
+  },
+  {
+    value: 'Ispravak / Zaključak / Potvrda',
+    label: 'Ispravak / Zaključak / Potvrda (čl. 104. ZUP, troškovi, potvrde)',
+    shortLabel: 'Ispravak / Zaključak / Potvrda',
+    group: 'posebni_ostalo',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800',
+    chartColor: '#14b8a6',
+  },
+  {
+    value: 'Neupravni akt / Mišljenje / Dopis',
+    label: 'Neupravni akt / Mišljenje / Dopis',
+    shortLabel: 'Neupravni akt / Mišljenje',
+    group: 'posebni_ostalo',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-stone-100 text-stone-700 border-stone-300 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700',
+    chartColor: '#78716c',
+  },
+  {
+    value: 'Ostalo',
+    label: 'Ostalo',
+    shortLabel: 'Ostalo',
+    group: 'posebni_ostalo',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    chartColor: '#64748b',
   },
 ];
+
+const LEGACY_ISHOD_META: Record<string, PredmetIshodMeta> = {
+  'Obustava / Ostalo': {
+    value: 'Obustava / Ostalo',
+    label: 'Obustava postupka / Ostalo (stari zapis)',
+    shortLabel: 'Obustava / Ostalo',
+    group: 'obustave_procesni',
+    summaryBucket: 'ostali',
+    badgeClass:
+      'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    chartColor: '#64748b',
+  },
+};
+
+export function getIshodMeta(ishod: string | null | undefined): PredmetIshodMeta | undefined {
+  if (!ishod) return undefined;
+  const trimmed = ishod.trim();
+  const direct = PREDMET_ISHODI.find((i) => i.value === trimmed);
+  if (direct) return direct;
+  if (LEGACY_ISHOD_META[trimmed]) return LEGACY_ISHOD_META[trimmed];
+  const low = trimmed.toLowerCase();
+  return PREDMET_ISHODI.find(
+    (i) => i.value.toLowerCase() === low || i.shortLabel.toLowerCase() === low
+  );
+}
+
+export function getIshodSummaryBucket(ishod: string | null | undefined): PredmetIshodSummaryBucket {
+  const meta = getIshodMeta(ishod);
+  if (meta) return meta.summaryBucket;
+  const low = (ishod || '').toLowerCase();
+  if (low.includes('odbijen')) return 'odbijeno';
+  if (low.includes('poništ') || low.includes('ponist') || low.includes('izmijenj')) return 'ponisteno';
+  return 'ostali';
+}
+
+export function isObustavaIshod(ishod: string | null | undefined): boolean {
+  return (ishod || '').toLowerCase().includes('obustav');
+}
+
+/**
+ * Automatsko prepoznavanje vjerojatnog ZUP ishoda iz teksta drugostupanjskog akta.
+ */
+export function detectIshodFromText(rawText: string | null | undefined): PredmetIshod {
+  const text = (rawText || '').toLowerCase();
+  if (!text.trim()) return 'Odbijena žalba';
+
+  // Fokusiraj se na izreku ako postoji (dio prije "obrazloženje")
+  const obrazlozenjeIdx = text.indexOf('obrazloženje');
+  const izreka = obrazlozenjeIdx > 80 ? text.slice(0, obrazlozenjeIdx) : text.slice(0, 2500);
+
+  if (/oglašava\s+se\s+ništav|oglašuje\s+se\s+ništav|ništavim\s+se\s+oglašava/.test(izreka)) {
+    return 'Oglašeno ništavim';
+  }
+
+  if (/obustavlja\s+se|postupak\s+se\s+obustavlja|obustava\s+postupka/.test(izreka)) {
+    if (/odustan\w*\s+od\s+žalb|odusta\w*\s+od\s+žalb|povlači\s+žalb|povuk\w*\s+žalb/.test(text)) {
+      return 'Obustava postupka — odustanak od žalbe';
+    }
+    return 'Obustava postupka — ostali razlozi';
+  }
+
+  if (/ustupa\s+se\s+na\s+nadležn|oglašava\s+se\s+nenadležn/.test(izreka)) {
+    return 'Ustupljeno nadležnom tijelu';
+  }
+
+  if (/ispravlja\s+se\s+rješenj|otklanjanj\w*\s+pogreš/.test(izreka)) {
+    return 'Ispravak / Zaključak / Potvrda';
+  }
+
+  if (/odbacuje\s+se\s+žalb|žalba\s+se\s+odbacuje|odbacuje\s+se\s+kao\s+(?:nepravodobn|nedopušten|izjavljen)/.test(izreka)) {
+    return 'Odbačena žalba';
+  }
+
+  if (
+    /djelomično\s+(?:se\s+)?(?:poništava|uvažava|mijenja|izmjenjuje)/.test(izreka) ||
+    (/poništava\s+se/.test(izreka) && /u\s+preostalom\s+dijelu\s+(?:žalba\s+se\s+)?odbija/.test(izreka))
+  ) {
+    return 'Djelomično poništeno / izmijenjeno';
+  }
+
+  if (/poništava\s+se|uvažava\s+se\s+žalb/.test(izreka)) {
+    if (/vraća\s+se|ponovn\w+\s+postup/.test(izreka)) {
+      return 'Poništeno rješenje';
+    }
+    if (/mijenja\s+se|zamjenjuje\s+se|rješava\s+se\s+upravna\s+stvar|utvrđuje\s+se/.test(izreka)) {
+      return 'Poništeno i meritorno riješeno / izmijenjeno';
+    }
+    return 'Poništeno rješenje';
+  }
+
+  if (/mijenja\s+se\s+rješenj|izmjenjuje\s+se\s+rješenj/.test(izreka)) {
+    return 'Poništeno i meritorno riješeno / izmijenjeno';
+  }
+
+  if (/odbacuje\s+se/.test(izreka)) {
+    return 'Odbačena žalba';
+  }
+
+  if (/odbija\s+se/.test(izreka)) {
+    return 'Odbijena žalba';
+  }
+
+  return 'Odbijena žalba';
+}
 
 export const DOKUMENT_VRSTE = [
   'Žalba',

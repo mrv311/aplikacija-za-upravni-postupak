@@ -14,7 +14,6 @@ import {
 import {
   META_DOC_TYPE,
   DOKUMENT_VRSTE,
-  PREDMET_ISHODI,
   decodeDocLabel,
   guessDocRoleFromFilename,
   formatBytes,
@@ -22,6 +21,7 @@ import {
   type PredmetIshod,
 } from '@/lib/predmet-meta';
 import { PodrucjeSelectOptions } from '@/components/PodrucjeSelectOptions';
+import { IshodSelectOptions } from '@/components/IshodSelectOptions';
 import {
   Upload,
   FileText,
@@ -860,11 +860,7 @@ export function DocumentManager({
                         onChange={(e) => setPraksaIshod(e.target.value as PredmetIshod)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                       >
-                        {PREDMET_ISHODI.map((ish) => (
-                          <option key={ish.value} value={ish.value}>
-                            {ish.value}
-                          </option>
-                        ))}
+                        <IshodSelectOptions labelMode="short" currentValue={praksaIshod} />
                       </select>
                     </div>
 

@@ -29,7 +29,7 @@ import {
 } from '@/app/actions/draftGeneratorActions';
 import { saveDraftToSpis } from '@/app/actions/chatActions';
 import { sendPredmetToSigning } from '@/app/actions/predmetActions';
-import { type PredmetIshod } from '@/lib/predmet-meta';
+import { detectIshodFromText, type PredmetIshod } from '@/lib/predmet-meta';
 
 interface LegalReviewModalProps {
   predmetId: string;
@@ -156,14 +156,7 @@ export function LegalReviewModal({
         setReviewResult(res.reviewText);
 
         // Prepoznaj ishod iz teksta rješenja za eventualnu objavu u praksi
-        const lower = actText.toLowerCase();
-        if (lower.includes('poništava se') || lower.includes('uvažava se')) {
-          setPraksaIshod('Poništeno rješenje');
-        } else if (lower.includes('odbacuje se')) {
-          setPraksaIshod('Odbačena žalba');
-        } else {
-          setPraksaIshod('Odbijena žalba');
-        }
+        setPraksaIshod(detectIshodFromText(actText));
       } else {
         setErrorMsg(res.error || 'Nije uspjela pravna revizija rješenja.');
       }

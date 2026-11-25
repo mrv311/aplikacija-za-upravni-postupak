@@ -1,4 +1,4 @@
-import { getPodrucjeFullLabel, type EnrichedPredmet, type PredmetPodrucje, type PredmetIshod } from './predmet-meta';
+import { getIshodMeta, getPodrucjeFullLabel, type EnrichedPredmet, type PredmetPodrucje, type PredmetIshod } from './predmet-meta';
 
 export type ReportPeriodPreset =
   | 'ova-godina'
@@ -435,22 +435,14 @@ export function calculateReportMetrics(filtered: EnrichedPredmet[]): ReportMetri
   const prosjecnoTrajanjeAktivnihDana =
     brojAktivnihSaDanima > 0 ? Math.round(zbrojDanaAktivnih / brojAktivnihSaDanima) : 0;
 
-  // Boje za ishode
-  const ISHOD_COLORS: Record<string, string> = {
-    'Odbijena žalba': '#10b981', // emerald-500
-    'Poništeno rješenje': '#6366f1', // indigo-500
-    'Odbačena žalba': '#f59e0b', // amber-500
-    'Obustava / Ostalo': '#64748b', // slate-500
-  };
-
   const ishodiBreakdown = Array.from(ishodiMap.entries())
     .map(([ishod, count]) => ({
       ishod,
-      label: ishod,
+      label: getIshodMeta(ishod)?.shortLabel || ishod,
       count,
       percentage:
         ukupnoRijeseno > 0 ? Number(((count / ukupnoRijeseno) * 100).toFixed(1)) : 0,
-      color: ISHOD_COLORS[ishod] || '#94a3b8',
+      color: getIshodMeta(ishod)?.chartColor || '#94a3b8',
     }))
     .sort((a, b) => b.count - a.count);
 

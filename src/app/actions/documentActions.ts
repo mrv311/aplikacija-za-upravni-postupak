@@ -18,6 +18,7 @@ import {
   normalizeDateToIso,
   isKosuljicaRole,
   mergeKosuljicaNote,
+  getIshodMeta,
   getPodrucjePraksaCategory,
   type IzvorTekstaTip,
   type PredmetExtendedMeta,
@@ -711,7 +712,7 @@ Pravila anonimizacije:
         ? 'poništeno rješenje'
         : params.ishod === 'Odbijena žalba'
         ? 'odbijena žalba'
-        : params.ishod.toLowerCase();
+        : (getIshodMeta(params.ishod)?.shortLabel || params.ishod).toLowerCase();
 
     const proposedTitle = `[${catFull} - ${year}] ${party}${loc ? ' - ' + loc : ''} - ${ishodShort}`;
 

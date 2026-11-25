@@ -39,9 +39,11 @@ import {
   type PredmetIshod,
   type PredmetPodrucje,
   PREDMET_FAZE,
-  PREDMET_ISHODI,
   calculateZupDeadline,
   formatIsoDateHr,
+  getIshodMeta,
+  getIshodSummaryBucket,
+  isObustavaIshod,
   getPodrucjeLabel,
   getPodrucjeFullLabel,
   getPodrucjeBadgeClass,
@@ -52,6 +54,7 @@ import { ParafiranjeModal } from './ParafiranjeModal';
 import { NadlezniPostupakModal } from './NadlezniPostupakModal';
 import { ObradjivacParafCell, useSluzbeniciList } from './ObradjivacParafCell';
 import { PodrucjeSelectOptions } from './PodrucjeSelectOptions';
+import { IshodSelectOptions } from './IshodSelectOptions';
 
 export { getStatusBadge };
 export type Predmet = EnrichedPredmet;
@@ -69,6 +72,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
   const [filterSecondary, setFilterSecondary] = useState<string>('sve'); // faza u aktivnima ili ishod u arhivi
   const [filterSluzbenik, setFilterSluzbenik] = useState<string>('sve');
   const [onlyUrgent, setOnlyUrgent] = useState(false);
+  const [onlyInPraksa, setOnlyInPraksa] = useState(false);
   const [sortBy, setSortBy] = useState<'datum' | 'datum_stari' | 'hitnost' | 'stranka'>('datum');
 
   // Službenici & Parafiranje modali
@@ -137,6 +141,10 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
     let naPotpisuCount = 0;
     let odbijeneCount = 0;
     let ponistenaCount = 0;
+    let ostaliIshodiCount = 0;
+    let odbaceneCount = 0;
+    let obustaveCount = 0;
+    let drugiIshodiCount = 0;
     let uPraksiCount = 0;
 
     for (const p of items) {
@@ -146,8 +154,17 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
         if (p.faza === 'Čeka dopunu') cekaDopunuCount++;
         if (p.faza === 'Na potpisu') naPotpisuCount++;
       } else {
-        if (p.ishod === 'Odbijena žalba') odbijeneCount++;
-        if (p.ishod === 'Poništeno rješenje') ponistenaCount++;
+        const bucket = getIshodSummaryBucket(p.ishod);
+        if (bucket === 'odbijeno') {
+          odbijeneCount++;
+        } else if (bucket === 'ponisteno') {
+          ponistenaCount++;
+        } else {
+          ostaliIshodiCount++;
+          if (p.ishod === 'Odbačena žalba') odbaceneCount++;
+          else if (isObustavaIshod(p.ishod)) obustaveCount++;
+          else drugiIshodiCount++;
+        }
         if (p.poslano_u_praksu) uPraksiCount++;
       }
     }
@@ -159,6 +176,10 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
       naPotpisuCount,
       odbijeneCount,
       ponistenaCount,
+      ostaliIshodiCount,
+      odbaceneCount,
+      obustaveCount,
+      drugiIshodiCount,
       uPraksiCount,
     };
   }, [items, type]);
@@ -198,7 +219,16 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           if (!dl || dl.urgency === 'normal') return false;
         }
       } else {
-        if (filterSecondary !== 'sve' && (p.ishod || 'Ostalo') !== filterSecondary) return false;
+        if (onlyInPraksa && !p.poslano_u_praksu) return false;
+        if (filterSecondary === '__bucket_odbijeno__') {
+          if (getIshodSummaryBucket(p.ishod) !== 'odbijeno') return false;
+        } else if (filterSecondary === '__bucket_ponisteno__') {
+          if (getIshodSummaryBucket(p.ishod) !== 'ponisteno') return false;
+        } else if (filterSecondary === '__bucket_ostali__') {
+          if (getIshodSummaryBucket(p.ishod) !== 'ostali') return false;
+        } else if (filterSecondary !== 'sve' && (p.ishod || 'Ostalo') !== filterSecondary) {
+          return false;
+        }
       }
 
       return true;
@@ -221,7 +251,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
     });
 
     return list;
-  }, [items, search, filterPodrucje, filterSecondary, filterSluzbenik, onlyUrgent, sortBy, type]);
+  }, [items, search, filterPodrucje, filterSecondary, filterSluzbenik, onlyUrgent, onlyInPraksa, sortBy, type]);
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) => {
@@ -456,23 +486,89 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setFilterSecondary('sve');
+              setOnlyInPraksa(false);
+            }}
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+              filterSecondary === 'sve' && !onlyInPraksa
+                ? 'bg-slate-100/80 dark:bg-slate-800/80 border-slate-400 dark:border-slate-600 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ukupno u arhivi (A/A)</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{stats.total}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOnlyInPraksa(false);
+              setFilterSecondary(filterSecondary === 'Odbijena žalba' || filterSecondary === '__bucket_odbijeno__' ? 'sve' : 'Odbijena žalba');
+            }}
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+              filterSecondary === 'Odbijena žalba' || filterSecondary === '__bucket_odbijeno__'
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-900'
+            }`}
+          >
             <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Odbijene žalbe</p>
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{stats.odbijeneCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Poništena rješenja</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOnlyInPraksa(false);
+              setFilterSecondary(filterSecondary === '__bucket_ponisteno__' ? 'sve' : '__bucket_ponisteno__');
+            }}
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+              filterSecondary === '__bucket_ponisteno__'
+                ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
+            }`}
+          >
+            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Poništena / izmijenjena</p>
             <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mt-1">{stats.ponistenaCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOnlyInPraksa(false);
+              setFilterSecondary(filterSecondary === '__bucket_ostali__' ? 'sve' : '__bucket_ostali__');
+            }}
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+              filterSecondary === '__bucket_ostali__'
+                ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-900'
+            }`}
+          >
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-400">Odbačene, obustave i ostalo</p>
+            <p className="text-2xl font-bold text-amber-800 dark:text-amber-400 mt-1">{stats.ostaliIshodiCount}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              Odbačene: {stats.odbaceneCount} · Obustave: {stats.obustaveCount} · Ostalo: {stats.drugiIshodiCount}
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFilterSecondary('sve');
+              setOnlyInPraksa((v) => !v);
+            }}
+            className={`text-left p-4 rounded-xl border transition-all cursor-pointer col-span-2 md:col-span-1 ${
+              onlyInPraksa
+                ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 shadow-2xs'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-900'
+            }`}
+          >
             <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">Ugrađeno u Bazu prakse</p>
             <p className="text-2xl font-bold text-blue-700 dark:text-blue-400 mt-1">{stats.uPraksiCount}</p>
-          </div>
+          </button>
         </div>
       )}
 
@@ -575,11 +671,13 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
               className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="sve">Svi ishodi</option>
-              {PREDMET_ISHODI.map((ish) => (
-                <option key={ish.value} value={ish.value}>
-                  {ish.value}
-                </option>
-              ))}
+              {filterSecondary === '__bucket_ponisteno__' && (
+                <option value="__bucket_ponisteno__">Grupa: Poništena / izmijenjena</option>
+              )}
+              {filterSecondary === '__bucket_ostali__' && (
+                <option value="__bucket_ostali__">Grupa: Odbačene, obustave i ostalo</option>
+              )}
+              <IshodSelectOptions labelMode="short" currentValue={filterSecondary} />
             </select>
           )}
 
@@ -699,7 +797,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                     type === 'aktivni' ? calculateZupDeadline(predmet.datum_predaje_zalbe) : null;
                   const fazaObj =
                     PREDMET_FAZE.find((f) => f.value === predmet.faza) || PREDMET_FAZE[0];
-                  const ishodObj = PREDMET_ISHODI.find((i) => i.value === predmet.ishod);
+                  const ishodObj = getIshodMeta(predmet.ishod);
 
                   return (
                     <tr
@@ -890,13 +988,14 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                           <td className="px-2.5 py-3 align-top">
                             <div className="flex flex-col items-start gap-1">
                               <span
+                                title={ishodObj?.label || predmet.ishod || 'Arhivirano (A/A)'}
                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap ${
                                   ishodObj
                                     ? ishodObj.badgeClass
-                                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
                                 }`}
                               >
-                                {predmet.ishod || 'Arhivirano (A/A)'}
+                                {ishodObj ? ishodObj.shortLabel : predmet.ishod || 'Arhivirano (A/A)'}
                               </span>
                               {predmet.poslano_u_praksu && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -1140,11 +1239,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                   >
-                    {PREDMET_ISHODI.map((ish) => (
-                      <option key={ish.value} value={ish.value}>
-                        {ish.label}
-                      </option>
-                    ))}
+                    <IshodSelectOptions labelMode="full" currentValue={editingItem.ishod} />
                   </select>
                 </div>
               )}
@@ -1249,11 +1344,7 @@ export default function PredmetiTable({ initialPredmeti, type }: PredmetiTablePr
                   onChange={(e) => setArchiveIshod(e.target.value as PredmetIshod)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  {PREDMET_ISHODI.map((ish) => (
-                    <option key={ish.value} value={ish.value}>
-                      {ish.label}
-                    </option>
-                  ))}
+                  <IshodSelectOptions labelMode="full" currentValue={archiveIshod} />
                 </select>
               </div>
 
